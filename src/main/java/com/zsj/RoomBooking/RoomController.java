@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-public class Greeting {
+public class RoomController {
     @Autowired
     private RoomRepository repository;
     @GetMapping("/")

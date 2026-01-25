@@ -12,6 +12,7 @@ public class Room {
     private Long id;
     private String displayName;
     private Integer capacity;
+    private String area; // String or Enum?
 
     public Room(String displayName, int capacity) {
         this.displayName = displayName;

@@ -14,9 +14,10 @@ public class Room {
     private Integer capacity;
     private String area; // String or Enum?
 
-    public Room(String displayName, int capacity) {
+    public Room(String displayName, int capacity, String area) {
         this.displayName = displayName;
         this.capacity = capacity;
+        this.area = area;
     }
     // JPA requires default constructor to instantiate
     public Room() {
@@ -32,6 +33,10 @@ public class Room {
 
     public Integer getCapacity() {
         return capacity;
+    }
+
+    public String getArea() {
+        return area;
     }
 }
 

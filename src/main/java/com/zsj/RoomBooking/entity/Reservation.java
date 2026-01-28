@@ -1,10 +1,10 @@
-package com.zsj.RoomBooking;
+package com.zsj.RoomBooking.entity;
 
+import com.zsj.RoomBooking.ReservationStatus;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
-import java.time.DateTimeException;
 import java.time.LocalDateTime;
 
 public class Reservation {

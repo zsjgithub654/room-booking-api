@@ -1,6 +1,6 @@
 package com.zsj.RoomBooking;
 
 public enum RoleType {
-    USER_TYPE_NORMAL,
-    USER_TYPE_ADMIN;
+    ROLE_TYPE_NORMAL,
+    ROLE_TYPE_ADMIN;
 }

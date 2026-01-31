@@ -13,7 +13,7 @@ public class Room {
     @Id // mark the primary key
     @GeneratedValue(strategy = GenerationType.IDENTITY) // generate val for id as ID, unique and increment automatically
     private Long id;
-    private String displayName;
+    private String name;
     private Integer capacity;
     // TODO: consider building a table for area
     private String area;
@@ -21,8 +21,8 @@ public class Room {
     @OneToMany(mappedBy = "room")
     private Set<Reservation> reservations;
 
-    public Room(String displayName, int capacity, String area) {
-        this.displayName = displayName;
+    public Room(String name, int capacity, String area) {
+        this.name = name;
         this.capacity = capacity;
         this.area = area;
     }
@@ -34,8 +34,8 @@ public class Room {
         return id;
     }
 
-    public String getDisplayName() {
-        return displayName;
+    public String getName() {
+        return name;
     }
 
     public Integer getCapacity() {

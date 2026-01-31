@@ -2,6 +2,7 @@ package com.zsj.RoomBooking.controller;
 
 import com.zsj.RoomBooking.entity.Room;
 import com.zsj.RoomBooking.repository.RoomRepository;
+import com.zsj.RoomBooking.service.RoomService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,17 +14,16 @@ import java.util.List;
 @RestController
 @RequestMapping("/rooms")
 public class RoomController {
-    // TODO: should it be singleton?
     @Autowired
-    private RoomRepository repository;
+    private RoomService service;
 
     @GetMapping
     public List<Room> getRooms() {
-        return repository.findAll();
+        return service.getAllRooms();
     }
 
     @PostMapping
-    public void addRoom(String displayName, int capacity, String area) {
-        repository.save(new Room(displayName, capacity, area));
+    public Room addRoom(String name, int capacity, String area) {
+        return service.addRoom(name, capacity, area);
     }
 }

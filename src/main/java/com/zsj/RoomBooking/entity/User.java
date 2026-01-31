@@ -22,7 +22,9 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(name = "role")
     private Set<RoleType> roles ;
-    // private List<Reservation> reservations;
+
+    @OneToMany(mappedBy = "user")
+    private Set<Reservation> reservations;
 
     public User(String userName, String password, Set<RoleType> roles) {
         this.userName = userName;

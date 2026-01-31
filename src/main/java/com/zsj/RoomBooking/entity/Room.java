@@ -3,7 +3,10 @@ package com.zsj.RoomBooking.entity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Id;
+
+import java.util.Set;
 
 @Entity
 public class Room {
@@ -12,7 +15,11 @@ public class Room {
     private Long id;
     private String displayName;
     private Integer capacity;
-    private String area; // String or Enum?
+    // TODO: consider building a table for area
+    private String area;
+
+    @OneToMany(mappedBy = "room")
+    private Set<Reservation> reservations;
 
     public Room(String displayName, int capacity, String area) {
         this.displayName = displayName;

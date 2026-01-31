@@ -1,8 +1,9 @@
-package com.zsj.RoomBooking.service;
+package com.zsj.RoomBooking.service.impl;
 
 import com.zsj.RoomBooking.RoleType;
 import com.zsj.RoomBooking.entity.User;
 import com.zsj.RoomBooking.repository.UserRepository;
+import com.zsj.RoomBooking.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,7 +15,7 @@ import static com.zsj.RoomBooking.RoleType.ROLE_TYPE_ADMIN;
 import static com.zsj.RoomBooking.RoleType.ROLE_TYPE_NORMAL;
 
 @Service
-public class UserServiceImpl implements UserService{
+public class UserServiceImpl implements UserService {
     @Autowired
     private UserRepository userRepository;
 

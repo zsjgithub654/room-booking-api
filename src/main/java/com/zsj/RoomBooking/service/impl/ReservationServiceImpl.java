@@ -1,4 +1,4 @@
-package com.zsj.RoomBooking.service;
+package com.zsj.RoomBooking.service.impl;
 
 import com.zsj.RoomBooking.entity.Reservation;
 import com.zsj.RoomBooking.entity.Room;
@@ -6,6 +6,7 @@ import com.zsj.RoomBooking.entity.User;
 import com.zsj.RoomBooking.repository.ReservationRepository;
 import com.zsj.RoomBooking.repository.RoomRepository;
 import com.zsj.RoomBooking.repository.UserRepository;
+import com.zsj.RoomBooking.service.ReservationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

@@ -33,6 +33,11 @@ public class RoomServiceImpl implements RoomService {
         return getRoomResponse(room);
     }
 
+    @Override
+    public RoomResponse deleteRoom(Long id) {
+        return null;
+    }
+
     private RoomResponse getRoomResponse(Room room) {
         return new RoomResponse(room.getId(), room.getName(), room.getCapacity(), room.getArea());
     }

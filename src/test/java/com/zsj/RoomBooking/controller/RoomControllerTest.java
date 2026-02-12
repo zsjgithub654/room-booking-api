@@ -15,7 +15,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -32,7 +34,7 @@ public class RoomControllerTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
-    void getAllRooms() throws Exception {
+    void getAllRoomsTest() throws Exception {
         List<RoomResponse> roomResponse = new ArrayList<>();
         roomResponse.add(new RoomResponse(1L, "101", 12, "Building A"));
         roomResponse.add(new RoomResponse(2L, "102", 4, "Building A"));
@@ -49,7 +51,7 @@ public class RoomControllerTest {
     }
 
     @Test
-    void addRoom() throws Exception {
+    void addRoomTest() throws Exception {
         RoomRequest roomRequest = new RoomRequest("101", 12, "Building A");
         when(roomService.addRoom(any(RoomRequest.class))).thenReturn(new RoomResponse(
                         1L, roomRequest.getName(), roomRequest.getCapacity(), roomRequest.getArea()));
@@ -62,5 +64,16 @@ public class RoomControllerTest {
                 .andExpect(jsonPath("$.name").value(roomRequest.getName()))
                 .andExpect(jsonPath("$.capacity").value(roomRequest.getCapacity()))
                 .andExpect(jsonPath("$.area").value(roomRequest.getArea()));
+    }
+
+    @Test
+    void deleteRoomTest() throws Exception {
+        Long id = 1L;
+        when(roomService.deleteRoom(any(Long.class))).thenReturn(new RoomResponse(id, "101", 12, "Building A"));
+
+        mockMvc.perform(delete("/rooms/{id}", id))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(id));
+        verify(roomService).deleteRoom(id);
     }
 }

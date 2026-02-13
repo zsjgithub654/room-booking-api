@@ -12,7 +12,6 @@ import java.util.Set;
 public class Room {
     @Id // mark the primary key
     @GeneratedValue(strategy = GenerationType.IDENTITY) // generate val for id as ID, unique and increment automatically
-    /* TODO: y don't use primitive */
     private Long id;
     private String name;
     private Integer capacity;

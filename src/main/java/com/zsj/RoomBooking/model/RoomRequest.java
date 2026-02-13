@@ -10,7 +10,6 @@ public class RoomRequest {
         this.capacity = capacity;
         this.area = area;
     }
-    /* required by jackson */
     public String getName() {
         return name;
     }

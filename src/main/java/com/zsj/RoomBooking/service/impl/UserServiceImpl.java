@@ -1,6 +1,6 @@
 package com.zsj.RoomBooking.service.impl;
 
-import com.zsj.RoomBooking.RoleType;
+import com.zsj.RoomBooking.model.RoleType;
 import com.zsj.RoomBooking.entity.User;
 import com.zsj.RoomBooking.repository.UserRepository;
 import com.zsj.RoomBooking.service.UserService;
@@ -11,8 +11,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static com.zsj.RoomBooking.RoleType.ROLE_TYPE_ADMIN;
-import static com.zsj.RoomBooking.RoleType.ROLE_TYPE_NORMAL;
+import static com.zsj.RoomBooking.model.RoleType.ROLE_TYPE_ADMIN;
+import static com.zsj.RoomBooking.model.RoleType.ROLE_TYPE_USER;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -27,7 +27,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public User addUser(String userName, String password, boolean isAdmin) {
         Set<RoleType> roles = new HashSet<>();
-        roles.add(ROLE_TYPE_NORMAL);
+        roles.add(ROLE_TYPE_USER);
         if (isAdmin) {
             roles.add(ROLE_TYPE_ADMIN);
         }

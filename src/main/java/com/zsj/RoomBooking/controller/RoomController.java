@@ -1,21 +1,23 @@
 package com.zsj.RoomBooking.controller;
 
+import com.zsj.RoomBooking.model.AddClosureResponse;
+import com.zsj.RoomBooking.model.ClosureRequest;
+import com.zsj.RoomBooking.model.ClosureResponse;
 import com.zsj.RoomBooking.model.RoomRequest;
 import com.zsj.RoomBooking.model.RoomResponse;
 import com.zsj.RoomBooking.model.SearchRoomRequest;
-import com.zsj.RoomBooking.model.UpdateRoomRequest;
 import com.zsj.RoomBooking.service.RoomService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -27,13 +29,8 @@ public class RoomController {
     private RoomService service;
 
     @GetMapping
-    public List<RoomResponse> getAllRooms() {
-        return service.getAllRooms();
-    }
-
-    @GetMapping
-    public List<RoomResponse> searchRooms(@RequestParam SearchRoomRequest searchRoomRequest) {
-        return null;
+    public List<RoomResponse> searchRooms(@ModelAttribute SearchRoomRequest searchRoomRequest) {
+        return service.searchRooms(searchRoomRequest);
     }
 
     /* TODO: Non-null type argument is expected for ResponseEntity */
@@ -42,13 +39,24 @@ public class RoomController {
         return new ResponseEntity<>(service.addRoom(roomRequest), HttpStatus.CREATED);
     }
 
-    @DeleteMapping("/{id}")
-    public RoomResponse deleteRoom(@PathVariable Long id) {
-    return service.deleteRoom(id);
+    @DeleteMapping("/{roomId}")
+    public RoomResponse deleteRoom(@PathVariable Long roomId) {
+    return service.deleteRoom(roomId);
     }
 
-    @PutMapping("/{id}")
-    public RoomResponse updateRoom(@PathVariable Long id, @RequestBody UpdateRoomRequest updateRoomRequest)  {
+    @PutMapping("/{roomId}")
+    public RoomResponse updateRoom(@PathVariable Long roomId, @RequestBody RoomRequest roomRequest)  {
+        return null;
+    }
+
+    /*  TODO: where to show closures, should room response include reservations? */
+    @PostMapping("/{roomId}/closures")
+    public AddClosureResponse addClosure(@PathVariable Long roomId, @RequestBody ClosureRequest closureRequest) {
+        return null;
+    }
+
+    @DeleteMapping("/{roomId}/closures/{closureId}")
+    public ClosureResponse deleteClosure(@PathVariable Long roomId, @PathVariable Long closureId) {
         return null;
     }
 }

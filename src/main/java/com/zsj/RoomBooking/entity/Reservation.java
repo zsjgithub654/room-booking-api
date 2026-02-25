@@ -1,6 +1,7 @@
 package com.zsj.RoomBooking.entity;
 
-import com.zsj.RoomBooking.ReservationStatus;
+import com.zsj.RoomBooking.model.ReservationStatus;
+import com.zsj.RoomBooking.model.TimeRange;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -10,7 +11,7 @@ import jakarta.persistence.Entity;
 import java.time.LocalDateTime;
 
 @Entity
-public class Reservation {
+public class Reservation implements TimeRange {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
@@ -21,7 +22,6 @@ public class Reservation {
     @ManyToOne
     private Room room;
 
-    // date and time without time zone, weekday?
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private ReservationStatus reservationStatus;
@@ -52,6 +52,7 @@ public class Reservation {
         return true;
     }
 
+    /* required by JPA */
     public Reservation() {}
 
     public long getId() {

@@ -33,6 +33,11 @@ public class RoomController {
         return service.searchRooms(searchRoomRequest);
     }
 
+    @GetMapping("/{roomId}")
+    public RoomResponse getRoom(@PathVariable Long roomId) {
+        return service.getRoom(roomId);
+    }
+
     /* TODO: Non-null type argument is expected for ResponseEntity */
     @PostMapping
     public ResponseEntity<RoomResponse> addRoom(@RequestBody RoomRequest roomRequest) {
@@ -41,22 +46,22 @@ public class RoomController {
 
     @DeleteMapping("/{roomId}")
     public RoomResponse deleteRoom(@PathVariable Long roomId) {
-    return service.deleteRoom(roomId);
+        return service.deleteRoom(roomId);
     }
 
     @PutMapping("/{roomId}")
     public RoomResponse updateRoom(@PathVariable Long roomId, @RequestBody RoomRequest roomRequest)  {
-        return null;
+        return service.updateRoom(roomId, roomRequest);
     }
 
-    /*  TODO: where to show closures, should room response include reservations? */
+    /* closure */
     @PostMapping("/{roomId}/closures")
-    public AddClosureResponse addClosure(@PathVariable Long roomId, @RequestBody ClosureRequest closureRequest) {
-        return null;
+    public ResponseEntity<AddClosureResponse> addClosure(@PathVariable Long roomId, @RequestBody ClosureRequest closureRequest) {
+        return new ResponseEntity<>(service.addClosure(roomId, closureRequest), HttpStatus.CREATED);
     }
 
     @DeleteMapping("/{roomId}/closures/{closureId}")
     public ClosureResponse deleteClosure(@PathVariable Long roomId, @PathVariable Long closureId) {
-        return null;
+        return service.deleteClosure(roomId, closureId);
     }
 }

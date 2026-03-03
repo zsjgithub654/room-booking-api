@@ -56,6 +56,7 @@ public class User {
         return true;
     }
 
+    /* required by JPA */
     public User() {
     }
 

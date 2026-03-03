@@ -26,7 +26,7 @@ public class Room {
         this.capacity = capacity;
         this.area = area;
     }
-    // JPA requires default constructor to instantiate
+    /* required by JPA */
     public Room() {
     }
     public Long getId() {

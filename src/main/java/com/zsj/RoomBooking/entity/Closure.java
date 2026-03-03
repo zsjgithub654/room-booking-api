@@ -1,7 +1,5 @@
 package com.zsj.RoomBooking.entity;
 
-import com.zsj.RoomBooking.model.ReservationStatus;
-import com.zsj.RoomBooking.model.RoleType;
 import com.zsj.RoomBooking.model.TimeRange;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;

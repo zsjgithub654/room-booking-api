@@ -1,10 +1,14 @@
 package com.zsj.RoomBooking.service;
 
-import com.zsj.RoomBooking.entity.User;
+import com.zsj.RoomBooking.model.UserRequest;
+import com.zsj.RoomBooking.model.UserResponse;
 
 import java.util.List;
 
 public interface UserService {
-    List<User> getAllUsers();
-    User addUser(String userName, String password, boolean isAdmin);
+    List<UserResponse> getAllUsers();
+    UserResponse getUser(Long id);
+    UserResponse addUser(UserRequest userRequest);
+    UserResponse updateUser(Long id, UserRequest userRequest);
+    UserResponse deleteUser(Long id);
 }

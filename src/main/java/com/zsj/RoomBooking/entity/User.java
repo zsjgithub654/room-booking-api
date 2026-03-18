@@ -1,6 +1,6 @@
 package com.zsj.RoomBooking.entity;
 
-import com.zsj.RoomBooking.model.RoleType;
+import com.zsj.RoomBooking.model.Role;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -15,6 +15,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -23,7 +24,8 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String userName; // how to deal with length constriction in db
+    /* TODO: length limit */
+    private String username;
     private String password;
 
     @ElementCollection(fetch = FetchType.EAGER)
@@ -33,22 +35,23 @@ public class User {
     )
     @Enumerated(EnumType.STRING)
     @Column(name = "role")
-    private Set<RoleType> roles ;
+    private Set<Role> roles ;
 
     @OneToMany(mappedBy = "user")
     private Set<Reservation> reservations;
 
-    public User(String userName, String password, Set<RoleType> roles) {
-        this.userName = userName;
+    public User(String username, String password) {
+        this.username = username;
         this.password = password;
-        this.roles = roles;
+        this.roles = new HashSet<>();
+        this.roles.add(Role.ROLE_USER);
     }
 
-    public boolean addRole(RoleType roleType) {
+    public boolean addRole(Role role) {
         return true;
     }
 
-    public boolean removeRole(RoleType roleType) {
+    public boolean removeRole(Role role) {
         return true;
     }
 
@@ -64,15 +67,15 @@ public class User {
         return id;
     }
 
-    public String getUserName() {
-        return userName;
+    public String getUsername() {
+        return username;
     }
 
     public String getPassword() {
         return password;
     }
 
-    public Set<RoleType> getRoles() {
+    public Set<Role> getRoles() {
         return roles;
     }
 }

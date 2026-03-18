@@ -1,18 +1,13 @@
 package com.zsj.RoomBooking.service.impl;
 
-import com.zsj.RoomBooking.model.RoleType;
-import com.zsj.RoomBooking.entity.User;
+import com.zsj.RoomBooking.model.UserRequest;
+import com.zsj.RoomBooking.model.UserResponse;
 import com.zsj.RoomBooking.repository.UserRepository;
 import com.zsj.RoomBooking.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-
-import static com.zsj.RoomBooking.model.RoleType.ROLE_TYPE_ADMIN;
-import static com.zsj.RoomBooking.model.RoleType.ROLE_TYPE_USER;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -20,17 +15,28 @@ public class UserServiceImpl implements UserService {
     private UserRepository userRepository;
 
     @Override
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    public List<UserResponse> getAllUsers() {
+        return null;
     }
 
     @Override
-    public User addUser(String userName, String password, boolean isAdmin) {
-        Set<RoleType> roles = new HashSet<>();
-        roles.add(ROLE_TYPE_USER);
-        if (isAdmin) {
-            roles.add(ROLE_TYPE_ADMIN);
-        }
-        return userRepository.save(new User(userName, password, roles));
+    public UserResponse getUser(Long id) {
+        return null;
     }
+
+    @Override
+    public UserResponse addUser(UserRequest userRequest) {
+        return null;
+    }
+
+    @Override
+    public UserResponse updateUser(Long id, UserRequest userRequest) {
+        return null;
+    }
+
+    @Override
+    public UserResponse deleteUser(Long id) {
+        return null;
+    }
+
 }

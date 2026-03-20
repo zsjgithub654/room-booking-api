@@ -55,6 +55,11 @@ public class RoomController {
     }
 
     /* closure */
+    @GetMapping("/{roomId}/closures")
+    public List<ClosureResponse> getClosures(@PathVariable Long roomId) {
+        return service.getClosures(roomId);
+    }
+
     @PostMapping("/{roomId}/closures")
     public ResponseEntity<AddClosureResponse> addClosure(@PathVariable Long roomId, @RequestBody ClosureRequest closureRequest) {
         return new ResponseEntity<>(service.addClosure(roomId, closureRequest), HttpStatus.CREATED);

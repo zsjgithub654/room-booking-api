@@ -27,8 +27,8 @@ public class ReservationController {
     private ReservationService service;
 
     @GetMapping
-    public List<ReservationResponse> searchReservations(@ModelAttribute SearchReservationRequest searchReservationRequest) {
-        return service.searchReservations(searchReservationRequest);
+    public List<ReservationResponse> searchReservations(@ModelAttribute SearchReservationRequest request) {
+        return service.searchReservations(request);
     }
 
     @GetMapping("/{id}")

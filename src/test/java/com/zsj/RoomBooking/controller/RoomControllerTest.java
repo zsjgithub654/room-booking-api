@@ -13,6 +13,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.http.MediaType;
+import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 
 import java.time.LocalDate;
@@ -142,6 +143,34 @@ public class RoomControllerTest {
     }
 
     @Test
+    void getClosuresTest() throws Exception {
+        Long userId = 1L;
+        Long roomId = 2L;
+        List<ClosureResponse> serviceResponse = new ArrayList<>();
+        serviceResponse.add(new ClosureResponse(0L, userId, roomId, LocalDateTime.of(2026, 3, 1, 10, 30, 0, 0), LocalDateTime.of(2026, 3, 2, 10, 30, 0, 0)));
+        serviceResponse.add(new ClosureResponse(1L, userId, roomId, LocalDateTime.of(2026, 3, 3, 8, 30, 0, 0), LocalDateTime.of(2026, 3, 3, 12, 0, 0, 0)));
+
+        when(roomService.getClosures(eq(roomId))).thenReturn(serviceResponse);
+
+        /* to compare LocalDateTime, parse response to dto object */
+        String responseString = mockMvc.perform(get("/rooms/{roomId}/closures", roomId))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        List<ClosureResponse> controllerResponse =
+                objectMapper.readValue(responseString, new TypeReference<List<ClosureResponse>>() {});
+
+        for (int i = 0; i < controllerResponse.size(); i++) {
+            assertThat(controllerResponse.get(i).id()).isEqualTo(serviceResponse.get(i).id());
+            assertThat(controllerResponse.get(i).roomId()).isEqualTo(serviceResponse.get(i).roomId());
+            assertThat(controllerResponse.get(i).userId()).isEqualTo(serviceResponse.get(i).userId());
+            assertThat(controllerResponse.get(i).startTime()).isEqualTo(serviceResponse.get(i).startTime());
+            assertThat(controllerResponse.get(i).endTime()).isEqualTo(serviceResponse.get(i).endTime());
+        }
+    }
+
+    @Test
     void addClosureTest() throws Exception {
         Long userId = 1L;
         Long roomId = 2L;
@@ -158,6 +187,7 @@ public class RoomControllerTest {
         String responseString = mockMvc.perform(post("/rooms/{roomId}/closures", roomId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(this.objectMapper.writeValueAsString(new ClosureRequest(userId, startTime, endTime))))
+                .andExpect(status().isOk())
                 .andReturn()
                 .getResponse()
                 .getContentAsString();

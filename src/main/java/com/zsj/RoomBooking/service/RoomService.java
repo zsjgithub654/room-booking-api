@@ -15,6 +15,7 @@ public interface RoomService {
     RoomResponse addRoom(RoomRequest roomRequest);
     RoomResponse deleteRoom(Long id);
     RoomResponse updateRoom(Long id, RoomRequest roomRequest);
+    List<ClosureResponse> getClosures(Long roomId);
     AddClosureResponse addClosure(Long roomId, ClosureRequest closureRequest);
     ClosureResponse deleteClosure(Long roomId, Long closureId);
 }

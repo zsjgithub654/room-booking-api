@@ -142,6 +142,7 @@ public class ReservationControllerTest {
                 .getContentAsString();
         ReservationResponse response = objectMapper.readValue(responseString, ReservationResponse.class);
 
+        assertThat(response.id()).isEqualTo(id);
         assertThat(response.userId()).isEqualTo(userId);
         assertThat(response.roomId()).isEqualTo(roomId);
         assertThat(response.startTime()).isEqualTo(startTime);
@@ -157,14 +158,13 @@ public class ReservationControllerTest {
         LocalDateTime startTime = LocalDateTime.of(2026, 3, 1, 10, 30, 0, 0);
         LocalDateTime endTime = LocalDateTime.of(2026, 3, 1, 11, 30, 0, 0);
 
-        when(reservationService.updateReservationTime(eq(id), any(TimeRangeRequest.class))).thenReturn(new ReservationResponse(
-                id, userId, roomId, startTime, endTime,
+        when(reservationService.updateReservationTime(eq(id), any(TimeRangeRequest.class)))
+                .thenReturn(new ReservationResponse(id, userId, roomId, startTime, endTime,
                 ReservationStatus.RESERVATION_STATUS_ACTIVE));
 
         String responseString = mockMvc.perform(put("/reservations/{id}", id)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(this.objectMapper
-                                .writeValueAsString(new TimeRangeRequest(startTime, endTime))))
+                        .content(this.objectMapper.writeValueAsString(new TimeRangeRequest(startTime, endTime))))
                 .andExpect(status().isOk())
                 .andReturn()
                 .getResponse()

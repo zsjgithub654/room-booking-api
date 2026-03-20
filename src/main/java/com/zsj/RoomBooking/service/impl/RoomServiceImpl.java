@@ -47,6 +47,11 @@ public class RoomServiceImpl implements RoomService {
     }
 
     @Override
+    public List<ClosureResponse> getClosures(Long roomId) {
+        return null;
+    }
+
+    @Override
     public AddClosureResponse addClosure(Long roomId, ClosureRequest closureRequest) {
         return null;
     }

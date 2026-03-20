@@ -1,14 +1,23 @@
 package com.zsj.RoomBooking.controller;
 
-import com.zsj.RoomBooking.entity.Reservation;
+import com.zsj.RoomBooking.model.ReservationRequest;
+import com.zsj.RoomBooking.model.ReservationResponse;
+import com.zsj.RoomBooking.model.SearchReservationRequest;
+import com.zsj.RoomBooking.model.TimeRangeRequest;
 import com.zsj.RoomBooking.service.ReservationService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -18,12 +27,29 @@ public class ReservationController {
     private ReservationService service;
 
     @GetMapping
-    public List<Reservation> getReservation() {
-        return service.getAllReservations();
+    public List<ReservationResponse> searchReservations(@ModelAttribute SearchReservationRequest searchReservationRequest) {
+        return service.searchReservations(searchReservationRequest);
+    }
+
+    @GetMapping("/{id}")
+    public ReservationResponse getReservation(@PathVariable Long id) {
+        return service.getReservation(id);
     }
 
     @PostMapping
-    public void addReservation(long userId, long roomId, LocalDateTime startTime, LocalDateTime endTime) {
-        service.addReservation(userId, roomId, startTime, endTime);
+    public ResponseEntity<ReservationResponse> addReservation(@RequestBody ReservationRequest reservationRequest) {
+        return new ResponseEntity<>(service.addReservation(reservationRequest), HttpStatus.CREATED);
     }
+
+    /* Only startTime and endTime are allowed to update */
+    @PutMapping("/{id}")
+    public ReservationResponse updateReservationTime(@PathVariable Long id, @RequestBody TimeRangeRequest request) {
+        return service.updateReservationTime(id, request);
+    }
+
+    @DeleteMapping("/{id}")
+    public ReservationResponse deleteReservation(@PathVariable Long id) {
+        return service.deleteReservation(id);
+    }
+
 }

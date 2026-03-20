@@ -1,11 +1,11 @@
 package com.zsj.RoomBooking.controller;
 
 import com.zsj.RoomBooking.model.AddClosureResponse;
-import com.zsj.RoomBooking.model.ClosureRequest;
 import com.zsj.RoomBooking.model.ClosureResponse;
 import com.zsj.RoomBooking.model.RoomRequest;
 import com.zsj.RoomBooking.model.RoomResponse;
 import com.zsj.RoomBooking.model.SearchRoomRequest;
+import com.zsj.RoomBooking.model.TimeRangeRequest;
 import com.zsj.RoomBooking.service.RoomService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -61,8 +62,8 @@ public class RoomController {
     }
 
     @PostMapping("/{roomId}/closures")
-    public ResponseEntity<AddClosureResponse> addClosure(@PathVariable Long roomId, @RequestBody ClosureRequest closureRequest) {
-        return new ResponseEntity<>(service.addClosure(roomId, closureRequest), HttpStatus.CREATED);
+    public ResponseEntity<AddClosureResponse> addClosure(@PathVariable Long roomId, @RequestParam Long userId, @RequestBody TimeRangeRequest timeRangeRequest) {
+        return new ResponseEntity<>(service.addClosure(roomId, userId, timeRangeRequest), HttpStatus.CREATED);
     }
 
     @DeleteMapping("/{roomId}/closures/{closureId}")

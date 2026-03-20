@@ -2,11 +2,11 @@ package com.zsj.RoomBooking.service.impl;
 
 import com.zsj.RoomBooking.entity.Room;
 import com.zsj.RoomBooking.model.AddClosureResponse;
-import com.zsj.RoomBooking.model.ClosureRequest;
 import com.zsj.RoomBooking.model.ClosureResponse;
 import com.zsj.RoomBooking.model.RoomRequest;
 import com.zsj.RoomBooking.model.RoomResponse;
 import com.zsj.RoomBooking.model.SearchRoomRequest;
+import com.zsj.RoomBooking.model.TimeRangeRequest;
 import com.zsj.RoomBooking.repository.RoomRepository;
 import com.zsj.RoomBooking.service.RoomService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,7 +52,7 @@ public class RoomServiceImpl implements RoomService {
     }
 
     @Override
-    public AddClosureResponse addClosure(Long roomId, ClosureRequest closureRequest) {
+    public AddClosureResponse addClosure(Long roomId, Long userId, TimeRangeRequest closureRequest) {
         return null;
     }
 

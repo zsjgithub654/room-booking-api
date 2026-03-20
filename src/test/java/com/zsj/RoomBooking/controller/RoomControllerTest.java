@@ -1,11 +1,11 @@
 package com.zsj.RoomBooking.controller;
 
 import com.zsj.RoomBooking.model.AddClosureResponse;
-import com.zsj.RoomBooking.model.ClosureRequest;
 import com.zsj.RoomBooking.model.ClosureResponse;
 import com.zsj.RoomBooking.model.RoomRequest;
 import com.zsj.RoomBooking.model.RoomResponse;
 import com.zsj.RoomBooking.model.SearchRoomRequest;
+import com.zsj.RoomBooking.model.TimeRangeRequest;
 import com.zsj.RoomBooking.service.RoomService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -130,7 +130,8 @@ public class RoomControllerTest {
         Integer capacity = 30;
         String area = "Building A";
 
-        when(roomService.updateRoom(any(Long.class), any(RoomRequest.class))).thenReturn(new RoomResponse(id, name, capacity, area));
+        when(roomService.updateRoom(any(Long.class), any(RoomRequest.class)))
+                .thenReturn(new RoomResponse(id, name, capacity, area));
 
         mockMvc.perform(put("/rooms/{id}", id)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -178,16 +179,17 @@ public class RoomControllerTest {
         LocalDateTime startTime = LocalDateTime.of(2026, 3, 1, 10, 30, 0, 0);
         LocalDateTime endTime = LocalDateTime.of(2026, 3, 2, 10, 30, 0, 0);
 
-        when(roomService.addClosure(eq(roomId), any(ClosureRequest.class)))
+        when(roomService.addClosure(eq(roomId), eq(userId), any(TimeRangeRequest.class)))
                 .thenReturn(new AddClosureResponse(
                         new ClosureResponse(closureId, userId, roomId, startTime, endTime),
                         null));
 
         /* to compare LocalDateTime, parse response to dto object */
         String responseString = mockMvc.perform(post("/rooms/{roomId}/closures", roomId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(this.objectMapper.writeValueAsString(new ClosureRequest(userId, startTime, endTime))))
-                .andExpect(status().isOk())
+                        .param("userId", userId.toString())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper.writeValueAsString(new TimeRangeRequest(startTime, endTime))))
+                .andExpect(status().isCreated())
                 .andReturn()
                 .getResponse()
                 .getContentAsString();

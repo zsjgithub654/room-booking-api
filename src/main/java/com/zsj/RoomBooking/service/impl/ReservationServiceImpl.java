@@ -34,7 +34,7 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
-    public ReservationResponse addReservation(ReservationRequest reservationRequest) {
+    public ReservationResponse addReservation(Long userId, ReservationRequest reservationRequest) {
         return null;
     }
 

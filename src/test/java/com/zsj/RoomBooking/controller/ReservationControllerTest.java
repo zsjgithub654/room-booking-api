@@ -101,14 +101,16 @@ public class ReservationControllerTest {
         LocalDateTime startTime = LocalDateTime.of(2026, 3, 1, 10, 30, 0, 0);
         LocalDateTime endTime = LocalDateTime.of(2026, 3, 1, 11, 30, 0, 0);
 
-        when(reservationService.addReservation(any(ReservationRequest.class))).thenReturn(new ReservationResponse(
+        when(reservationService.addReservation(eq(userId), any(ReservationRequest.class)))
+                .thenReturn(new ReservationResponse(
                         id, userId, roomId, startTime, endTime,
                         ReservationStatus.RESERVATION_STATUS_ACTIVE));
 
         String responseString = mockMvc.perform(post("/reservations")
+                        .param("userId", userId.toString())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(this.objectMapper
-                                .writeValueAsString(new ReservationRequest(userId, roomId, startTime, endTime))))
+                                .writeValueAsString(new ReservationRequest(roomId, startTime, endTime))))
                 // HTTP 201 Created is the successful status of post request
                 .andExpect(status().isCreated())
                 .andReturn()

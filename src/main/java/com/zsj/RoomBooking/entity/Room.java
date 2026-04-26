@@ -21,6 +21,10 @@ public class Room {
     @OneToMany(mappedBy = "room")
     private Set<Reservation> reservations;
 
+    /* TODO: need this or not? */
+    @OneToMany(mappedBy = "room")
+    private Set<Closure> closures;
+
     public Room(String name, int capacity, String area) {
         this.name = name;
         this.capacity = capacity;

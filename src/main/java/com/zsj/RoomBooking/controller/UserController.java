@@ -1,11 +1,10 @@
 package com.zsj.RoomBooking.controller;
 
-import com.zsj.RoomBooking.model.UserRequest;
-import com.zsj.RoomBooking.model.UserResponse;
+import com.zsj.RoomBooking.model.dto.request.UserRequest;
+import com.zsj.RoomBooking.model.dto.response.UserResponse;
 import com.zsj.RoomBooking.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,7 +25,7 @@ public class UserController {
 
     @GetMapping
     public List<UserResponse> getAllUsers() {
-        return service.getAllUsers();
+        return service.searchUsers();
     }
 
     @GetMapping("/{id}")

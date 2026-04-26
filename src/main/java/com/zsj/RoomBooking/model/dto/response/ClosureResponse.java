@@ -1,4 +1,4 @@
-package com.zsj.RoomBooking.model;
+package com.zsj.RoomBooking.model.dto.response;
 
 import java.time.LocalDateTime;
 

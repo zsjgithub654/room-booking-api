@@ -1,4 +1,6 @@
-package com.zsj.RoomBooking.model;
+package com.zsj.RoomBooking.model.dto.response;
+
+import com.zsj.RoomBooking.model.Role;
 
 import java.util.Set;
 

@@ -1,15 +1,13 @@
 package com.zsj.RoomBooking.controller;
 
 import com.zsj.RoomBooking.model.Role;
-import com.zsj.RoomBooking.model.UserRequest;
-import com.zsj.RoomBooking.model.UserResponse;
+import com.zsj.RoomBooking.model.dto.request.UserRequest;
+import com.zsj.RoomBooking.model.dto.response.UserResponse;
 import com.zsj.RoomBooking.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;

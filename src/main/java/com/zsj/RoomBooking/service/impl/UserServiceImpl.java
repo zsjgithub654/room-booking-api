@@ -1,7 +1,7 @@
 package com.zsj.RoomBooking.service.impl;
 
-import com.zsj.RoomBooking.model.UserRequest;
-import com.zsj.RoomBooking.model.UserResponse;
+import com.zsj.RoomBooking.model.dto.request.UserRequest;
+import com.zsj.RoomBooking.model.dto.response.UserResponse;
 import com.zsj.RoomBooking.repository.UserRepository;
 import com.zsj.RoomBooking.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,8 +15,8 @@ public class UserServiceImpl implements UserService {
     private UserRepository userRepository;
 
     @Override
-    public List<UserResponse> getAllUsers() {
-        return null;
+    public List<UserResponse> searchUsers() {
+        return List.of();
     }
 
     @Override

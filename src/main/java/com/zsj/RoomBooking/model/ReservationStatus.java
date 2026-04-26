@@ -1,6 +1,7 @@
 package com.zsj.RoomBooking.model;
 
 public enum ReservationStatus {
+    /* TODO: reconsider the name */
     RESERVATION_STATUS_ACTIVE,
     /* canceled by user */
     RESERVATION_STATUS_CANCELED,

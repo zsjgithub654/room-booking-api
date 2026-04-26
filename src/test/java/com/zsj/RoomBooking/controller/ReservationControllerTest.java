@@ -1,10 +1,10 @@
 package com.zsj.RoomBooking.controller;
 
-import com.zsj.RoomBooking.model.ReservationRequest;
-import com.zsj.RoomBooking.model.ReservationResponse;
+import com.zsj.RoomBooking.model.dto.request.ReservationRequest;
+import com.zsj.RoomBooking.model.dto.response.ReservationResponse;
 import com.zsj.RoomBooking.model.ReservationStatus;
-import com.zsj.RoomBooking.model.SearchReservationRequest;
-import com.zsj.RoomBooking.model.TimeRangeRequest;
+import com.zsj.RoomBooking.model.dto.request.SearchReservationRequest;
+import com.zsj.RoomBooking.model.dto.request.TimeRangeRequest;
 import com.zsj.RoomBooking.service.ReservationService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

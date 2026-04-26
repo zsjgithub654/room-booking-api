@@ -1,10 +1,10 @@
 package com.zsj.RoomBooking.service.impl;
 
 import com.zsj.RoomBooking.entity.Reservation;
-import com.zsj.RoomBooking.model.ReservationRequest;
-import com.zsj.RoomBooking.model.ReservationResponse;
-import com.zsj.RoomBooking.model.SearchReservationRequest;
-import com.zsj.RoomBooking.model.TimeRangeRequest;
+import com.zsj.RoomBooking.model.dto.request.ReservationRequest;
+import com.zsj.RoomBooking.model.dto.response.ReservationResponse;
+import com.zsj.RoomBooking.model.dto.request.SearchReservationRequest;
+import com.zsj.RoomBooking.model.dto.request.TimeRangeRequest;
 import com.zsj.RoomBooking.repository.ReservationRepository;
 import com.zsj.RoomBooking.repository.RoomRepository;
 import com.zsj.RoomBooking.repository.UserRepository;
@@ -59,6 +59,6 @@ public class ReservationServiceImpl implements ReservationService {
                 reservation.getUser().getId(),
                 reservation.getRoom().getId(),
                 reservation.getStartTime(), reservation.getEndTime(),
-                reservation.getReservationStatus());
+                reservation.getStatus());
     }
 }

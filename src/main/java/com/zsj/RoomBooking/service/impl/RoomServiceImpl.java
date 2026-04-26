@@ -1,12 +1,12 @@
 package com.zsj.RoomBooking.service.impl;
 
 import com.zsj.RoomBooking.entity.Room;
-import com.zsj.RoomBooking.model.AddClosureResponse;
-import com.zsj.RoomBooking.model.ClosureResponse;
-import com.zsj.RoomBooking.model.RoomRequest;
-import com.zsj.RoomBooking.model.RoomResponse;
-import com.zsj.RoomBooking.model.SearchRoomRequest;
-import com.zsj.RoomBooking.model.TimeRangeRequest;
+import com.zsj.RoomBooking.model.dto.request.SearchAvailabilityRequest;
+import com.zsj.RoomBooking.model.dto.request.SearchRoomRequest;
+import com.zsj.RoomBooking.model.dto.request.RoomRequest;
+import com.zsj.RoomBooking.model.dto.response.DeleteRoomResponse;
+import com.zsj.RoomBooking.model.dto.response.RoomResponse;
+import com.zsj.RoomBooking.model.dto.response.SearchAvailabilityResponse;
 import com.zsj.RoomBooking.repository.RoomRepository;
 import com.zsj.RoomBooking.service.RoomService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +25,11 @@ public class RoomServiceImpl implements RoomService {
     }
 
     @Override
+    public List<SearchAvailabilityResponse> searchAvailabilities(SearchAvailabilityRequest searchRoomRequest) {
+        return List.of();
+    }
+
+    @Override
     public RoomResponse getRoom(Long id) {
         return getRoomResponse(roomRepository.getReferenceById(id));
     }
@@ -37,27 +42,12 @@ public class RoomServiceImpl implements RoomService {
     }
 
     @Override
-    public RoomResponse deleteRoom(Long id) {
+    public DeleteRoomResponse deleteRoom(Long id) {
         return null;
     }
 
     @Override
     public RoomResponse updateRoom(Long id, RoomRequest roomRequest) {
-        return null;
-    }
-
-    @Override
-    public List<ClosureResponse> getClosures(Long roomId) {
-        return null;
-    }
-
-    @Override
-    public AddClosureResponse addClosure(Long roomId, Long userId, TimeRangeRequest closureRequest) {
-        return null;
-    }
-
-    @Override
-    public ClosureResponse deleteClosure(Long roomId, Long closureId) {
         return null;
     }
 

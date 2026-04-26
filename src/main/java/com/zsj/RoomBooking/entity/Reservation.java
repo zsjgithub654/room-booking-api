@@ -24,14 +24,14 @@ public class Reservation implements TimeRange {
 
     private LocalDateTime startTime;
     private LocalDateTime endTime;
-    private ReservationStatus reservationStatus;
+    private ReservationStatus status;
 
     public Reservation(User user, Room room, LocalDateTime startTime, LocalDateTime endTime) {
         this.user = user;
         this.room = room;
         this.startTime = startTime;
         this.endTime = endTime;
-        this.reservationStatus = ReservationStatus.RESERVATION_STATUS_ACTIVE;
+        this.status = ReservationStatus.RESERVATION_STATUS_ACTIVE;
     }
 
     /**
@@ -75,7 +75,7 @@ public class Reservation implements TimeRange {
         return endTime;
     }
 
-    public ReservationStatus getReservationStatus() {
-        return reservationStatus;
+    public ReservationStatus getStatus() {
+        return status;
     }
 }

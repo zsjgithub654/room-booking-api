@@ -24,7 +24,6 @@ import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -54,34 +53,44 @@ public class RoomControllerTest {
 
     @Test
     void searchRoomsTest() throws Exception {
-        /* response */
-        List<RoomResponse> responses = new ArrayList<>();
-        responses.add(new RoomResponse(1L, "101", 12, "Building A"));
-        responses.add(new RoomResponse(2L, "102", 4, "Building A"));
-        responses.add(new RoomResponse(3L, "101", 6, "Building B"));
         /* request */
         SearchRoomRequest request = new SearchRoomRequest(null,
                 2, 20,
                 null);
-        /* mock behavior */
-        when(roomService.searchRooms(any(SearchRoomRequest.class))).thenReturn(responses);
-        /* verify return value */
-        mockMvc.perform(get("/rooms")
+        /* mock service response */
+        List<RoomResponse> serviceResponse = List.of(
+        new RoomResponse(1L, "101", 12, "Building A"),
+        new RoomResponse(2L, "102", 4, "Building A"),
+        new RoomResponse(3L, "101", 6, "Building B"));
+        when(roomService.searchRooms(any(SearchRoomRequest.class))).thenReturn(serviceResponse);
+        /* perform */
+        String responseString = mockMvc.perform(get("/rooms")
                         .param("minCapacity", request.minCapacity().toString())
                         .param("maxCapacity", request.maxCapacity().toString()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$.length()").value(3))
-                .andExpect(jsonPath("$[0].name").value("101"))
-                .andExpect(jsonPath("$[1].capacity").value(4))
-                .andExpect(jsonPath("$[2].area").value("Building B"));
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
         /* verify params passed to service */
         verify(roomService).searchRooms(request);
+        /* verify response */
+        List<RoomResponse> controllerResponse =
+                objectMapper.readValue(responseString, new TypeReference<List<RoomResponse>>() {
+                });
+        assertThat(controllerResponse)
+                .usingRecursiveComparison()
+                .isEqualTo(serviceResponse);
     }
 
     @Test
     void searchAvailabilitiesTest() throws Exception {
-        /* response */
+        /* request */
+        SearchAvailabilityRequest request = new SearchAvailabilityRequest(null,
+                2, 20,
+                null,
+                LocalDateTime.of(2026, 3, 1, 10, 30, 0, 0),
+                LocalDateTime.of(2026, 3, 2, 10, 30, 0, 0));
+        /* mock service response */
         List<SearchAvailabilityResponse> serviceResponse = List.of(
                 new SearchAvailabilityResponse(new RoomResponse(1L, "101", 12, "Building A"),
                         List.of(
@@ -97,15 +106,8 @@ public class RoomControllerTest {
                                         LocalDateTime.of(2026, 3, 2, 10, 30, 0, 0))
                         )
                 ));
-        /* request */
-        SearchAvailabilityRequest request = new SearchAvailabilityRequest(null,
-                2, 20,
-                null,
-                LocalDateTime.of(2026, 3, 1, 10, 30, 0, 0),
-                LocalDateTime.of(2026, 3, 2, 10, 30, 0, 0));
-        /* mock behavior */
         when(roomService.searchAvailabilities(any(SearchAvailabilityRequest.class))).thenReturn(serviceResponse);
-        /* verify response */
+        /* perform */
         String responseString = mockMvc.perform(get("/rooms/availabilities")
                         .param("minCapacity", request.minCapacity().toString())
                         .param("maxCapacity", request.maxCapacity().toString())
@@ -116,25 +118,25 @@ public class RoomControllerTest {
                 .getResponse()
                 .getContentAsString();
         List<SearchAvailabilityResponse> controllerResponse =
-                objectMapper.readValue(responseString, new TypeReference<List<SearchAvailabilityResponse>>() {
-                });
+                objectMapper.readValue(responseString, new TypeReference<List<SearchAvailabilityResponse>>() {});
+        /* verify params passed to service */
+        verify(roomService).searchAvailabilities(request);
+        /* verify response */
         assertThat(controllerResponse)
                 .usingRecursiveComparison()
                 .isEqualTo(serviceResponse);
-
-        /* verify params passed to service */
-        verify(roomService).searchAvailabilities(request);
     }
 
     @Test
     void getRoomTest() throws Exception {
+        /* request */
         Long id = 1L;
+        /* mock response */
         String name = "101";
         Integer capacity = 12;
         String area = "Building A";
-
-        when(roomService.getRoom(id)).thenReturn(new RoomResponse(id, name, capacity, area));
-
+        when(roomService.getRoom(id)).thenReturn(new RoomResponse(id, "101", 12, "Building A"));
+        /* perform and verify */
         mockMvc.perform(get("/rooms/{id}", id))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value(name))
@@ -163,8 +165,9 @@ public class RoomControllerTest {
 
     @Test
     void deleteRoomTest() throws Exception {
-        /* data */
+        /* request */
         Long roomId = 1L;
+        /* mock service response */
         DeleteRoomResponse serviceResponse = new DeleteRoomResponse(
                 roomId,
                 List.of(
@@ -177,18 +180,17 @@ public class RoomControllerTest {
                                 LocalDateTime.of(2300, 1, 2, 9, 0, 0, 0),
                                 ReservationStatus.RESERVATION_STATUS_CLOSED)
                 ));
-        /* mock */
         when(roomService.deleteRoom(eq(roomId))).thenReturn(serviceResponse);
+        /* perform */
         String responseString = mockMvc.perform(delete("/rooms/{id}", roomId))
                 .andExpect(status().isOk())
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
-        /* request */
+        /* verify request */
         verify(roomService).deleteRoom(roomId);
-        /* response */
-        DeleteRoomResponse controllerResponse =
-                objectMapper.readValue(responseString, DeleteRoomResponse.class);
+        /* verify response */
+        DeleteRoomResponse controllerResponse =objectMapper.readValue(responseString, DeleteRoomResponse.class);
         assertThat(controllerResponse)
                 .usingRecursiveComparison()
                 .isEqualTo(serviceResponse);
@@ -216,24 +218,22 @@ public class RoomControllerTest {
 
     @Test
     void getClosuresTest() throws Exception {
-        Long userId = 1L;
+        /* request */
         Long roomId = 2L;
+        /* mock service response */
         List<ClosureResponse> serviceResponse = List.of(
-                new ClosureResponse(0L, userId, roomId, LocalDateTime.of(2026, 3, 1, 10, 30, 0, 0), LocalDateTime.of(2026, 3, 2, 10, 30, 0, 0)),
-                new ClosureResponse(1L, userId, roomId, LocalDateTime.of(2026, 3, 3, 8, 30, 0, 0), LocalDateTime.of(2026, 3, 3, 12, 0, 0, 0)));
-
+                new ClosureResponse(0L, 1L, roomId, LocalDateTime.of(2026, 3, 1, 10, 30, 0, 0), LocalDateTime.of(2026, 3, 2, 10, 30, 0, 0)),
+                new ClosureResponse(1L, 1L, roomId, LocalDateTime.of(2026, 3, 3, 8, 30, 0, 0), LocalDateTime.of(2026, 3, 3, 12, 0, 0, 0)));
         when(closureService.getClosuresForRoom(eq(roomId))).thenReturn(serviceResponse);
-
-        /* to compare LocalDateTime, parse response to dto object */
+        /* perform, to compare LocalDateTime, parse response to dto object */
         String responseString = mockMvc.perform(get("/rooms/{roomId}/closures", roomId))
                 .andExpect(status().isOk())
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
         List<ClosureResponse> controllerResponse =
-                objectMapper.readValue(responseString, new TypeReference<List<ClosureResponse>>() {
-                });
-
+                objectMapper.readValue(responseString, new TypeReference<List<ClosureResponse>>() {});
+        /* verify */
         assertThat(controllerResponse)
                 .usingRecursiveComparison()
                 .isEqualTo(serviceResponse);
@@ -241,13 +241,12 @@ public class RoomControllerTest {
 
     @Test
     void addClosureTest() throws Exception {
-        /* data */
         /* request */
         Long userId = 1L;
         Long roomId = 2L;
         LocalDateTime startTime = LocalDateTime.of(2300, 1, 1, 10, 30, 0, 0);
         LocalDateTime endTime = LocalDateTime.of(2300, 1, 10, 10, 30, 0, 0);
-        /* response */
+        /* mock service response */
         AddClosureResponse serviceResponse = new AddClosureResponse(
                 new ClosureResponse(3L, roomId, userId, startTime, endTime),
                 List.of(
@@ -264,7 +263,7 @@ public class RoomControllerTest {
         when(closureService.addClosure(eq(roomId), eq(userId), any(TimeRangeRequest.class)))
                 .thenReturn(serviceResponse);
 
-        /* in order to compare LocalDateTime, need to parse response to dto object */
+        /* perform, in order to compare LocalDateTime, need to parse response to dto object */
         String responseString = mockMvc.perform(post("/rooms/{roomId}/closures", roomId)
                         .param("userId", userId.toString())
                         .contentType(MediaType.APPLICATION_JSON)

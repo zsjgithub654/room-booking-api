@@ -31,19 +31,21 @@ public class ClosureControllerTest {
 
     @Test
     void getClosureTest() throws Exception {
+        /* request */
         Long closureId = 0L;
+        /* mock service response */
         ClosureResponse serviceResponse = new ClosureResponse(closureId, 10L, 100L,
                 LocalDateTime.of(2026, 3, 1, 10, 30, 0, 0),
                 LocalDateTime.of(2026, 3, 2, 10, 30, 0, 0));
-
         when(closureService.getClosure(eq(closureId))).thenReturn(serviceResponse);
+        /* perform */
         String responseString = mockMvc.perform(get("/closures/{closureId}", closureId))
                 .andExpect(status().isOk())
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
         ClosureResponse controllerResponse = objectMapper.readValue(responseString, ClosureResponse.class);
-
+        /* verify */
         assertThat(controllerResponse)
                 .usingRecursiveComparison()
                 .isEqualTo(serviceResponse);
@@ -51,7 +53,6 @@ public class ClosureControllerTest {
 
     @Test
     void deleteClosureTest() throws Exception {
-        /* data */
         Long closureId = 3L;
 
         doNothing().when(closureService).deleteClosure(eq(closureId));

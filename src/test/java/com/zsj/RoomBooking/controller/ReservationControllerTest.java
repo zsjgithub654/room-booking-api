@@ -22,6 +22,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -128,28 +129,11 @@ public class ReservationControllerTest {
     @Test
     void deleteReservationTest() throws Exception {
         Long id = 0L;
-        Long userId = 10L;
-        Long roomId = 11L;
-        LocalDateTime startTime = LocalDateTime.of(2026, 3, 1, 10, 30, 0, 0);
-        LocalDateTime endTime = LocalDateTime.of(2026, 3, 1, 11, 30, 0, 0);
 
-        when(reservationService.deleteReservation(id)).thenReturn(new ReservationResponse(
-                id, userId, roomId, startTime, endTime,
-                ReservationStatus.RESERVATION_STATUS_CANCELED));
+        doNothing().when(reservationService).deleteReservation(eq(id));
 
-        String responseString = mockMvc.perform(delete("/reservations/{id}", id))
-                .andExpect(status().isOk())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-        ReservationResponse response = objectMapper.readValue(responseString, ReservationResponse.class);
-
-        assertThat(response.id()).isEqualTo(id);
-        assertThat(response.userId()).isEqualTo(userId);
-        assertThat(response.roomId()).isEqualTo(roomId);
-        assertThat(response.startTime()).isEqualTo(startTime);
-        assertThat(response.endTime()).isEqualTo(endTime);
-        assertThat(response.reservationStatus()).isEqualTo(ReservationStatus.RESERVATION_STATUS_CANCELED);
+        mockMvc.perform(delete("/reservations/{id}", id))
+                .andExpect(status().isNoContent());
     }
 
     @Test

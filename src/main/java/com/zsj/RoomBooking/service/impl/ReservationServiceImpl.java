@@ -39,8 +39,7 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
-    public ReservationResponse deleteReservation(Long reservationId) {
-        return null;
+    public void deleteReservation(Long reservationId) {
     }
 
     @Override

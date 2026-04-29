@@ -1,4 +1,4 @@
-package com.zsj.RoomBooking.entity;
+package com.zsj.RoomBooking.model.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

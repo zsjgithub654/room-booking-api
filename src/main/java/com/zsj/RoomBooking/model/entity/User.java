@@ -1,4 +1,4 @@
-package com.zsj.RoomBooking.entity;
+package com.zsj.RoomBooking.model.entity;
 
 import com.zsj.RoomBooking.model.Role;
 import jakarta.persistence.CollectionTable;

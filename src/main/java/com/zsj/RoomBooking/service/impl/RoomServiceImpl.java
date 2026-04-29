@@ -1,6 +1,6 @@
 package com.zsj.RoomBooking.service.impl;
 
-import com.zsj.RoomBooking.entity.Room;
+import com.zsj.RoomBooking.model.entity.Room;
 import com.zsj.RoomBooking.model.dto.request.SearchAvailabilityRequest;
 import com.zsj.RoomBooking.model.dto.request.SearchRoomRequest;
 import com.zsj.RoomBooking.model.dto.request.RoomRequest;

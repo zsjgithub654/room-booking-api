@@ -1,17 +1,15 @@
 package com.zsj.RoomBooking.service.impl;
 
+import com.zsj.RoomBooking.model.Availability;
+import com.zsj.RoomBooking.model.entity.Reservation;
 import com.zsj.RoomBooking.model.entity.Room;
-import com.zsj.RoomBooking.model.dto.request.SearchAvailabilityRequest;
-import com.zsj.RoomBooking.model.dto.request.SearchRoomRequest;
-import com.zsj.RoomBooking.model.dto.request.RoomRequest;
-import com.zsj.RoomBooking.model.dto.response.DeleteRoomResponse;
 import com.zsj.RoomBooking.model.dto.response.RoomResponse;
-import com.zsj.RoomBooking.model.dto.response.SearchAvailabilityResponse;
 import com.zsj.RoomBooking.repository.RoomRepository;
 import com.zsj.RoomBooking.service.RoomService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -20,34 +18,32 @@ public class RoomServiceImpl implements RoomService {
     private RoomRepository roomRepository;
 
     @Override
-    public List<RoomResponse> searchRooms(SearchRoomRequest searchRoomRequest) {
+    public List<Room> searchRooms(String name, Integer minCapacity, Integer maxCapacity, String area) {
         return null;
     }
 
     @Override
-    public List<SearchAvailabilityResponse> searchAvailabilities(SearchAvailabilityRequest searchRoomRequest) {
-        return List.of();
-    }
-
-    @Override
-    public RoomResponse getRoom(Long id) {
-        return getRoomResponse(roomRepository.getReferenceById(id));
-    }
-
-    @Override
-    public RoomResponse addRoom(RoomRequest roomRequest) {
-        Room room = roomRepository.save(
-                new Room(roomRequest.name(), roomRequest.capacity(), roomRequest.area()));
-        return getRoomResponse(room);
-    }
-
-    @Override
-    public DeleteRoomResponse deleteRoom(Long id) {
+    public List<Availability> searchAvailabilities(String name, Integer minCapacity, Integer maxCapacity, String area, LocalDateTime startTime, LocalDateTime endTime) {
         return null;
     }
 
     @Override
-    public RoomResponse updateRoom(Long id, RoomRequest roomRequest) {
+    public Room getRoom(Long id) {
+        return roomRepository.getReferenceById(id);
+    }
+
+    @Override
+    public Room addRoom(Room room) {
+        return roomRepository.save(new Room(room.getName(), room.getCapacity(), room.getArea()));
+    }
+
+    @Override
+    public List<Reservation> deleteRoom(Long id) {
+        return null;
+    }
+
+    @Override
+    public Room updateRoom(Long id, String name, Integer capacity, String area) {
         return null;
     }
 

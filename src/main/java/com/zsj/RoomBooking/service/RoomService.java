@@ -1,19 +1,17 @@
 package com.zsj.RoomBooking.service;
 
-import com.zsj.RoomBooking.model.dto.request.SearchRoomRequest;
-import com.zsj.RoomBooking.model.dto.request.RoomRequest;
-import com.zsj.RoomBooking.model.dto.response.DeleteRoomResponse;
-import com.zsj.RoomBooking.model.dto.response.RoomResponse;
-import com.zsj.RoomBooking.model.dto.request.SearchAvailabilityRequest;
-import com.zsj.RoomBooking.model.dto.response.SearchAvailabilityResponse;
+import com.zsj.RoomBooking.model.Availability;
+import com.zsj.RoomBooking.model.entity.Reservation;
+import com.zsj.RoomBooking.model.entity.Room;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface RoomService {
-    List<RoomResponse> searchRooms(SearchRoomRequest searchRoomRequest);
-    List<SearchAvailabilityResponse> searchAvailabilities(SearchAvailabilityRequest searchRoomRequest);
-    RoomResponse getRoom(Long id);
-    RoomResponse addRoom(RoomRequest roomRequest);
-    DeleteRoomResponse deleteRoom(Long id);
-    RoomResponse updateRoom(Long id, RoomRequest roomRequest);
+    List<Room> searchRooms(String name, Integer minCapacity, Integer maxCapacity, String area);
+    List<Availability> searchAvailabilities(String name, Integer minCapacity, Integer maxCapacity, String area, LocalDateTime startTime, LocalDateTime endTime);
+    Room getRoom(Long id);
+    Room addRoom(Room room);
+    List<Reservation> deleteRoom(Long id);
+    Room updateRoom(Long id, String name, Integer capacity, String area);
 }

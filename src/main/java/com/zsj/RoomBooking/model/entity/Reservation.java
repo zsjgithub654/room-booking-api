@@ -11,7 +11,7 @@ import jakarta.persistence.Entity;
 import java.time.LocalDateTime;
 
 @Entity
-public class Reservation implements TimeRange {
+public class Reservation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;

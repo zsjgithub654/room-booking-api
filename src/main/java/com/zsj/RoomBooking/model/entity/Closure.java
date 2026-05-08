@@ -1,6 +1,5 @@
 package com.zsj.RoomBooking.model.entity;
 
-import com.zsj.RoomBooking.model.TimeRange;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -10,7 +9,7 @@ import jakarta.persistence.ManyToOne;
 import java.time.LocalDateTime;
 
 @Entity
-public class Closure implements TimeRange {
+public class Closure {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
@@ -46,12 +45,10 @@ public class Closure implements TimeRange {
         return room;
     }
 
-    @Override
     public LocalDateTime getStartTime() {
         return this.startTime;
     }
 
-    @Override
     public LocalDateTime getEndTime() {
         return this.endTime;
     }

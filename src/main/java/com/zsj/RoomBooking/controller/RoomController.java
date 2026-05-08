@@ -1,5 +1,8 @@
 package com.zsj.RoomBooking.controller;
 
+import com.zsj.RoomBooking.mapper.AvailabilityMapper;
+import com.zsj.RoomBooking.mapper.ReservationMapper;
+import com.zsj.RoomBooking.mapper.RoomMapper;
 import com.zsj.RoomBooking.model.dto.request.SearchRoomRequest;
 import com.zsj.RoomBooking.model.dto.response.AddClosureResponse;
 import com.zsj.RoomBooking.model.dto.response.ClosureResponse;
@@ -8,7 +11,8 @@ import com.zsj.RoomBooking.model.dto.response.DeleteRoomResponse;
 import com.zsj.RoomBooking.model.dto.response.RoomResponse;
 import com.zsj.RoomBooking.model.dto.request.SearchAvailabilityRequest;
 import com.zsj.RoomBooking.model.dto.request.TimeRangeRequest;
-import com.zsj.RoomBooking.model.dto.response.SearchAvailabilityResponse;
+import com.zsj.RoomBooking.model.dto.response.AvailabilityResponse;
+import com.zsj.RoomBooking.model.entity.Room;
 import com.zsj.RoomBooking.service.ClosureService;
 import com.zsj.RoomBooking.service.RoomService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,35 +40,61 @@ public class RoomController {
     @Autowired
     private ClosureService closureService;
 
+    @Autowired
+    private RoomMapper roomMapper;
+
+    @Autowired
+    private ReservationMapper reservationMapper;
+
+    @Autowired
+    private AvailabilityMapper availabilityMapper;
+
     @GetMapping
     public List<RoomResponse> searchRooms(@ModelAttribute SearchRoomRequest request) {
-        return roomService.searchRooms(request);
+        return roomService.searchRooms(
+                request.name(),
+                request.minCapacity(), request.maxCapacity(),
+                request.area()
+        ).stream().map(roomMapper::toResponse).toList();
     }
 
     @GetMapping("/availabilities")
-    public List<SearchAvailabilityResponse> searchAvailabilities(@ModelAttribute SearchAvailabilityRequest request) {
-        return roomService.searchAvailabilities(request);
+    public List<AvailabilityResponse> searchAvailabilities(@ModelAttribute SearchAvailabilityRequest request) {
+        return roomService.searchAvailabilities(
+                request.name(),
+                request.minCapacity(), request.maxCapacity(),
+                request.area(),
+                request.startTime(), request.endTime()
+        ).stream().map(availabilityMapper::toResponse).toList();
     }
 
     @GetMapping("/{roomId}")
     public RoomResponse getRoom(@PathVariable Long roomId) {
-        return roomService.getRoom(roomId);
+        return roomMapper.toResponse(roomService.getRoom(roomId));
     }
 
     /* TODO: Non-null type argument is expected for ResponseEntity */
     @PostMapping
-    public ResponseEntity<RoomResponse> addRoom(@RequestBody RoomRequest roomRequest) {
-        return new ResponseEntity<>(roomService.addRoom(roomRequest), HttpStatus.CREATED);
+    public ResponseEntity<RoomResponse> addRoom(@RequestBody RoomRequest request) {
+        return new ResponseEntity<>(roomMapper.toResponse(
+                roomService.addRoom(new Room(request.name(), request.capacity(), request.area()))),
+                HttpStatus.CREATED
+        );
     }
 
     @DeleteMapping("/{roomId}")
     public DeleteRoomResponse deleteRoom(@PathVariable Long roomId) {
-        return roomService.deleteRoom(roomId);
+        return new DeleteRoomResponse(
+                roomId,
+                roomService.deleteRoom(roomId).stream().map(reservationMapper::toResponse).toList()
+        );
     }
 
     @PutMapping("/{roomId}")
-    public RoomResponse updateRoom(@PathVariable Long roomId, @RequestBody RoomRequest roomRequest)  {
-        return roomService.updateRoom(roomId, roomRequest);
+    public RoomResponse updateRoom(@PathVariable Long roomId, @RequestBody RoomRequest request) {
+        return roomMapper.toResponse(
+                roomService.updateRoom(roomId, request.name(), request.capacity(), request.area())
+        );
     }
 
     /* closure */
@@ -75,7 +105,8 @@ public class RoomController {
     }
 
     @PostMapping("/{roomId}/closures")
-    public ResponseEntity<AddClosureResponse> addClosure(@PathVariable Long roomId, @RequestParam Long userId, @RequestBody TimeRangeRequest timeRangeRequest) {
+    public ResponseEntity<AddClosureResponse> addClosure(
+            @PathVariable Long roomId, @RequestParam Long userId, @RequestBody TimeRangeRequest timeRangeRequest) {
         return new ResponseEntity<>(closureService.addClosure(roomId, userId, timeRangeRequest), HttpStatus.CREATED);
     }
 }

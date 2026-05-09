@@ -1,5 +1,6 @@
 package com.zsj.RoomBooking.controller;
 
+import com.zsj.RoomBooking.mapper.UserMapper;
 import com.zsj.RoomBooking.model.dto.request.UserRequest;
 import com.zsj.RoomBooking.model.dto.response.UserResponse;
 import com.zsj.RoomBooking.service.UserService;
@@ -23,28 +24,30 @@ public class UserController {
     @Autowired
     private UserService service;
 
-    @GetMapping
-    public List<UserResponse> getAllUsers() {
-        return service.searchUsers();
-    }
+    @Autowired
+    private UserMapper userMapper;
 
     @GetMapping("/{id}")
     public UserResponse getUser(@PathVariable Long id) {
-        return service.getUser(id);
+        return userMapper.toResponse(service.getUser(id));
     }
 
     @PostMapping
     public ResponseEntity<UserResponse> addUser(@RequestBody UserRequest userRequest) {
-        return new ResponseEntity<>(service.addUser(userRequest), HttpStatus.CREATED);
+        return new ResponseEntity<>(
+                userMapper.toResponse(service.addUser(userMapper.toEntity(userRequest))),
+                HttpStatus.CREATED
+        );
     }
 
     @PutMapping("/{id}")
     public UserResponse updateUser(@PathVariable Long id, @RequestBody UserRequest userRequest) {
-        return service.updateUser(id, userRequest);
+        return userMapper.toResponse(service.updateUser(id, userRequest.username(), userRequest.password()));
     }
 
     @DeleteMapping("/{id}")
-    public UserResponse deleteUser(@PathVariable Long id) {
-        return service.deleteUser(id);
+    public ResponseEntity<UserResponse> deleteUser(@PathVariable Long id) {
+        service.deleteUser(id);
+        return ResponseEntity.noContent().build();
     }
 }

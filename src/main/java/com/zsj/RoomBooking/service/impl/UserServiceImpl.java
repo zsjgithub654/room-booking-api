@@ -1,12 +1,13 @@
 package com.zsj.RoomBooking.service.impl;
 
-import com.zsj.RoomBooking.model.dto.request.UserRequest;
-import com.zsj.RoomBooking.model.dto.response.UserResponse;
+import com.zsj.RoomBooking.model.entity.User;
+import com.zsj.RoomBooking.repository.ReservationRepository;
 import com.zsj.RoomBooking.repository.UserRepository;
 import com.zsj.RoomBooking.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -14,29 +15,31 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private UserRepository userRepository;
 
-    @Override
-    public List<UserResponse> searchUsers() {
-        return List.of();
-    }
+    @Autowired
+    private ReservationRepository reservationRepository;
 
     @Override
-    public UserResponse getUser(Long id) {
+    public List<User> searchUsers() {
         return null;
     }
 
     @Override
-    public UserResponse addUser(UserRequest userRequest) {
+    public User getUser(Long id) {
         return null;
     }
 
     @Override
-    public UserResponse updateUser(Long id, UserRequest userRequest) {
+    public User addUser(User user) {
         return null;
     }
 
     @Override
-    public UserResponse deleteUser(Long id) {
+    public User updateUser(Long id, String username, String password) {
         return null;
+    }
+
+    @Override
+    public void deleteUser(Long id) {
     }
 
 }

@@ -5,17 +5,12 @@ import com.zsj.RoomBooking.mapper.ReservationMapper;
 import com.zsj.RoomBooking.mapper.RoomMapper;
 import com.zsj.RoomBooking.mapper.TimeRangeMapper;
 import com.zsj.RoomBooking.model.Availability;
-import com.zsj.RoomBooking.model.ReservationStatus;
 import com.zsj.RoomBooking.model.TimeRange;
 import com.zsj.RoomBooking.model.dto.request.SearchRoomRequest;
-import com.zsj.RoomBooking.model.dto.response.AddClosureResponse;
-import com.zsj.RoomBooking.model.dto.response.ClosureResponse;
 import com.zsj.RoomBooking.model.dto.request.RoomRequest;
 import com.zsj.RoomBooking.model.dto.response.DeleteRoomResponse;
-import com.zsj.RoomBooking.model.dto.response.ReservationResponse;
 import com.zsj.RoomBooking.model.dto.response.RoomResponse;
 import com.zsj.RoomBooking.model.dto.request.SearchAvailabilityRequest;
-import com.zsj.RoomBooking.model.dto.request.TimeRangeRequest;
 import com.zsj.RoomBooking.model.dto.response.AvailabilityResponse;
 import com.zsj.RoomBooking.model.entity.Reservation;
 import com.zsj.RoomBooking.model.entity.Room;
@@ -59,9 +54,6 @@ public class RoomControllerTest {
 
     @MockitoBean
     private RoomService roomService;
-
-    @MockitoBean
-    private ClosureService closureService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -236,69 +228,5 @@ public class RoomControllerTest {
                 .andExpect(jsonPath("$.name").value(name))
                 .andExpect(jsonPath("$.capacity").value(capacity))
                 .andExpect(jsonPath("$.area").value(area));
-    }
-
-    @Test
-    void getClosuresTest() throws Exception {
-        /* request */
-        Long roomId = 2L;
-        /* mock service result */
-        List<ClosureResponse> serviceResponse = List.of(
-                new ClosureResponse(0L, 1L, roomId, LocalDateTime.of(2026, 3, 1, 10, 30, 0, 0), LocalDateTime.of(2026, 3, 2, 10, 30, 0, 0)),
-                new ClosureResponse(1L, 1L, roomId, LocalDateTime.of(2026, 3, 3, 8, 30, 0, 0), LocalDateTime.of(2026, 3, 3, 12, 0, 0, 0)));
-        when(closureService.getClosuresForRoom(eq(roomId))).thenReturn(serviceResponse);
-        /* perform, to compare LocalDateTime, parse response to dto object */
-        String responseString = mockMvc.perform(get("/rooms/{roomId}/closures", roomId))
-                .andExpect(status().isOk())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-        List<ClosureResponse> controllerResponse =
-                objectMapper.readValue(responseString, new TypeReference<List<ClosureResponse>>() {
-                });
-        /* verify */
-        assertThat(controllerResponse)
-                .usingRecursiveComparison()
-                .isEqualTo(serviceResponse);
-    }
-
-    @Test
-    void addClosureTest() throws Exception {
-        /* request */
-        Long userId = 1L;
-        Long roomId = 2L;
-        LocalDateTime startTime = LocalDateTime.of(2300, 1, 1, 10, 30, 0, 0);
-        LocalDateTime endTime = LocalDateTime.of(2300, 1, 10, 10, 30, 0, 0);
-        /* mock service result */
-        AddClosureResponse serviceResponse = new AddClosureResponse(
-                new ClosureResponse(3L, roomId, userId, startTime, endTime),
-                List.of(
-                        new ReservationResponse(0L, 10L, 100L,
-                                LocalDateTime.of(2300, 1, 1, 10, 0, 0, 0),
-                                LocalDateTime.of(2300, 1, 1, 12, 0, 0, 0),
-                                ReservationStatus.RESERVATION_STATUS_CLOSED),
-                        new ReservationResponse(1L, 11L, 101L,
-                                LocalDateTime.of(2300, 1, 2, 8, 0, 0, 0),
-                                LocalDateTime.of(2300, 1, 2, 9, 0, 0, 0),
-                                ReservationStatus.RESERVATION_STATUS_CLOSED)
-                ));
-        /* mock */
-        when(closureService.addClosure(eq(roomId), eq(userId), any(TimeRangeRequest.class)))
-                .thenReturn(serviceResponse);
-
-        /* perform, in order to compare LocalDateTime, need to parse response to dto object */
-        String responseString = mockMvc.perform(post("/rooms/{roomId}/closures", roomId)
-                        .param("userId", userId.toString())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(this.objectMapper.writeValueAsString(new TimeRangeRequest(startTime, endTime))))
-                .andExpect(status().isCreated())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-        AddClosureResponse controllerResponse = objectMapper.readValue(responseString, AddClosureResponse.class);
-        /* verify */
-        assertThat(controllerResponse)
-                .usingRecursiveComparison()
-                .isEqualTo(serviceResponse);
     }
 }

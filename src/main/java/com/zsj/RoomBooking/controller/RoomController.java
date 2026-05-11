@@ -4,16 +4,12 @@ import com.zsj.RoomBooking.mapper.AvailabilityMapper;
 import com.zsj.RoomBooking.mapper.ReservationMapper;
 import com.zsj.RoomBooking.mapper.RoomMapper;
 import com.zsj.RoomBooking.model.dto.request.SearchRoomRequest;
-import com.zsj.RoomBooking.model.dto.response.AddClosureResponse;
-import com.zsj.RoomBooking.model.dto.response.ClosureResponse;
 import com.zsj.RoomBooking.model.dto.request.RoomRequest;
 import com.zsj.RoomBooking.model.dto.response.DeleteRoomResponse;
 import com.zsj.RoomBooking.model.dto.response.RoomResponse;
 import com.zsj.RoomBooking.model.dto.request.SearchAvailabilityRequest;
-import com.zsj.RoomBooking.model.dto.request.TimeRangeRequest;
 import com.zsj.RoomBooking.model.dto.response.AvailabilityResponse;
 import com.zsj.RoomBooking.model.entity.Room;
-import com.zsj.RoomBooking.service.ClosureService;
 import com.zsj.RoomBooking.service.RoomService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -26,7 +22,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -36,9 +31,6 @@ import java.util.List;
 public class RoomController {
     @Autowired
     private RoomService roomService;
-
-    @Autowired
-    private ClosureService closureService;
 
     @Autowired
     private RoomMapper roomMapper;
@@ -95,18 +87,5 @@ public class RoomController {
         return roomMapper.toResponse(
                 roomService.updateRoom(roomId, request.name(), request.capacity(), request.area())
         );
-    }
-
-    /* closure */
-    /* TODO: do we need an update? */
-    @GetMapping("/{roomId}/closures")
-    public List<ClosureResponse> getClosures(@PathVariable Long roomId) {
-        return closureService.getClosuresForRoom(roomId);
-    }
-
-    @PostMapping("/{roomId}/closures")
-    public ResponseEntity<AddClosureResponse> addClosure(
-            @PathVariable Long roomId, @RequestParam Long userId, @RequestBody TimeRangeRequest timeRangeRequest) {
-        return new ResponseEntity<>(closureService.addClosure(roomId, userId, timeRangeRequest), HttpStatus.CREATED);
     }
 }

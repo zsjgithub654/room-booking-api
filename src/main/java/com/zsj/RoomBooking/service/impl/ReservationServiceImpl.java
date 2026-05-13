@@ -1,10 +1,7 @@
 package com.zsj.RoomBooking.service.impl;
 
+import com.zsj.RoomBooking.model.ReservationStatus;
 import com.zsj.RoomBooking.model.entity.Reservation;
-import com.zsj.RoomBooking.model.dto.request.ReservationRequest;
-import com.zsj.RoomBooking.model.dto.response.ReservationResponse;
-import com.zsj.RoomBooking.model.dto.request.SearchReservationRequest;
-import com.zsj.RoomBooking.model.dto.request.TimeRangeRequest;
 import com.zsj.RoomBooking.repository.ReservationRepository;
 import com.zsj.RoomBooking.repository.RoomRepository;
 import com.zsj.RoomBooking.repository.UserRepository;
@@ -12,6 +9,8 @@ import com.zsj.RoomBooking.service.ReservationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -24,17 +23,17 @@ public class ReservationServiceImpl implements ReservationService {
     private RoomRepository roomRepository;
 
     @Override
-    public List<ReservationResponse> searchReservations(SearchReservationRequest searchReservationRequest) {
+    public List<Reservation> searchReservations(Long userId, Long roomId, LocalDate date, ReservationStatus status) {
         return null;
     }
 
     @Override
-    public ReservationResponse getReservation(Long id) {
-        return getReservationResponse(reservationRepository.getReferenceById(id));
+    public Reservation getReservation(Long id) {
+        return reservationRepository.getReferenceById(id);
     }
 
     @Override
-    public ReservationResponse addReservation(Long userId, ReservationRequest reservationRequest) {
+    public Reservation addReservation(Long userId, Long roomId, LocalDateTime startTime, LocalDateTime endTime) {
         return null;
     }
 
@@ -43,21 +42,7 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
-    public ReservationResponse updateReservationTime(Long id, TimeRangeRequest request) {
+    public Reservation updateReservationTime(Long id, LocalDateTime startTime, LocalDateTime endTime) {
         return null;
-    }
-
-    /**
-     * generate a dto object from a Reservation object to return
-     * @param reservation: Reservation object
-     * @return ReservationResponse object
-     */
-    private ReservationResponse getReservationResponse(Reservation reservation) {
-        return new ReservationResponse(
-                reservation.getId(),
-                reservation.getUser().getId(),
-                reservation.getRoom().getId(),
-                reservation.getStartTime(), reservation.getEndTime(),
-                reservation.getStatus());
     }
 }

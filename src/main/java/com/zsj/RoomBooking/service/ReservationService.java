@@ -1,16 +1,16 @@
 package com.zsj.RoomBooking.service;
 
-import com.zsj.RoomBooking.model.dto.request.ReservationRequest;
-import com.zsj.RoomBooking.model.dto.response.ReservationResponse;
-import com.zsj.RoomBooking.model.dto.request.SearchReservationRequest;
-import com.zsj.RoomBooking.model.dto.request.TimeRangeRequest;
+import com.zsj.RoomBooking.model.ReservationStatus;
+import com.zsj.RoomBooking.model.entity.Reservation;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ReservationService {
-    List<ReservationResponse> searchReservations(SearchReservationRequest searchReservationRequest);
-    ReservationResponse getReservation(Long id);
-    ReservationResponse addReservation(Long userId, ReservationRequest reservationRequest);
+    List<Reservation> searchReservations(Long userId, Long roomId, LocalDate date, ReservationStatus status);
+    Reservation getReservation(Long id);
+    Reservation addReservation(Long userId, Long roomId, LocalDateTime startTime, LocalDateTime endTime);
     void deleteReservation(Long reservationId);
-    ReservationResponse updateReservationTime(Long id, TimeRangeRequest request);
+    Reservation updateReservationTime(Long id, LocalDateTime startTime, LocalDateTime endTime);
 }

@@ -14,8 +14,4 @@ public class ReservationMapper {
                 reservation.getStartTime(), reservation.getEndTime(),
                 reservation.getStatus());
     }
-
-    public Reservation toEntity(ReservationResponse response) {
-        return null;
-    }
 }

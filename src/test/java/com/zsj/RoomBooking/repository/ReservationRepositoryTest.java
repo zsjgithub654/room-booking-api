@@ -97,6 +97,45 @@ public class ReservationRepositoryTest {
                 .isEqualTo(reservations);
     }
 
+    @Test
+    void getTimeByRoomIdAndIntervalAndActiveNoResultMatchRoomTest() {
+        Reservation reservation = new Reservation(user, room,
+                LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
+                LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0));
+        reservationRepository.save(reservation);
+
+        List<TimeRange> timeRanges = reservationRepository.getTimeByRoomIdAndIntervalAndActive(room.getId() + 1,
+                LocalDateTime.of(2026, 5, 1, 0, 0, 0, 0),
+                LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0));
+        assertThat(timeRanges).hasSize(0);
+    }
+
+    @Test
+    void getTimeByRoomIdAndIntervalAndActiveNoResultMatchTimeTest() {
+        Reservation reservation = new Reservation(user, room,
+                LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
+                LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0));
+        reservationRepository.save(reservation);
+
+        List<TimeRange> timeRanges = reservationRepository.getTimeByRoomIdAndIntervalAndActive(room.getId(),
+                LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0),
+                LocalDateTime.of(2026, 8, 1, 0, 0, 0, 0));
+        assertThat(timeRanges).hasSize(0);
+    }
+
+    @Test
+    void getTimeByRoomIdAndIntervalAndActiveNoResultMatchStatusTest() {
+        Reservation reservation = new Reservation(user, room,
+                LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
+                LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0));
+        reservation.setStatus(ReservationStatus.RESERVATION_STATUS_CANCELED);
+        reservationRepository.save(reservation);
+
+        List<TimeRange> timeRanges = reservationRepository.getTimeByRoomIdAndIntervalAndActive(room.getId(),
+                LocalDateTime.of(2026, 5, 1, 0, 0, 0, 0),
+                LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0));
+        assertThat(timeRanges).hasSize(0);
+    }
 
     @Test
     void findByRoomIdAndStartAfterAndActiveHasResultTest() {

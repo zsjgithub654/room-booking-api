@@ -43,4 +43,13 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                   AND reservation.startTime > :fromTime
             """)
     List<Reservation> findByRoomIdAndStartAfterAndActive(Long roomId, LocalDateTime fromTime);
+
+    @Query("""
+                SELECT reservation
+                FROM Reservation reservation
+                WHERE reservation.user.id = :userId
+                  AND reservation.status = RESERVATION_STATUS_ACTIVE
+                  AND reservation.startTime > :fromTime
+            """)
+    List<Reservation> findByUserIdAndStartAfterAndActive(Long userId, LocalDateTime fromTime);
 }

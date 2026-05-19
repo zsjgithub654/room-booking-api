@@ -1,5 +1,7 @@
 package com.zsj.RoomBooking.service.impl;
 
+import com.zsj.RoomBooking.model.ReservationStatus;
+import com.zsj.RoomBooking.model.entity.Reservation;
 import com.zsj.RoomBooking.model.entity.User;
 import com.zsj.RoomBooking.repository.ReservationRepository;
 import com.zsj.RoomBooking.repository.UserRepository;
@@ -40,6 +42,15 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void deleteUser(Long id) {
+        /* close reservations */
+        List<Reservation> reservations = reservationRepository.findByRoomIdAndStartAfterAndActive(id, LocalDateTime.now());
+        for (Reservation reservation : reservations) {
+            reservation.setStatus(ReservationStatus.RESERVATION_STATUS_CLOSED);
+            reservation.setUser(null);
+        }
+        /* delete user */
+        /* TODO: how to delete or inactivate an account */
+        userRepository.deleteById(id);
     }
 
 }

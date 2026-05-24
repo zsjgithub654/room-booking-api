@@ -5,6 +5,7 @@ import com.zsj.RoomBooking.model.TimeRange;
 import com.zsj.RoomBooking.model.entity.Reservation;
 import com.zsj.RoomBooking.model.entity.Room;
 import com.zsj.RoomBooking.model.entity.User;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,15 +32,18 @@ public class ReservationRepositoryTest {
 
     @BeforeEach
     public void setup() {
-        reservationRepository.deleteAll();
-        roomRepository.deleteAll();
-        userRepository.deleteAll();
         this.room = new Room("101", 12, "building A");
         this.user = new User("user1", "");
         roomRepository.save(room);
         userRepository.save(user);
     }
 
+    @AfterEach
+    public void clear() {
+        reservationRepository.deleteAll();
+        roomRepository.deleteAll();
+        userRepository.deleteAll();
+    }
     /* findByRoomId */
     @Test
     void findByRoomIdHasResultTest() {

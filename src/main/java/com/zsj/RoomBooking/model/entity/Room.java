@@ -15,7 +15,6 @@ public class Room {
     private Long id;
     private String name;
     private Integer capacity;
-    // TODO: consider building a table for area
     private String area;
 
     @OneToMany(mappedBy = "room")
@@ -35,6 +34,7 @@ public class Room {
     /* required by JPA */
     public Room() {
     }
+
     public Long getId() {
         return id;
     }
@@ -55,8 +55,20 @@ public class Room {
         return status;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setArea(String area) {
+        this.area = area;
+    }
+
     public void setStatus(RoomStatus status) {
         this.status = status;
+    }
+
+    public void setCapacity(Integer capacity) {
+        this.capacity = capacity;
     }
 }
 

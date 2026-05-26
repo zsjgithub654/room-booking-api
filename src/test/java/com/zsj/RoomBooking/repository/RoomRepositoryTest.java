@@ -1,6 +1,7 @@
 package com.zsj.RoomBooking.repository;
 
 import com.zsj.RoomBooking.model.entity.Room;
+import com.zsj.RoomBooking.model.entity.RoomStatus;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -27,6 +28,7 @@ public class RoomRepositoryTest {
                 new Room("102", 4, "Building A"),
                 new Room("101", 6, "Building B")
         );
+        rooms.get(2).setStatus(RoomStatus.ROOM_STATUS_DELETED);
         roomRepository.saveAll(rooms);
     }
 
@@ -58,6 +60,14 @@ public class RoomRepositoryTest {
     void FilterByInAreaTest() {
         Specification<Room> spec = Specification.unrestricted();
         spec = spec.and(RoomSpecifications.inArea("Building A"));
+        List<Room> result = roomRepository.findAll(spec);
+        assertThat(result).hasSize(2);
+    }
+
+    @Test
+    void FilterByHasStatusTest() {
+        Specification<Room> spec = Specification.unrestricted();
+        spec = spec.and(RoomSpecifications.hasStatus(RoomStatus.ROOM_STATUS_ACTIVE));
         List<Room> result = roomRepository.findAll(spec);
         assertThat(result).hasSize(2);
     }

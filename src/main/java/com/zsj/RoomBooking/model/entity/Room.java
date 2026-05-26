@@ -24,11 +24,13 @@ public class Room {
     /* TODO: need this or not? */
     @OneToMany(mappedBy = "room")
     private Set<Closure> closures;
+    private RoomStatus status;
 
     public Room(String name, int capacity, String area) {
         this.name = name;
         this.capacity = capacity;
         this.area = area;
+        this.status = RoomStatus.ROOM_STATUS_ACTIVE;
     }
     /* required by JPA */
     public Room() {
@@ -47,6 +49,14 @@ public class Room {
 
     public String getArea() {
         return area;
+    }
+
+    public RoomStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(RoomStatus status) {
+        this.status = status;
     }
 }
 

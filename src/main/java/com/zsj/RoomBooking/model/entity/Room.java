@@ -1,5 +1,6 @@
 package com.zsj.RoomBooking.model.entity;
 
+import com.zsj.RoomBooking.model.RoomStatus;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;

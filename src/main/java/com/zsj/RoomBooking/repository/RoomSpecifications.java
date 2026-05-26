@@ -1,7 +1,7 @@
 package com.zsj.RoomBooking.repository;
 
 import com.zsj.RoomBooking.model.entity.Room;
-import com.zsj.RoomBooking.model.entity.RoomStatus;
+import com.zsj.RoomBooking.model.RoomStatus;
 import org.springframework.data.jpa.domain.Specification;
 
 public class RoomSpecifications {

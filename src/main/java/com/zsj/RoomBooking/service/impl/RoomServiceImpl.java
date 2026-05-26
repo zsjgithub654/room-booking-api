@@ -6,7 +6,7 @@ import com.zsj.RoomBooking.model.ReservationStatus;
 import com.zsj.RoomBooking.model.entity.Reservation;
 import com.zsj.RoomBooking.model.entity.Room;
 import com.zsj.RoomBooking.model.TimeRange;
-import com.zsj.RoomBooking.model.entity.RoomStatus;
+import com.zsj.RoomBooking.model.RoomStatus;
 import com.zsj.RoomBooking.repository.ClosureRepository;
 import com.zsj.RoomBooking.repository.ReservationRepository;
 import com.zsj.RoomBooking.repository.RoomRepository;

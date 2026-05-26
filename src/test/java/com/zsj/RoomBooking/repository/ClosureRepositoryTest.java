@@ -118,13 +118,17 @@ public class ClosureRepositoryTest {
 
     @Test
     void deleteByRoomIdTest() {
-        Closure closure = new Closure(user, room,
-                LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
-                LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0));
-        closureRepository.save(closure);
-        assertThat(closureRepository.findByRoomId(room.getId())).hasSize(1);
+        List<Closure> closures = List.of(
+                new Closure(user, room,
+                        LocalDateTime.of(2026, 5, 1, 14, 30, 0, 0),
+                        LocalDateTime.of(2026, 5, 1, 15, 30, 0, 0)),
+                new Closure(user, room,
+                        LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
+                        LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0)));
+        closureRepository.saveAll(closures);
 
-        closureRepository.deleteByRoomId(room.getId());
-        assertThat(closureRepository.findByRoomId(room.getId())).hasSize(0);
+        closureRepository.deleteByRoomIdAndAfterTime(1L,
+                LocalDateTime.of(2026, 6, 1, 0, 0, 0, 0));
+        assertThat(closureRepository.findByRoomId(room.getId())).hasSize(1);
     }
 }

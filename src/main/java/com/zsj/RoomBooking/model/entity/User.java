@@ -1,6 +1,7 @@
 package com.zsj.RoomBooking.model.entity;
 
 import com.zsj.RoomBooking.model.Role;
+import com.zsj.RoomBooking.model.UserStatus;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -27,6 +28,7 @@ public class User {
     /* TODO: length limit */
     private String username;
     private String password;
+    private UserStatus status;
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
@@ -43,6 +45,7 @@ public class User {
     public User(String username, String password) {
         this.username = username;
         this.password = password;
+        this.status = UserStatus.USER_STATUS_ACTIVE;
         this.roles = new HashSet<>();
         this.roles.add(Role.ROLE_USER);
     }
@@ -52,10 +55,6 @@ public class User {
     }
 
     public boolean removeRole(Role role) {
-        return true;
-    }
-
-    public boolean changePassword(String password) {
         return true;
     }
 
@@ -77,5 +76,13 @@ public class User {
 
     public Set<Role> getRoles() {
         return roles;
+    }
+
+    public UserStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(UserStatus status) {
+        this.status = status;
     }
 }

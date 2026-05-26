@@ -7,7 +7,9 @@ public class TimeRange {
     LocalDateTime endTime;
 
     public TimeRange(LocalDateTime startTime, LocalDateTime endTime) {
-        /* TODO: validate */
+        if (!startTime.isBefore(endTime)) {
+            throw new IllegalArgumentException("Start time must be before end time.");
+        }
         this.startTime = startTime;
         this.endTime = endTime;
     }

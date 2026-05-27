@@ -1,6 +1,7 @@
 package com.zsj.RoomBooking.repository;
 
 import com.zsj.RoomBooking.model.Role;
+import com.zsj.RoomBooking.model.UserStatus;
 import com.zsj.RoomBooking.model.entity.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,11 +17,12 @@ public class UserRepositoryTest {
     private UserRepository userRepository;
 
     @Test
-    void findByUsernameAndRoleHasResultTest() {
+    void findByUsernameAndRoleAndStatusHasResultTest() {
         User user = new User("user1", "");
         userRepository.save(user);
 
-        List<User> result = userRepository.findByUsernameAndRole("user", Role.ROLE_USER);
+        List<User> result = userRepository.findByUsernameAndRoleAndStatus(
+                "user", Role.ROLE_USER, UserStatus.USER_STATUS_ACTIVE);
         assertThat(result).hasSize(1);
         assertThat(result.get(0))
                 .usingRecursiveComparison()
@@ -28,11 +30,12 @@ public class UserRepositoryTest {
     }
 
     @Test
-    void findByUsernameAndRoleWithoutUsernameHasResultTest() {
+    void findByUsernameAndRoleAndStatusWithoutUsernameHasResultTest() {
         User user = new User("user1", "");
         userRepository.save(user);
 
-        List<User> result = userRepository.findByUsernameAndRole(null, Role.ROLE_USER);
+        List<User> result = userRepository.findByUsernameAndRoleAndStatus(
+                null, Role.ROLE_USER, UserStatus.USER_STATUS_ACTIVE);
         assertThat(result).hasSize(1);
         assertThat(result.get(0))
                 .usingRecursiveComparison()
@@ -40,11 +43,12 @@ public class UserRepositoryTest {
     }
 
     @Test
-    void findByUsernameAndRoleWithoutRoleHasResultTest() {
+    void findByUsernameAndRoleAndStatusWithoutRoleHasResultTest() {
         User user = new User("user1", "");
         userRepository.save(user);
 
-        List<User> result = userRepository.findByUsernameAndRole("user", null);
+        List<User> result = userRepository.findByUsernameAndRoleAndStatus(
+                "user", null, UserStatus.USER_STATUS_ACTIVE);
         assertThat(result).hasSize(1);
         assertThat(result.get(0))
                 .usingRecursiveComparison()
@@ -52,20 +56,45 @@ public class UserRepositoryTest {
     }
 
     @Test
-    void findByUsernameAndRoleUsernameNotFoundTest() {
+    void findByUsernameAndRoleAndStatusWithoutStatusHasResultTest() {
         User user = new User("user1", "");
         userRepository.save(user);
 
-        List<User> result = userRepository.findByUsernameAndRole("user2", Role.ROLE_USER);
+        List<User> result = userRepository.findByUsernameAndRoleAndStatus(
+                "user", Role.ROLE_USER, null);
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0))
+                .usingRecursiveComparison()
+                .isEqualTo(user);
+    }
+
+    @Test
+    void findByUsernameAndRoleAndStatusUsernameNotFoundTest() {
+        User user = new User("user1", "");
+        userRepository.save(user);
+
+        List<User> result = userRepository.findByUsernameAndRoleAndStatus(
+                "user2", Role.ROLE_USER, UserStatus.USER_STATUS_ACTIVE);
         assertThat(result).hasSize(0);
     }
 
     @Test
-    void findByUsernameAndRoleRoleNotFoundTest() {
+    void findByUsernameAndRoleAndStatusRoleNotFoundTest() {
         User user = new User("user1", "");
         userRepository.save(user);
 
-        List<User> result = userRepository.findByUsernameAndRole("user", Role.ROLE_ADMIN);
+        List<User> result = userRepository.findByUsernameAndRoleAndStatus(
+                "user", Role.ROLE_ADMIN, UserStatus.USER_STATUS_ACTIVE);
+        assertThat(result).hasSize(0);
+    }
+
+    @Test
+    void findByUsernameAndRoleAndStatusStatusNotFoundTest() {
+        User user = new User("user1", "");
+        userRepository.save(user);
+
+        List<User> result = userRepository.findByUsernameAndRoleAndStatus(
+                "user", Role.ROLE_USER, UserStatus.USER_STATUS_CLOSED);
         assertThat(result).hasSize(0);
     }
 }

@@ -1,6 +1,7 @@
 package com.zsj.RoomBooking.repository;
 
 import com.zsj.RoomBooking.model.Role;
+import com.zsj.RoomBooking.model.UserStatus;
 import com.zsj.RoomBooking.model.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -13,6 +14,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
             SELECT user FROM User user
             WHERE (:username IS NULL OR user.username LIKE %:username%)
             AND (:role IS NULL OR :role MEMBER OF user.roles)
+            AND (:status IS NULL OR :status = user.status)
             """)
-    List<User> findByUsernameAndRole(String username, Role role);
+    List<User> findByUsernameAndRoleAndStatus(String username, Role role, UserStatus status);
 }

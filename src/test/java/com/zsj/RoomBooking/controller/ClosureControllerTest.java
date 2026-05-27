@@ -56,7 +56,7 @@ public class ClosureControllerTest {
         /* request */
         Long closureId = 0L;
         /* mock service response */
-        Closure closure = new Closure(new User(), new Room(),
+        Closure closure = new Closure(new Room(),
                 LocalDateTime.of(2026, 3, 1, 10, 30, 0, 0),
                 LocalDateTime.of(2026, 3, 2, 10, 30, 0, 0));
         when(closureService.getClosure(eq(closureId))).thenReturn(closure);
@@ -93,8 +93,8 @@ public class ClosureControllerTest {
         Long roomId = 2L;
         /* mock service result */
         List<Closure> closures = List.of(
-                new Closure(new User(), new Room(), LocalDateTime.of(2026, 3, 1, 10, 30, 0, 0), LocalDateTime.of(2026, 3, 2, 10, 30, 0, 0)),
-                new Closure(new User(), new Room(), LocalDateTime.of(2026, 3, 3, 8, 30, 0, 0), LocalDateTime.of(2026, 3, 3, 12, 0, 0, 0)));
+                new Closure(new Room(), LocalDateTime.of(2026, 3, 1, 10, 30, 0, 0), LocalDateTime.of(2026, 3, 2, 10, 30, 0, 0)),
+                new Closure(new Room(), LocalDateTime.of(2026, 3, 3, 8, 30, 0, 0), LocalDateTime.of(2026, 3, 3, 12, 0, 0, 0)));
         when(closureService.getClosuresOfRoom(eq(roomId))).thenReturn(closures);
         /* perform, to compare LocalDateTime, parse response to dto object */
         String responseString = mockMvc.perform(get("/closures")
@@ -123,7 +123,7 @@ public class ClosureControllerTest {
         LocalDateTime endTime = LocalDateTime.of(2300, 1, 10, 10, 30, 0, 0);
         /* mock service result */
         AddClosureResult addClosureResult = new AddClosureResult(
-                new Closure(new User(), new Room(), startTime, endTime),
+                new Closure(new Room(), startTime, endTime),
                 List.of(
                         new Reservation(new User(), new Room(),
                                 LocalDateTime.of(2300, 1, 1, 10, 0, 0, 0),

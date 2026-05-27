@@ -38,7 +38,7 @@ public class ClosureRepositoryTest {
 
     @Test
     void findByRoomIdHasResultTest() {
-        Closure closure = new Closure(user, room,
+        Closure closure = new Closure(room,
                 LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
                 LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0));
         closureRepository.save(closure);
@@ -51,7 +51,7 @@ public class ClosureRepositoryTest {
 
     @Test
     void findByRoomIdNoResultMatchRoomTest() {
-        Closure closure = new Closure(user, room,
+        Closure closure = new Closure(room,
                 LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
                 LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0));
         closureRepository.save(closure);
@@ -64,19 +64,19 @@ public class ClosureRepositoryTest {
     void getTimeByRoomIdAndIntervalHasResultTest() {
         List<Closure> closures = List.of(
                 /* startTime < lowerBound, lowerBound < end Time < upperBound */
-                new Closure(user, room,
+                new Closure(room,
                         LocalDateTime.of(2026, 4, 30, 14, 30, 0, 0),
                         LocalDateTime.of(2026, 5, 1, 15, 30, 0, 0)),
                 /* lowerBound < end Time < upperBound, lowerBound < endTime < upperBound */
-                new Closure(user, room,
+                new Closure(room,
                         LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
                         LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0)),
                 /* lowerBound < end Time < upperBound, end Time > upperBound */
-                new Closure(user, room,
+                new Closure(room,
                         LocalDateTime.of(2026, 6, 30, 14, 30, 0, 0),
                         LocalDateTime.of(2026, 7, 1, 15, 30, 0, 0)),
                 /* startTime < lowerBound, end Time > upperBound */
-                new Closure(user, room,
+                new Closure(room,
                         LocalDateTime.of(2026, 4, 30, 14, 30, 0, 0),
                         LocalDateTime.of(2026, 7, 1, 15, 30, 0, 0))
         );
@@ -92,7 +92,7 @@ public class ClosureRepositoryTest {
 
     @Test
     void getTimeByRoomIdAndIntervalNoResultMatchRoomTest() {
-        Closure closure = new Closure(user, room,
+        Closure closure = new Closure(room,
                 LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
                 LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0));
         closureRepository.save(closure);
@@ -105,7 +105,7 @@ public class ClosureRepositoryTest {
 
     @Test
     void getTimeByRoomIdAndIntervalNoResultMatchTimeTest() {
-        Closure closure = new Closure(user, room,
+        Closure closure = new Closure(room,
                 LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
                 LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0));
         closureRepository.save(closure);
@@ -119,10 +119,10 @@ public class ClosureRepositoryTest {
     @Test
     void deleteByRoomIdTest() {
         List<Closure> closures = List.of(
-                new Closure(user, room,
+                new Closure(room,
                         LocalDateTime.of(2026, 5, 1, 14, 30, 0, 0),
                         LocalDateTime.of(2026, 5, 1, 15, 30, 0, 0)),
-                new Closure(user, room,
+                new Closure(room,
                         LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
                         LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0)));
         closureRepository.saveAll(closures);

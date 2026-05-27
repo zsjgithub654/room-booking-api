@@ -15,16 +15,12 @@ public class Closure {
     private long id;
 
     @ManyToOne
-    private User user;
-
-    @ManyToOne
     private Room room;
 
     private LocalDateTime startTime;
     private LocalDateTime endTime;
 
-    public Closure(User user, Room room, LocalDateTime startTime, LocalDateTime endTime) {
-        this.user = user;
+    public Closure(Room room, LocalDateTime startTime, LocalDateTime endTime) {
         this.room = room;
         this.startTime = startTime;
         this.endTime = endTime;
@@ -35,10 +31,6 @@ public class Closure {
 
     public long getId() {
         return id;
-    }
-
-    public User getUser() {
-        return user;
     }
 
     public Room getRoom() {

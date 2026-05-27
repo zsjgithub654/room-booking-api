@@ -3,6 +3,7 @@ package com.zsj.RoomBooking.service;
 import com.zsj.RoomBooking.exception.ResourceNotFoundException;
 import com.zsj.RoomBooking.model.Availability;
 import com.zsj.RoomBooking.model.ReservationStatus;
+import com.zsj.RoomBooking.model.RoomStatus;
 import com.zsj.RoomBooking.model.TimeRange;
 import com.zsj.RoomBooking.model.entity.Reservation;
 import com.zsj.RoomBooking.model.entity.Room;
@@ -48,16 +49,18 @@ public class RoomServiceImplTest {
     @Test
     void GetRoomSucceedTest() {
         Room room = new Room("101", 12, "Building A");
-        when(roomRepository.findById(any(Long.class))).thenReturn(Optional.of(room));
-        assertThat(roomService.getRoom(1L))
+        Long searchId = 2L;
+        when(roomRepository.findById(eq(searchId))).thenReturn(Optional.of(room));
+        assertThat(roomService.getRoom(searchId))
                 .usingRecursiveComparison()
                 .isEqualTo(room);
     }
 
     @Test
     void GetRoomNotFoundTest() {
-        when(roomRepository.findById(any(Long.class))).thenReturn(Optional.empty());
-        Exception exception = assertThrows(ResourceNotFoundException.class, () -> roomService.getRoom(1L));
+        Long searchId = 2L;
+        when(roomRepository.findById(eq(searchId))).thenReturn(Optional.empty());
+        Exception exception = assertThrows(ResourceNotFoundException.class, () -> roomService.getRoom(searchId));
         assertThat(exception.getMessage()).isEqualTo("Room not found.");
     }
 
@@ -74,8 +77,9 @@ public class RoomServiceImplTest {
     void UpdateRoomSucceedTest() {
         Room room = new Room("101", 12, "Building A");
         Room newRoom = new Room("102", 10, "Building 1");
-        when(roomRepository.findById(any(Long.class))).thenReturn(Optional.of(room));
-        assertThat(roomService.updateRoom(1L, newRoom.getName(), newRoom.getCapacity(), newRoom.getArea()))
+        Long searchId = 2L;
+        when(roomRepository.findById(eq(searchId))).thenReturn(Optional.of(room));
+        assertThat(roomService.updateRoom(searchId, newRoom.getName(), newRoom.getCapacity(), newRoom.getArea()))
                 .usingRecursiveComparison()
                 .isEqualTo(newRoom);
     }
@@ -83,11 +87,12 @@ public class RoomServiceImplTest {
     @Test
     void UpdateRoomNotFoundTest() {
         Room newRoom = new Room("102", 10, "Building 1");
+        Long searchId = 2L;
 
-        when(roomRepository.findById(any(Long.class))).thenReturn(Optional.empty());
+        when(roomRepository.findById(eq(searchId))).thenReturn(Optional.empty());
 
         Exception exception = assertThrows(ResourceNotFoundException.class,
-                () -> roomService.updateRoom(1L, newRoom.getName(), newRoom.getCapacity(), newRoom.getArea()));
+                () -> roomService.updateRoom(searchId, newRoom.getName(), newRoom.getCapacity(), newRoom.getArea()));
         assertThat(exception.getMessage()).isEqualTo("Room not found.");
     }
 
@@ -101,6 +106,9 @@ public class RoomServiceImplTest {
         when(roomRepository.findAll(any(Specification.class))).thenReturn(rooms);
         List<Room> result = roomService.searchRooms(null, null, null, null);
         assertThat(result).hasSize(3);
+        assertThat(result)
+                .usingRecursiveComparison()
+                .isEqualTo(rooms);
     }
 
     @Test
@@ -177,6 +185,7 @@ public class RoomServiceImplTest {
     @Test
     void DeleteRoomSucceedTest() {
         Room room = new Room("101", 12, "Building A");
+        Long searchId = 2L;
         List<Reservation> reservations = List.of(
                 new Reservation(new User(), room,
                         LocalDateTime.of(2300, 3, 1, 10, 0, 0, 0),
@@ -185,12 +194,13 @@ public class RoomServiceImplTest {
                         LocalDateTime.of(2300, 3, 1, 14, 30, 0, 0),
                         LocalDateTime.of(2300, 3, 1, 15, 30, 0, 0)));
 
-        when(roomRepository.findById(any(Long.class))).thenReturn(Optional.of(room));
-        when(reservationRepository.findByRoomIdAndStartAfterAndActive(any(Long.class),any(LocalDateTime.class)))
+        when(roomRepository.findById(eq((searchId)))).thenReturn(Optional.of(room));
+        when(reservationRepository.findByRoomIdAndStartAfterAndActive(eq(searchId),any(LocalDateTime.class)))
                 .thenReturn(reservations);
-        doNothing().when(closureRepository).deleteByRoomIdAndAfterTime(any(Long.class), any(LocalDateTime.class));
+        doNothing().when(closureRepository).deleteByRoomIdAndAfterTime(eq(searchId), any(LocalDateTime.class));
 
-        List<Reservation> closedReservations = roomService.deleteRoom(0L);
+        List<Reservation> closedReservations = roomService.deleteRoom(searchId);
+        assertThat(room.getStatus()).isEqualTo(RoomStatus.ROOM_STATUS_DELETED);
         assertThat(closedReservations).hasSize(2);
         assertThat(closedReservations)
                 .usingRecursiveComparison()
@@ -202,9 +212,10 @@ public class RoomServiceImplTest {
 
     @Test
     void DeleteRoomNotFoundTest() {
-        when(roomRepository.findById(any(Long.class))).thenReturn(Optional.empty());
+        Long searchId = 2L;
+        when(roomRepository.findById(eq(searchId))).thenReturn(Optional.empty());
 
-        Exception exception = assertThrows(ResourceNotFoundException.class, () -> roomService.deleteRoom(0L));
+        Exception exception = assertThrows(ResourceNotFoundException.class, () -> roomService.deleteRoom(searchId));
         assertThat(exception.getMessage()).isEqualTo("Room not found.");
     }
 }

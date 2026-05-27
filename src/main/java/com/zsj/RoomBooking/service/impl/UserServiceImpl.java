@@ -1,6 +1,9 @@
 package com.zsj.RoomBooking.service.impl;
 
+import com.zsj.RoomBooking.exception.ResourceNotFoundException;
 import com.zsj.RoomBooking.model.ReservationStatus;
+import com.zsj.RoomBooking.model.Role;
+import com.zsj.RoomBooking.model.UserStatus;
 import com.zsj.RoomBooking.model.entity.Reservation;
 import com.zsj.RoomBooking.model.entity.User;
 import com.zsj.RoomBooking.repository.ReservationRepository;
@@ -8,10 +11,12 @@ import com.zsj.RoomBooking.repository.UserRepository;
 import com.zsj.RoomBooking.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Transactional
 @Service
 public class UserServiceImpl implements UserService {
     @Autowired
@@ -21,36 +26,48 @@ public class UserServiceImpl implements UserService {
     private ReservationRepository reservationRepository;
 
     @Override
-    public List<User> searchUsers() {
-        return null;
+    public List<User> searchUsers(String username, Role role, UserStatus status) {
+        return userRepository.findByUsernameAndRoleAndStatus(username, role, status);
     }
 
     @Override
     public User getUser(Long id) {
-        return null;
+        return userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found."));
     }
 
     @Override
     public User addUser(User user) {
-        return null;
+        return userRepository.save(user);
     }
 
     @Override
-    public User updateUser(Long id, String username, String password) {
-        return null;
+    public User updateUsername(Long id, String username) {
+        User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found."));
+        user.setUsername(username);
+        return user;
     }
 
     @Override
-    public void deleteUser(Long id) {
+    public User updatePassword(Long id, String password) {
+        User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found."));
+        user.setPassword(password);
+        return user;
+    }
+
+    @Override
+    public void closeUserAccount(Long id) {
+        User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found."));
+        if (user.getStatus() == UserStatus.USER_STATUS_CLOSED) {
+            return;
+        }
+        /* delete user info, but keep the record as FK of history reservations */
+        user.setStatus(UserStatus.USER_STATUS_CLOSED);
+        user.setUsername(null);
+        user.setPassword(null);
         /* close reservations */
-        List<Reservation> reservations = reservationRepository.findByRoomIdAndStartAfterAndActive(id, LocalDateTime.now());
+        List<Reservation> reservations = reservationRepository.findByUserIdAndStartAfterAndActive(id, LocalDateTime.now());
         for (Reservation reservation : reservations) {
             reservation.setStatus(ReservationStatus.RESERVATION_STATUS_CLOSED);
-            reservation.setUser(null);
         }
-        /* delete user */
-        /* TODO: how to delete or inactivate an account */
-        userRepository.deleteById(id);
     }
-
 }

@@ -1,6 +1,10 @@
 package com.zsj.RoomBooking.controller;
 
 import com.zsj.RoomBooking.mapper.UserMapper;
+import com.zsj.RoomBooking.model.Role;
+import com.zsj.RoomBooking.model.UserStatus;
+import com.zsj.RoomBooking.model.dto.request.UpdatePasswordRequest;
+import com.zsj.RoomBooking.model.dto.request.UpdateUsernameRequest;
 import com.zsj.RoomBooking.model.dto.request.UserRequest;
 import com.zsj.RoomBooking.model.dto.response.UserResponse;
 import com.zsj.RoomBooking.service.UserService;
@@ -9,11 +13,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -32,6 +37,12 @@ public class UserController {
         return userMapper.toResponse(service.getUser(id));
     }
 
+    @GetMapping
+    public List<UserResponse> searchUser(@RequestParam String username, @RequestParam Role role,
+                                         @RequestParam UserStatus status) {
+        return service.searchUsers(username, role, status).stream().map(userMapper::toResponse).toList();
+    }
+
     @PostMapping
     public ResponseEntity<UserResponse> addUser(@RequestBody UserRequest userRequest) {
         return new ResponseEntity<>(
@@ -40,14 +51,19 @@ public class UserController {
         );
     }
 
-    @PutMapping("/{id}")
-    public UserResponse updateUser(@PathVariable Long id, @RequestBody UserRequest userRequest) {
-        return userMapper.toResponse(service.updateUser(id, userRequest.username(), userRequest.password()));
+    @PatchMapping("/{id}/username")
+    public UserResponse updateUsername(@PathVariable Long id, @RequestBody UpdateUsernameRequest request) {
+        return userMapper.toResponse(service.updateUsername(id, request.username()));
+    }
+
+    @PatchMapping("/{id}/password")
+    public UserResponse updatePassword(@PathVariable Long id, @RequestBody UpdatePasswordRequest request) {
+        return userMapper.toResponse(service.updatePassword(id, request.password()));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<UserResponse> deleteUser(@PathVariable Long id) {
-        service.deleteUser(id);
+    public ResponseEntity<UserResponse> closeUserAccount(@PathVariable Long id) {
+        service.closeUserAccount(id);
         return ResponseEntity.noContent().build();
     }
 }

@@ -2,6 +2,8 @@ package com.zsj.RoomBooking.controller;
 
 import com.zsj.RoomBooking.mapper.UserMapper;
 import com.zsj.RoomBooking.model.Role;
+import com.zsj.RoomBooking.model.dto.request.UpdatePasswordRequest;
+import com.zsj.RoomBooking.model.dto.request.UpdateUsernameRequest;
 import com.zsj.RoomBooking.model.dto.request.UserRequest;
 import com.zsj.RoomBooking.model.entity.User;
 import com.zsj.RoomBooking.service.UserService;
@@ -25,8 +27,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -78,30 +80,46 @@ public class UserControllerTest {
     void deleteUserTest() throws Exception {
         Long id = 1L;
 
-        doNothing().when(userService).deleteUser(id);
+        doNothing().when(userService).closeUserAccount(id);
 
         mockMvc.perform(delete("/users/{id}", id))
                 .andExpect(status().isNoContent());
 
-        verify(userService).deleteUser(id);
+        verify(userService).closeUserAccount(id);
     }
 
     @Test
-    void updateRoomTest() throws Exception {
+    void updateUsernameTest() throws Exception {
         Long id = 1L;
-        String username = "user1NewName";
-        String password = "password1";
+        String usernameNew = "user1NewName";
 
-        when(userService.updateUser(any(Long.class), eq(username), eq(password)))
-                .thenReturn(new User(username, password));
+        when(userService.updateUsername(eq(id), eq(usernameNew)))
+                .thenReturn(new User(usernameNew, ""));
 
-        mockMvc.perform(put("/users/{id}", id)
+        mockMvc.perform(patch("/users/{id}/username", id)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(this.objectMapper.writeValueAsString(new UserRequest(username, password))))
+                        .content(this.objectMapper.writeValueAsString(new UpdateUsernameRequest(usernameNew))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.username").value(username))
+                .andExpect(jsonPath("$.username").value(usernameNew))
                 .andExpect(jsonPath("$.password").doesNotExist())
                 .andExpect(jsonPath("$.roles", hasItem(Role.ROLE_USER.name())));
-        verify(userService).updateUser(id, username, password);
+    }
+
+    @Test
+    void updatePasswordTest() throws Exception {
+        Long id = 1L;
+        String password = "password1";
+
+        when(userService.updatePassword(eq(id), eq(password)))
+                .thenReturn(new User("user1", password));
+
+        mockMvc.perform(patch("/users/{id}/password", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper.writeValueAsString(new UpdatePasswordRequest(password))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value("user1"))
+                .andExpect(jsonPath("$.password").doesNotExist())
+                .andExpect(jsonPath("$.roles", hasItem(Role.ROLE_USER.name())));
+        verify(userService).updatePassword(id, password);
     }
 }

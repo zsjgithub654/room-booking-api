@@ -26,8 +26,10 @@ import java.util.Optional;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
@@ -67,7 +69,7 @@ public class RoomServiceImplTest {
     @Test
     void AddRoomTest() {
         Room room = new Room("101", 12, "Building A");
-        when(roomRepository.save(any(Room.class))).thenReturn(room);
+        doAnswer(returnsFirstArg()).when(roomRepository).save(eq(room));
         assertThat(roomService.addRoom(room))
                 .usingRecursiveComparison()
                 .isEqualTo(room);
@@ -195,7 +197,7 @@ public class RoomServiceImplTest {
                         LocalDateTime.of(2300, 3, 1, 15, 30, 0, 0)));
 
         when(roomRepository.findById(eq((searchId)))).thenReturn(Optional.of(room));
-        when(reservationRepository.findByRoomIdAndStartAfterAndActive(eq(searchId),any(LocalDateTime.class)))
+        when(reservationRepository.findByRoomIdAndStartAfterAndActive(eq(searchId), any(LocalDateTime.class)))
                 .thenReturn(reservations);
         doNothing().when(closureRepository).deleteByRoomIdAndAfterTime(eq(searchId), any(LocalDateTime.class));
 

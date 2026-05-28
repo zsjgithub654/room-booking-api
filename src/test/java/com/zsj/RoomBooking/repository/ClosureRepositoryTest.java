@@ -61,7 +61,7 @@ public class ClosureRepositoryTest {
 
 
     @Test
-    void getTimeByRoomIdAndIntervalHasResultTest() {
+    void getTimeByRoomIdAndOverlappingHasResultTest() {
         List<Closure> closures = List.of(
                 /* startTime < lowerBound, lowerBound < end Time < upperBound */
                 new Closure(room,
@@ -81,7 +81,7 @@ public class ClosureRepositoryTest {
                         LocalDateTime.of(2026, 7, 1, 15, 30, 0, 0))
         );
         closureRepository.saveAll(closures);
-        List<TimeRange> timeRanges = closureRepository.getTimeByRoomIdAndInterval(room.getId(),
+        List<TimeRange> timeRanges = closureRepository.getTimeByRoomIdAndOverlapping(room.getId(),
                 LocalDateTime.of(2026, 5, 1, 0, 0, 0, 0),
                 LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0));
         assertThat(timeRanges).hasSize(4);
@@ -91,29 +91,56 @@ public class ClosureRepositoryTest {
     }
 
     @Test
-    void getTimeByRoomIdAndIntervalNoResultMatchRoomTest() {
+    void getTimeByRoomIdAndOverlappingIntervalNoResultMatchRoomTest() {
         Closure closure = new Closure(room,
                 LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
                 LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0));
         closureRepository.save(closure);
 
-        List<TimeRange> timeRanges = closureRepository.getTimeByRoomIdAndInterval(room.getId() + 1,
+        List<TimeRange> timeRanges = closureRepository.getTimeByRoomIdAndOverlapping(room.getId() + 1,
                 LocalDateTime.of(2026, 5, 1, 0, 0, 0, 0),
                 LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0));
         assertThat(timeRanges).hasSize(0);
     }
 
     @Test
-    void getTimeByRoomIdAndIntervalNoResultMatchTimeTest() {
+    void getTimeByRoomIdAndOverlappingIntervalNoResultMatchTimeTest() {
         Closure closure = new Closure(room,
                 LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
                 LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0));
         closureRepository.save(closure);
 
-        List<TimeRange> timeRanges = closureRepository.getTimeByRoomIdAndInterval(room.getId(),
+        List<TimeRange> timeRanges = closureRepository.getTimeByRoomIdAndOverlapping(room.getId(),
                 LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0),
                 LocalDateTime.of(2026, 8, 1, 0, 0, 0, 0));
         assertThat(timeRanges).hasSize(0);
+    }
+
+    @Test
+    void findByRoomIdAndOverlappingOrAdjacentHasResultTest() {
+        List<Closure> closures = List.of(
+                new Closure(room,
+                        LocalDateTime.of(2026, 5, 1, 0, 0, 0, 0),
+                        LocalDateTime.of(2026, 5, 1, 15, 30, 0, 0)),
+                new Closure(room,
+                        LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
+                        LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0)),
+                new Closure(room,
+                        LocalDateTime.of(2026, 6, 30, 14, 30, 0, 0),
+                        LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0)),
+                new Closure(room,
+                        LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0),
+                        LocalDateTime.of(2026, 7, 1, 15, 30, 0, 0))
+        );
+        closureRepository.saveAll(closures);
+
+        List<Closure> result = closureRepository.findByRoomIdAndOverlappingOrAdjacent(room.getId(),
+                LocalDateTime.of(2026, 5, 1, 0, 0, 0, 0),
+                LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0));
+        assertThat(result).hasSize(4);
+        assertThat(result)
+                .usingRecursiveComparison()
+                .isEqualTo(closures);
     }
 
     @Test

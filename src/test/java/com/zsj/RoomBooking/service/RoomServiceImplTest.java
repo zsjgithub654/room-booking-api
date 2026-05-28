@@ -127,9 +127,9 @@ public class RoomServiceImplTest {
                         LocalDateTime.of(2026, 3, 1, 16, 0, 0, 0)));
         /* mock */
         when(roomRepository.findAll(any(Specification.class))).thenReturn(List.of(room));
-        when(closureRepository.getTimeByRoomIdAndInterval(eq(null), any(LocalDateTime.class), any(LocalDateTime.class)))
+        when(closureRepository.getTimeByRoomIdAndOverlapping(eq(null), any(LocalDateTime.class), any(LocalDateTime.class)))
                 .thenReturn(closures);
-        when(reservationRepository.getTimeByRoomIdAndIntervalAndActive(eq(null), any(LocalDateTime.class), any(LocalDateTime.class)))
+        when(reservationRepository.getTimeByRoomIdAndOverlappingAndActive(eq(null), any(LocalDateTime.class), any(LocalDateTime.class)))
                 .thenReturn(reservations);
         /* verify */
         /* search range start and end time don't overlapped with occupations in between */

@@ -1,10 +1,8 @@
 package com.zsj.RoomBooking.repository;
 
-import com.zsj.RoomBooking.model.ReservationStatus;
 import com.zsj.RoomBooking.model.TimeRange;
 import com.zsj.RoomBooking.model.entity.Reservation;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
@@ -23,7 +21,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                   AND reservation.startTime < :toTime
                   AND reservation.endTime > :fromTime
             """)
-    List<TimeRange> getTimeByRoomIdAndIntervalAndActive(Long roomId, LocalDateTime fromTime, LocalDateTime toTime);
+    List<TimeRange> getTimeByRoomIdAndOverlappingAndActive(Long roomId, LocalDateTime fromTime, LocalDateTime toTime);
 
     @Query("""
                 SELECT reservation
@@ -33,7 +31,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                   AND reservation.startTime < :toTime
                   AND reservation.endTime > :fromTime
             """)
-    List<Reservation> findByRoomIdAndIntervalAndActive(Long roomId, LocalDateTime fromTime, LocalDateTime toTime);
+    List<Reservation> findByRoomIdAndOverlappingAndActive(Long roomId, LocalDateTime fromTime, LocalDateTime toTime);
 
     @Query("""
                 SELECT reservation

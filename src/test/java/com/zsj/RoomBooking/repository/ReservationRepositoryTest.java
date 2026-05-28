@@ -63,9 +63,9 @@ public class ReservationRepositoryTest {
         assertThat(reservationsRetrieved).hasSize(0);
     }
 
-    /* getTimeByRoomIdAndIntervalAndActive */
+    /* getTimeByRoomIdAndOverlappingIntervalAndActive */
     @Test
-    void getTimeByRoomIdAndIntervalAndActiveHasResultTest() {
+    void getTimeByRoomIdAndOverlappingAndActiveHasResultTest() {
         List<Reservation> reservations = List.of(
                 /* startTime < lowerBound, lowerBound < end Time < upperBound */
                 new Reservation(user, room,
@@ -86,7 +86,7 @@ public class ReservationRepositoryTest {
         );
         reservationRepository.saveAll(reservations);
 
-        List<TimeRange> timeRanges = reservationRepository.getTimeByRoomIdAndIntervalAndActive(room.getId(),
+        List<TimeRange> timeRanges = reservationRepository.getTimeByRoomIdAndOverlappingAndActive(room.getId(),
                 LocalDateTime.of(2026, 5, 1, 0, 0, 0, 0),
                 LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0));
         assertThat(timeRanges).hasSize(4);
@@ -96,40 +96,40 @@ public class ReservationRepositoryTest {
     }
 
     @Test
-    void getTimeByRoomIdAndIntervalAndActiveNoResultMatchRoomTest() {
+    void getTimeByRoomIdAndOverlappingIntervalAndActiveNoResultMatchRoomTest() {
         Reservation reservation = new Reservation(user, room,
                 LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
                 LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0));
         reservationRepository.save(reservation);
 
-        List<TimeRange> timeRanges = reservationRepository.getTimeByRoomIdAndIntervalAndActive(room.getId() + 1,
+        List<TimeRange> timeRanges = reservationRepository.getTimeByRoomIdAndOverlappingAndActive(room.getId() + 1,
                 LocalDateTime.of(2026, 5, 1, 0, 0, 0, 0),
                 LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0));
         assertThat(timeRanges).hasSize(0);
     }
 
     @Test
-    void getTimeByRoomIdAndIntervalAndActiveNoResultMatchTimeTest() {
+    void getTimeByRoomIdAndOverlappingIntervalAndActiveNoResultMatchTimeTest() {
         Reservation reservation = new Reservation(user, room,
                 LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
                 LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0));
         reservationRepository.save(reservation);
 
-        List<TimeRange> timeRanges = reservationRepository.getTimeByRoomIdAndIntervalAndActive(room.getId(),
+        List<TimeRange> timeRanges = reservationRepository.getTimeByRoomIdAndOverlappingAndActive(room.getId(),
                 LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0),
                 LocalDateTime.of(2026, 8, 1, 0, 0, 0, 0));
         assertThat(timeRanges).hasSize(0);
     }
 
     @Test
-    void getTimeByRoomIdAndIntervalAndActiveNoResultMatchStatusTest() {
+    void getTimeByRoomIdAndOverlappingAndActiveNoResultMatchStatusTest() {
         Reservation reservation = new Reservation(user, room,
                 LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
                 LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0));
         reservation.setStatus(ReservationStatus.RESERVATION_STATUS_CANCELED);
         reservationRepository.save(reservation);
 
-        List<TimeRange> timeRanges = reservationRepository.getTimeByRoomIdAndIntervalAndActive(room.getId(),
+        List<TimeRange> timeRanges = reservationRepository.getTimeByRoomIdAndOverlappingAndActive(room.getId(),
                 LocalDateTime.of(2026, 5, 1, 0, 0, 0, 0),
                 LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0));
         assertThat(timeRanges).hasSize(0);

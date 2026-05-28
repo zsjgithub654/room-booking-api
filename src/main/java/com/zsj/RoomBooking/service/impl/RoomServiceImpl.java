@@ -76,8 +76,8 @@ public class RoomServiceImpl implements RoomService {
     }
 
     private List<TimeRange> getAvailabilitiesForRoom(Long roomId, LocalDateTime startTime, LocalDateTime endTime) {
-        List<TimeRange> closures = closureRepository.getTimeByRoomIdAndInterval(roomId, startTime, endTime);
-        List<TimeRange> reservations = reservationRepository.getTimeByRoomIdAndIntervalAndActive(roomId, startTime, endTime);
+        List<TimeRange> closures = closureRepository.getTimeByRoomIdAndOverlapping(roomId, startTime, endTime);
+        List<TimeRange> reservations = reservationRepository.getTimeByRoomIdAndOverlappingAndActive(roomId, startTime, endTime);
         List<TimeRange> occupations = new ArrayList<>();
         occupations.addAll(closures);
         occupations.addAll(reservations);

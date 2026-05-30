@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 public class Closure {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     @ManyToOne
     private Room room;
@@ -29,7 +29,7 @@ public class Closure {
     public Closure() {
     }
 
-    public long getId() {
+    public Long getId() {
         return id;
     }
 

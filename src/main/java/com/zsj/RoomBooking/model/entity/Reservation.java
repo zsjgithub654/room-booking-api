@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 public class Reservation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     @ManyToOne
     private User user;
@@ -55,7 +55,7 @@ public class Reservation {
     /* required by JPA */
     public Reservation() {}
 
-    public long getId() {
+    public Long getId() {
         return id;
     }
 

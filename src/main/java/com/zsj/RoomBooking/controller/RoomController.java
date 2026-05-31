@@ -1,6 +1,6 @@
 package com.zsj.RoomBooking.controller;
 
-import com.zsj.RoomBooking.mapper.AvailabilityMapper;
+import com.zsj.RoomBooking.mapper.RoomScheduleMapper;
 import com.zsj.RoomBooking.mapper.ReservationMapper;
 import com.zsj.RoomBooking.mapper.RoomMapper;
 import com.zsj.RoomBooking.model.dto.request.SearchRoomRequest;
@@ -8,8 +8,7 @@ import com.zsj.RoomBooking.model.dto.request.RoomRequest;
 import com.zsj.RoomBooking.model.dto.response.DeleteRoomResponse;
 import com.zsj.RoomBooking.model.dto.response.RoomResponse;
 import com.zsj.RoomBooking.model.dto.request.SearchAvailabilityRequest;
-import com.zsj.RoomBooking.model.dto.response.AvailabilityResponse;
-import com.zsj.RoomBooking.model.entity.Room;
+import com.zsj.RoomBooking.model.dto.response.RoomScheduleResponse;
 import com.zsj.RoomBooking.service.RoomService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -39,7 +38,7 @@ public class RoomController {
     private ReservationMapper reservationMapper;
 
     @Autowired
-    private AvailabilityMapper availabilityMapper;
+    private RoomScheduleMapper roomScheduleMapper;
 
     @GetMapping
     public List<RoomResponse> searchRooms(@ModelAttribute SearchRoomRequest request) {
@@ -50,17 +49,19 @@ public class RoomController {
         ).stream().map(roomMapper::toResponse).toList();
     }
 
+    /* TODO: add constraint on search time range length, or page the result */
     @GetMapping("/availabilities")
-    public List<AvailabilityResponse> searchAvailabilities(@ModelAttribute SearchAvailabilityRequest request) {
+    public List<RoomScheduleResponse> searchAvailabilities(@ModelAttribute SearchAvailabilityRequest request) {
         return roomService.searchAvailabilities(
                 request.name(),
                 request.minCapacity(), request.maxCapacity(),
                 request.area(),
                 request.startTime(), request.endTime()
-        ).stream().map(availabilityMapper::toResponse).toList();
+        ).stream().map(roomScheduleMapper::toResponse).toList();
     }
 
     @GetMapping("/{roomId}")
+    /* TODO: rename */
     public RoomResponse getRoom(@PathVariable Long roomId) {
         return roomMapper.toResponse(roomService.getRoom(roomId));
     }
@@ -69,7 +70,7 @@ public class RoomController {
     @PostMapping
     public ResponseEntity<RoomResponse> addRoom(@RequestBody RoomRequest request) {
         return new ResponseEntity<>(roomMapper.toResponse(
-                roomService.addRoom(new Room(request.name(), request.capacity(), request.area()))),
+                roomService.addRoom(roomMapper.toEntity(request))),
                 HttpStatus.CREATED
         );
     }
@@ -85,7 +86,12 @@ public class RoomController {
     @PutMapping("/{roomId}")
     public RoomResponse updateRoom(@PathVariable Long roomId, @RequestBody RoomRequest request) {
         return roomMapper.toResponse(
-                roomService.updateRoom(roomId, request.name(), request.capacity(), request.area())
+                roomService.updateRoom(roomId,
+                        request.name(),
+                        request.capacity(),
+                        request.area(),
+                        request.openTime(),
+                        request.closeTime())
         );
     }
 }

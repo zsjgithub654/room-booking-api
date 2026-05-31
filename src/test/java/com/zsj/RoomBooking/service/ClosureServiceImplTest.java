@@ -86,7 +86,7 @@ public class ClosureServiceImplTest {
 
     @Test
     void AddClosureTest() {
-        Room room = new Room("101", 12, "Building A");
+        Room room = new Room("101", 12, "Building A", null, null);
         LocalDateTime startTime = LocalDateTime.of(2026, 3, 1, 12, 0, 0, 0);
         LocalDateTime endTime = LocalDateTime.of(2026, 3, 1, 16, 0, 0, 0);
         List<Reservation> reservations = List.of(

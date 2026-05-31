@@ -8,10 +8,17 @@ import org.springframework.stereotype.Component;
 @Component
 public class RoomMapper {
     public RoomResponse toResponse(Room room) {
-        return new RoomResponse(room.getId(), room.getName(), room.getCapacity(), room.getArea());
+        return new RoomResponse(room.getId(),
+                room.getName(),
+                room.getCapacity(),
+                room.getArea(),
+                room.getOpenTime(), room.getCloseTime());
     }
 
     public Room toEntity(RoomRequest request) {
-        return new Room(request.name(), request.capacity(), request.area());
+        return new Room(request.name(),
+                request.capacity(),
+                request.area(),
+                request.openTime(), request.closeTime());
     }
 }

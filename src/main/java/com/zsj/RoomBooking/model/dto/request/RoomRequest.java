@@ -1,4 +1,6 @@
 package com.zsj.RoomBooking.model.dto.request;
 
-public record RoomRequest(String name, int capacity, String area) {
+import java.time.LocalTime;
+
+public record RoomRequest(String name, int capacity, String area, LocalTime openTime, LocalTime closeTime) {
 }

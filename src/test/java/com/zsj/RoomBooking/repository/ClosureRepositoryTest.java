@@ -1,9 +1,7 @@
 package com.zsj.RoomBooking.repository;
 
-import com.zsj.RoomBooking.model.TimeRange;
 import com.zsj.RoomBooking.model.entity.Closure;
 import com.zsj.RoomBooking.model.entity.Room;
-import com.zsj.RoomBooking.model.entity.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,17 +21,12 @@ public class ClosureRepositoryTest {
     @Autowired
     private RoomRepository roomRepository;
 
-    @Autowired
-    private UserRepository userRepository;
-
-    private User user;
     private Room room;
 
+    /* DataJpaTest rollback DB after each test */
     @BeforeEach
-    /* DateJpaTest rollback DB after each test */
     public void setup() {
-        room = roomRepository.save(new Room("101", 12, "building A"));
-        user = userRepository.save(new User("user1", ""));
+        room = roomRepository.save(new Room("101", 12, "building A", null, null));
     }
 
     @Test
@@ -61,7 +54,7 @@ public class ClosureRepositoryTest {
 
 
     @Test
-    void getTimeByRoomIdAndOverlappingHasResultTest() {
+    void findByRoomIdAndOverlappingHasResultTest() {
         List<Closure> closures = List.of(
                 /* startTime < lowerBound, lowerBound < end Time < upperBound */
                 new Closure(room,
@@ -71,7 +64,7 @@ public class ClosureRepositoryTest {
                 new Closure(room,
                         LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
                         LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0)),
-                /* lowerBound < end Time < upperBound, end Time > upperBound */
+                /* lowerBound < startTime < upperBound, end Time > upperBound */
                 new Closure(room,
                         LocalDateTime.of(2026, 6, 30, 14, 30, 0, 0),
                         LocalDateTime.of(2026, 7, 1, 15, 30, 0, 0)),
@@ -81,39 +74,40 @@ public class ClosureRepositoryTest {
                         LocalDateTime.of(2026, 7, 1, 15, 30, 0, 0))
         );
         closureRepository.saveAll(closures);
-        List<TimeRange> timeRanges = closureRepository.getTimeByRoomIdAndOverlapping(room.getId(),
+        List<Closure> result = closureRepository.findByRoomIdAndOverlapping(room.getId(),
                 LocalDateTime.of(2026, 5, 1, 0, 0, 0, 0),
                 LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0));
-        assertThat(timeRanges).hasSize(4);
-        assertThat(timeRanges)
+        assertThat(result).hasSize(4);
+        assertThat(result)
                 .usingRecursiveComparison()
                 .isEqualTo(closures);
     }
 
+
     @Test
-    void getTimeByRoomIdAndOverlappingIntervalNoResultMatchRoomTest() {
+    void findByRoomIdAndOverlappingNoResultMatchRoomTest() {
         Closure closure = new Closure(room,
                 LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
                 LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0));
         closureRepository.save(closure);
 
-        List<TimeRange> timeRanges = closureRepository.getTimeByRoomIdAndOverlapping(room.getId() + 1,
+        List<Closure> result = closureRepository.findByRoomIdAndOverlapping(room.getId() + 1,
                 LocalDateTime.of(2026, 5, 1, 0, 0, 0, 0),
                 LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0));
-        assertThat(timeRanges).hasSize(0);
+        assertThat(result).hasSize(0);
     }
 
     @Test
-    void getTimeByRoomIdAndOverlappingIntervalNoResultMatchTimeTest() {
+    void findByRoomIdAndOverlappingNoResultMatchTimeTest() {
         Closure closure = new Closure(room,
                 LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
                 LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0));
         closureRepository.save(closure);
 
-        List<TimeRange> timeRanges = closureRepository.getTimeByRoomIdAndOverlapping(room.getId(),
+        List<Closure> result = closureRepository.findByRoomIdAndOverlapping(room.getId(),
                 LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0),
                 LocalDateTime.of(2026, 8, 1, 0, 0, 0, 0));
-        assertThat(timeRanges).hasSize(0);
+        assertThat(result).hasSize(0);
     }
 
     @Test
@@ -154,7 +148,7 @@ public class ClosureRepositoryTest {
                         LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0)));
         closureRepository.saveAll(closures);
 
-        closureRepository.deleteByRoomIdAndAfterTime(1L,
+        closureRepository.deleteByRoomIdAndAfterTime(room.getId(),
                 LocalDateTime.of(2026, 6, 1, 0, 0, 0, 0));
         assertThat(closureRepository.findByRoomId(room.getId())).hasSize(1);
     }

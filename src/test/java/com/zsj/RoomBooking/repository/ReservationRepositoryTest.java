@@ -1,7 +1,6 @@
 package com.zsj.RoomBooking.repository;
 
 import com.zsj.RoomBooking.model.ReservationStatus;
-import com.zsj.RoomBooking.model.TimeRange;
 import com.zsj.RoomBooking.model.entity.Reservation;
 import com.zsj.RoomBooking.model.entity.Room;
 import com.zsj.RoomBooking.model.entity.User;
@@ -30,9 +29,9 @@ public class ReservationRepositoryTest {
     private Room room;
 
     @BeforeEach
-    /* DateJpaTest rollback DB after each test */
+    /* DataJpaTest rollback DB after each test */
     public void setup() {
-        room = roomRepository.save(new Room("101", 12, "building A"));
+        room = roomRepository.save(new Room("101", 12, "building A", null, null));
         user = userRepository.save(new User("user1", ""));
     }
 
@@ -65,7 +64,7 @@ public class ReservationRepositoryTest {
 
     /* getTimeByRoomIdAndOverlappingIntervalAndActive */
     @Test
-    void getTimeByRoomIdAndOverlappingAndActiveHasResultTest() {
+    void findByRoomIdAndOverlappingAndActiveHasResultTest() {
         List<Reservation> reservations = List.of(
                 /* startTime < lowerBound, lowerBound < end Time < upperBound */
                 new Reservation(user, room,
@@ -86,53 +85,53 @@ public class ReservationRepositoryTest {
         );
         reservationRepository.saveAll(reservations);
 
-        List<TimeRange> timeRanges = reservationRepository.getTimeByRoomIdAndOverlappingAndActive(room.getId(),
+        List<Reservation> result = reservationRepository.findByRoomIdAndOverlappingAndActive(room.getId(),
                 LocalDateTime.of(2026, 5, 1, 0, 0, 0, 0),
                 LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0));
-        assertThat(timeRanges).hasSize(4);
-        assertThat(timeRanges)
+        assertThat(result).hasSize(4);
+        assertThat(result)
                 .usingRecursiveComparison()
                 .isEqualTo(reservations);
     }
 
     @Test
-    void getTimeByRoomIdAndOverlappingIntervalAndActiveNoResultMatchRoomTest() {
+    void findByRoomIdAndOverlappingIntervalAndActiveNoResultMatchRoomTest() {
         Reservation reservation = new Reservation(user, room,
                 LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
                 LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0));
         reservationRepository.save(reservation);
 
-        List<TimeRange> timeRanges = reservationRepository.getTimeByRoomIdAndOverlappingAndActive(room.getId() + 1,
+        List<Reservation> result = reservationRepository.findByRoomIdAndOverlappingAndActive(room.getId() + 1,
                 LocalDateTime.of(2026, 5, 1, 0, 0, 0, 0),
                 LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0));
-        assertThat(timeRanges).hasSize(0);
+        assertThat(result).hasSize(0);
     }
 
     @Test
-    void getTimeByRoomIdAndOverlappingIntervalAndActiveNoResultMatchTimeTest() {
+    void findByRoomIdAndOverlappingIntervalAndActiveNoResultMatchTimeTest() {
         Reservation reservation = new Reservation(user, room,
                 LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
                 LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0));
         reservationRepository.save(reservation);
 
-        List<TimeRange> timeRanges = reservationRepository.getTimeByRoomIdAndOverlappingAndActive(room.getId(),
+        List<Reservation> result = reservationRepository.findByRoomIdAndOverlappingAndActive(room.getId(),
                 LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0),
                 LocalDateTime.of(2026, 8, 1, 0, 0, 0, 0));
-        assertThat(timeRanges).hasSize(0);
+        assertThat(result).hasSize(0);
     }
 
     @Test
-    void getTimeByRoomIdAndOverlappingAndActiveNoResultMatchStatusTest() {
+    void findByRoomIdAndOverlappingAndActiveNoResultMatchStatusTest() {
         Reservation reservation = new Reservation(user, room,
                 LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
                 LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0));
         reservation.setStatus(ReservationStatus.RESERVATION_STATUS_CANCELED);
         reservationRepository.save(reservation);
 
-        List<TimeRange> timeRanges = reservationRepository.getTimeByRoomIdAndOverlappingAndActive(room.getId(),
+        List<Reservation> result = reservationRepository.findByRoomIdAndOverlappingAndActive(room.getId(),
                 LocalDateTime.of(2026, 5, 1, 0, 0, 0, 0),
                 LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0));
-        assertThat(timeRanges).hasSize(0);
+        assertThat(result).hasSize(0);
     }
 
     /* findByRoomIdAndStartAfterAndActive */

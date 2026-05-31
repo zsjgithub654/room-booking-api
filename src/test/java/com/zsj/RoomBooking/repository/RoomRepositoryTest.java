@@ -24,9 +24,9 @@ public class RoomRepositoryTest {
     void Setup() {
         roomRepository.deleteAll();
         List<Room> rooms = List.of(
-                new Room("101", 12, "Building A"),
-                new Room("102", 4, "Building A"),
-                new Room("101", 6, "Building B")
+                new Room("101", 12, "Building A", null, null),
+                new Room("102", 4, "Building A", null, null),
+                new Room("101", 6, "Building B", null, null)
         );
         rooms.get(2).setStatus(RoomStatus.ROOM_STATUS_DELETED);
         roomRepository.saveAll(rooms);

@@ -1,11 +1,12 @@
 package com.zsj.RoomBooking.service.impl;
 
 import com.zsj.RoomBooking.exception.ResourceNotFoundException;
-import com.zsj.RoomBooking.model.Availability;
+import com.zsj.RoomBooking.model.RoomSchedule;
+import com.zsj.RoomBooking.model.Occupation;
 import com.zsj.RoomBooking.model.ReservationStatus;
+import com.zsj.RoomBooking.model.entity.Closure;
 import com.zsj.RoomBooking.model.entity.Reservation;
 import com.zsj.RoomBooking.model.entity.Room;
-import com.zsj.RoomBooking.model.TimeRange;
 import com.zsj.RoomBooking.model.RoomStatus;
 import com.zsj.RoomBooking.repository.ClosureRepository;
 import com.zsj.RoomBooking.repository.ReservationRepository;
@@ -18,9 +19,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Stream;
 
 @Service
 @Transactional
@@ -58,46 +61,60 @@ public class RoomServiceImpl implements RoomService {
     }
 
     @Override
-    public List<Availability> searchAvailabilities(String name, Integer minCapacity, Integer maxCapacity, String area, LocalDateTime startTime, LocalDateTime endTime) {
+    public List<RoomSchedule> searchAvailabilities(String name, Integer minCapacity, Integer maxCapacity, String area, LocalDateTime startTime, LocalDateTime endTime) {
         /* filter rooms */
         List<Room> rooms = searchRooms(name, minCapacity, maxCapacity, area);
         /* calculate availability */
-        List<Availability> availabilities = new ArrayList<>();
+        List<RoomSchedule> availabilities = new ArrayList<>();
         for (Room room : rooms) {
             /* calculate available slots */
-            List<TimeRange> availableSlots = getAvailabilitiesForRoom(room.getId(), startTime, endTime);
-            /* skip unavailable rooms */
-            if (availableSlots.isEmpty()) {
+            List<Occupation> occupations = getOccupationsForRoom(room.getId(), startTime, endTime);
+            /* skip rooms if no gap between occupations during the given range */
+            if (!isAvailableDuringTime(room.getOpenTime(), room.getCloseTime(), startTime, endTime, occupations)) {
                 continue;
             }
-            availabilities.add(new Availability(room, availableSlots));
+            availabilities.add(new RoomSchedule(room, occupations));
         }
         return availabilities;
     }
 
-    private List<TimeRange> getAvailabilitiesForRoom(Long roomId, LocalDateTime startTime, LocalDateTime endTime) {
-        List<TimeRange> closures = closureRepository.getTimeByRoomIdAndOverlapping(roomId, startTime, endTime);
-        List<TimeRange> reservations = reservationRepository.getTimeByRoomIdAndOverlappingAndActive(roomId, startTime, endTime);
-        List<TimeRange> occupations = new ArrayList<>();
-        occupations.addAll(closures);
-        occupations.addAll(reservations);
-        /* sort occupied time ranges */
-        occupations.sort(Comparator.comparing(TimeRange::getStartTime));
-        /* add slots between occupied time ranges */
-        List<TimeRange> availableSlots = new ArrayList<>();
-        LocalDateTime slotStartTime = startTime;
-        for (TimeRange occupation : occupations) {
-            if (occupation.getStartTime().isAfter(slotStartTime)) {
-                availableSlots.add(new TimeRange(slotStartTime, occupation.getStartTime()));
+    private boolean isAvailableDuringTime(LocalTime openTime, LocalTime closeTime, LocalDateTime fromTime, LocalDateTime toTime, List<Occupation> occupations) {
+        LocalDateTime availableSince = getNoEarlierThanOpenTime(fromTime, openTime);
+        /* check if there is gap between occupations during the given range */
+        for (Occupation occupation : occupations) {
+            LocalDateTime availableUntil = getNoLaterThanCloseTime(occupation.getStartTime(), closeTime);
+            if (availableSince.isBefore(availableUntil)) {
+                return true;
             }
-            slotStartTime = occupation.getEndTime();
+            availableSince = getNoEarlierThanOpenTime(occupation.getEndTime(), openTime);
         }
-        /* add slot after the last occupied time range */
-        if (slotStartTime.isBefore(endTime)) {
-            availableSlots.add(new TimeRange(slotStartTime, endTime));
-        }
-        return availableSlots;
+        LocalDateTime availableUntil = getNoLaterThanCloseTime(toTime, closeTime);
+        return availableSince.isBefore(availableUntil);
     }
+
+    private LocalDateTime getNoEarlierThanOpenTime(LocalDateTime time, LocalTime openTime) {
+        return time.toLocalTime().isBefore(openTime)
+                ? time.toLocalDate().atTime(openTime)
+                : time;
+    }
+
+    private LocalDateTime getNoLaterThanCloseTime(LocalDateTime time, LocalTime closeTime) {
+        return time.toLocalTime().isAfter(closeTime)
+                ? time.toLocalDate().atTime(closeTime)
+                : time;
+    }
+
+    private List<Occupation> getOccupationsForRoom(Long roomId, LocalDateTime startTime, LocalDateTime endTime) {
+        List<Closure> closures = closureRepository.findByRoomIdAndOverlapping(roomId, startTime, endTime);
+        List<Reservation> reservations = reservationRepository.findByRoomIdAndOverlappingAndActive(roomId, startTime, endTime);
+        /* combine occupations and sort by startTime */
+        return Stream.concat(
+                        reservations.stream(),
+                        closures.stream())
+                .sorted(Comparator.comparing(Occupation::getStartTime))
+                .toList();
+    }
+
 
     /* TODO: rename */
     @Override
@@ -132,11 +149,14 @@ public class RoomServiceImpl implements RoomService {
     }
 
     @Override
-    public Room updateRoom(Long id, String name, Integer capacity, String area) {
+    public Room updateRoom(Long id, String name, Integer capacity, String area, LocalTime openTime, LocalTime closeTime) {
         Room room = roomRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Room not found."));
         room.setName(name);
         room.setCapacity(capacity);
         room.setArea(area);
+        /* TODO: not null */
+        room.setOpenTime(openTime);
+        room.setCloseTime(closeTime);
         return room;
     }
 }

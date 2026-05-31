@@ -1,7 +1,8 @@
 package com.zsj.RoomBooking.model.entity;
 
+import com.zsj.RoomBooking.model.Occupation;
+import com.zsj.RoomBooking.model.OccupationType;
 import com.zsj.RoomBooking.model.ReservationStatus;
-import com.zsj.RoomBooking.model.TimeRange;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -11,7 +12,7 @@ import jakarta.persistence.Entity;
 import java.time.LocalDateTime;
 
 @Entity
-public class Reservation {
+public class Reservation implements Occupation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -54,6 +55,11 @@ public class Reservation {
 
     /* required by JPA */
     public Reservation() {}
+
+    @Override
+    public OccupationType getOccupationType() {
+        return OccupationType.OCCUPATION_TYPE_RESERVATION;
+    }
 
     public Long getId() {
         return id;

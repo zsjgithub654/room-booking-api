@@ -1,5 +1,7 @@
 package com.zsj.RoomBooking.model.entity;
 
+import com.zsj.RoomBooking.model.Occupation;
+import com.zsj.RoomBooking.model.OccupationType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -9,7 +11,7 @@ import jakarta.persistence.ManyToOne;
 import java.time.LocalDateTime;
 
 @Entity
-public class Closure {
+public class Closure implements Occupation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -27,6 +29,11 @@ public class Closure {
     }
 
     public Closure() {
+    }
+
+    @Override
+    public OccupationType getOccupationType() {
+        return OccupationType.OCCUPATION_TYPE_CLOSURE;
     }
 
     public Long getId() {

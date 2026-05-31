@@ -7,6 +7,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Id;
 
+import java.time.LocalTime;
 import java.util.Set;
 
 @Entity
@@ -17,6 +18,9 @@ public class Room {
     private String name;
     private Integer capacity;
     private String area;
+    private RoomStatus status;
+    private LocalTime openTime = LocalTime.MIN;
+    private LocalTime closeTime = LocalTime.MAX;
 
     @OneToMany(mappedBy = "room")
     private Set<Reservation> reservations;
@@ -24,14 +28,20 @@ public class Room {
     /* TODO: need this or not? */
     @OneToMany(mappedBy = "room")
     private Set<Closure> closures;
-    private RoomStatus status;
 
-    public Room(String name, int capacity, String area) {
+    public Room(String name, int capacity, String area, LocalTime openTime, LocalTime closeTime) {
         this.name = name;
         this.capacity = capacity;
         this.area = area;
         this.status = RoomStatus.ROOM_STATUS_ACTIVE;
+        if (openTime != null) {
+            this.openTime = openTime;
+        }
+        if (closeTime != null) {
+            this.closeTime = closeTime;
+        }
     }
+
     /* required by JPA */
     public Room() {
     }
@@ -56,6 +66,14 @@ public class Room {
         return status;
     }
 
+    public LocalTime getCloseTime() {
+        return closeTime;
+    }
+
+    public LocalTime getOpenTime() {
+        return openTime;
+    }
+
     public void setName(String name) {
         this.name = name;
     }
@@ -70,6 +88,14 @@ public class Room {
 
     public void setCapacity(Integer capacity) {
         this.capacity = capacity;
+    }
+
+    public void setOpenTime(LocalTime openTime) {
+        this.openTime = openTime;
+    }
+
+    public void setCloseTime(LocalTime closeTime) {
+        this.closeTime = closeTime;
     }
 }
 

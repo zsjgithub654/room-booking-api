@@ -139,7 +139,7 @@ public class RoomServiceImpl implements RoomService {
         }
         room.setStatus(RoomStatus.ROOM_STATUS_DELETED);
         /* delete future closures */
-        closureRepository.deleteByRoomIdAndAfterTime(id, LocalDateTime.now());
+        closureRepository.deleteByRoomIdAndStartAfter(id, LocalDateTime.now());
         /* close future reservations */
         List<Reservation> reservations = reservationRepository.findByRoomIdAndStartAfterAndActive(id, LocalDateTime.now());
         for (Reservation reservation : reservations) {

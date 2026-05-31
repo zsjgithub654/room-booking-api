@@ -26,6 +26,18 @@ public interface ClosureRepository extends JpaRepository<Closure, Long> {
             LocalDateTime toTime
     );
 
+    @Query("""
+                SELECT COUNT(closure) > 0 FROM Closure closure
+                WHERE closure.room.id = :roomId
+                  AND closure.startTime < :toTime
+                  AND closure.endTime > :fromTime
+            """)
+    boolean existsByRoomIdAndOverlapping(
+            Long roomId,
+            LocalDateTime fromTime,
+            LocalDateTime toTime
+    );
+
     /* get closures that overlapping or adjacent with given interval */
     @Query("""
                 SELECT closure FROM Closure closure
@@ -45,5 +57,5 @@ public interface ClosureRepository extends JpaRepository<Closure, Long> {
                 WHERE closure.room.id = :roomId
                   AND closure.startTime > :fromTime
             """)
-    void deleteByRoomIdAndAfterTime(Long roomId, LocalDateTime fromTime);
+    void deleteByRoomIdAndStartAfter(Long roomId, LocalDateTime fromTime);
 }

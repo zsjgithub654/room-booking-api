@@ -87,6 +87,30 @@ public class ClosureRepositoryTest {
     }
 
     @Test
+    void existsByRoomIdAndOverlappingExistsTest() {
+        assertThat(closureRepository.existsByRoomIdAndOverlapping(room.getId(),
+                LocalDateTime.of(2026, 5, 1, 0, 0, 0, 0),
+                LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0))
+        ).isTrue();
+    }
+
+    @Test
+    void existsByRoomIdAndOverlappingNoResultMatchRoomTest() {
+        assertThat(closureRepository.existsByRoomIdAndOverlapping(room.getId() + 1,
+                LocalDateTime.of(2026, 5, 1, 0, 0, 0, 0),
+                LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0))
+        ).isFalse();
+    }
+
+    @Test
+    void existsByRoomIdAndOverlappingNoResultMatchTimeTest() {
+        assertThat(closureRepository.existsByRoomIdAndOverlapping(room.getId(),
+                LocalDateTime.of(2026, 8, 1, 0, 0, 0, 0),
+                LocalDateTime.of(2026, 9, 1, 0, 0, 0, 0))
+        ).isFalse();
+    }
+
+    @Test
     void findByRoomIdAndOverlappingOrAdjacentHasResultTest() {
         List<Closure> result = closureRepository.findByRoomIdAndOverlappingOrAdjacent(room.getId(),
                 LocalDateTime.of(2026, 4, 30, 14, 30, 0, 0),
@@ -98,8 +122,8 @@ public class ClosureRepositoryTest {
     }
 
     @Test
-    void deleteByRoomIdAndAfterTimeTest() {
-        closureRepository.deleteByRoomIdAndAfterTime(room.getId(),
+    void deleteByRoomIdAndStartAfterTest() {
+        closureRepository.deleteByRoomIdAndStartAfter(room.getId(),
                 LocalDateTime.of(2026, 6, 1, 0, 0, 0, 0));
         assertThat(closureRepository.findByRoomId(room.getId())).hasSize(2);
     }

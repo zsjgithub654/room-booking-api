@@ -236,7 +236,7 @@ public class RoomServiceImplTest {
         when(roomRepository.findById(eq((searchId)))).thenReturn(Optional.of(room));
         when(reservationRepository.findByRoomIdAndStartAfterAndActive(eq(searchId), any(LocalDateTime.class)))
                 .thenReturn(reservations);
-        doNothing().when(closureRepository).deleteByRoomIdAndAfterTime(eq(searchId), any(LocalDateTime.class));
+        doNothing().when(closureRepository).deleteByRoomIdAndStartAfter(eq(searchId), any(LocalDateTime.class));
 
         List<Reservation> closedReservations = roomService.deleteRoom(searchId);
         assertThat(room.getStatus()).isEqualTo(RoomStatus.ROOM_STATUS_DELETED);

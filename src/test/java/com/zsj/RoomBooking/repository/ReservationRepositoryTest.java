@@ -27,37 +27,42 @@ public class ReservationRepositoryTest {
 
     private User user;
     private Room room;
+    private List<Reservation> reservations;
 
     @BeforeEach
     /* DataJpaTest rollback DB after each test */
     public void setup() {
         room = roomRepository.save(new Room("101", 12, "building A", null, null));
         user = userRepository.save(new User("user1", ""));
+        reservations = reservationRepository.saveAll(List.of(
+                new Reservation(user, room,
+                        LocalDateTime.of(2026, 4, 30, 14, 30, 0, 0),
+                        LocalDateTime.of(2026, 5, 1, 15, 30, 0, 0)),
+                new Reservation(user, room,
+                        LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
+                        LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0)),
+                new Reservation(user, room,
+                        LocalDateTime.of(2026, 6, 30, 14, 30, 0, 0),
+                        LocalDateTime.of(2026, 7, 1, 15, 30, 0, 0)),
+                new Reservation(user, room,
+                        LocalDateTime.of(2026, 4, 30, 14, 30, 0, 0),
+                        LocalDateTime.of(2026, 7, 1, 15, 30, 0, 0))
+        ));
     }
 
     /* findByRoomId */
     @Test
     void findByRoomIdHasResultTest() {
-        Reservation reservation = new Reservation(user, room,
-                LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
-                LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0));
-        reservationRepository.save(reservation);
-
         List<Reservation> reservationsRetrieved = reservationRepository.findByRoomId(room.getId());
-        assertThat(reservationsRetrieved).hasSize(1);
-        assertThat(reservationsRetrieved.get(0))
+        assertThat(reservationsRetrieved).hasSize(reservations.size());
+        assertThat(reservationsRetrieved)
                 .usingRecursiveComparison()
                 .ignoringFields("id")
-                .isEqualTo(reservation);
+                .isEqualTo(reservations);
     }
 
     @Test
     void findByRoomIdNoResultTest() {
-        Reservation reservation = new Reservation(user, room,
-                LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
-                LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0));
-        reservationRepository.save(reservation);
-
         List<Reservation> reservationsRetrieved = reservationRepository.findByRoomId(room.getId() + 1);
         assertThat(reservationsRetrieved).hasSize(0);
     }
@@ -65,26 +70,6 @@ public class ReservationRepositoryTest {
     /* getTimeByRoomIdAndOverlappingIntervalAndActive */
     @Test
     void findByRoomIdAndOverlappingAndActiveHasResultTest() {
-        List<Reservation> reservations = List.of(
-                /* startTime < lowerBound, lowerBound < end Time < upperBound */
-                new Reservation(user, room,
-                        LocalDateTime.of(2026, 4, 30, 14, 30, 0, 0),
-                        LocalDateTime.of(2026, 5, 1, 15, 30, 0, 0)),
-                /* lowerBound < end Time < upperBound, lowerBound < endTime < upperBound */
-                new Reservation(user, room,
-                        LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
-                        LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0)),
-                /* lowerBound < end Time < upperBound, end Time > upperBound */
-                new Reservation(user, room,
-                        LocalDateTime.of(2026, 6, 30, 14, 30, 0, 0),
-                        LocalDateTime.of(2026, 7, 1, 15, 30, 0, 0)),
-                /* startTime < lowerBound, end Time > upperBound */
-                new Reservation(user, room,
-                        LocalDateTime.of(2026, 4, 30, 14, 30, 0, 0),
-                        LocalDateTime.of(2026, 7, 1, 15, 30, 0, 0))
-        );
-        reservationRepository.saveAll(reservations);
-
         List<Reservation> result = reservationRepository.findByRoomIdAndOverlappingAndActive(room.getId(),
                 LocalDateTime.of(2026, 5, 1, 0, 0, 0, 0),
                 LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0));
@@ -95,12 +80,7 @@ public class ReservationRepositoryTest {
     }
 
     @Test
-    void findByRoomIdAndOverlappingIntervalAndActiveNoResultMatchRoomTest() {
-        Reservation reservation = new Reservation(user, room,
-                LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
-                LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0));
-        reservationRepository.save(reservation);
-
+    void findByRoomIdAndOverlappingAndActiveNoResultMatchRoomTest() {
         List<Reservation> result = reservationRepository.findByRoomIdAndOverlappingAndActive(room.getId() + 1,
                 LocalDateTime.of(2026, 5, 1, 0, 0, 0, 0),
                 LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0));
@@ -108,25 +88,17 @@ public class ReservationRepositoryTest {
     }
 
     @Test
-    void findByRoomIdAndOverlappingIntervalAndActiveNoResultMatchTimeTest() {
-        Reservation reservation = new Reservation(user, room,
-                LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
-                LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0));
-        reservationRepository.save(reservation);
-
+    void findByRoomIdAndOverlappingAndActiveNoResultMatchTimeTest() {
         List<Reservation> result = reservationRepository.findByRoomIdAndOverlappingAndActive(room.getId(),
-                LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0),
-                LocalDateTime.of(2026, 8, 1, 0, 0, 0, 0));
+                LocalDateTime.of(2026, 8, 1, 0, 0, 0, 0),
+                LocalDateTime.of(2026, 9, 1, 0, 0, 0, 0));
         assertThat(result).hasSize(0);
     }
 
     @Test
     void findByRoomIdAndOverlappingAndActiveNoResultMatchStatusTest() {
-        Reservation reservation = new Reservation(user, room,
-                LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
-                LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0));
-        reservation.setStatus(ReservationStatus.RESERVATION_STATUS_CANCELED);
-        reservationRepository.save(reservation);
+        reservations.forEach(reservation -> reservation.setStatus(ReservationStatus.RESERVATION_STATUS_CANCELED));
+        reservationRepository.saveAll(reservations);
 
         List<Reservation> result = reservationRepository.findByRoomIdAndOverlappingAndActive(room.getId(),
                 LocalDateTime.of(2026, 5, 1, 0, 0, 0, 0),
@@ -134,52 +106,68 @@ public class ReservationRepositoryTest {
         assertThat(result).hasSize(0);
     }
 
+    @Test
+    void existsByRoomIdAndOverlappingAndActiveExistsTest() {
+        assertThat(reservationRepository.existsByRoomIdAndOverlappingAndActive(room.getId(),
+                LocalDateTime.of(2026, 5, 1, 0, 0, 0, 0),
+                LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0))
+        ).isTrue();
+    }
+
+    @Test
+    void existsByRoomIdAndOverlappingAndActiveNoResultMatchRoomTest() {
+        assertThat(reservationRepository.existsByRoomIdAndOverlappingAndActive(room.getId() + 1,
+                LocalDateTime.of(2026, 5, 1, 0, 0, 0, 0),
+                LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0))
+        ).isFalse();
+    }
+
+    @Test
+    void existsByRoomIdAndOverlappingAndActiveNoResultMatchTimeTest() {
+        assertThat(reservationRepository.existsByRoomIdAndOverlappingAndActive(room.getId(),
+                LocalDateTime.of(2026, 8, 1, 0, 0, 0, 0),
+                LocalDateTime.of(2026, 9, 1, 0, 0, 0, 0))
+        ).isFalse();
+    }
+
+    @Test
+    void existsByRoomIdAndOverlappingAndActiveNoResultMatchStatusTest() {
+        reservations.forEach(reservation -> reservation.setStatus(ReservationStatus.RESERVATION_STATUS_CANCELED));
+        reservationRepository.saveAll(reservations);
+
+        assertThat(reservationRepository.existsByRoomIdAndOverlappingAndActive(room.getId(),
+                LocalDateTime.of(2026, 5, 1, 0, 0, 0, 0),
+                LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0))
+        ).isFalse();
+    }
+
     /* findByRoomIdAndStartAfterAndActive */
     @Test
     void findByRoomIdAndStartAfterAndActiveHasResultTest() {
-        Reservation reservation = new Reservation(user, room,
-                LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
-                LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0));
-        reservationRepository.save(reservation);
-
         List<Reservation> reservations = reservationRepository.findByRoomIdAndStartAfterAndActive(room.getId(),
                 LocalDateTime.of(2026, 5, 1, 0, 0, 0, 0));
-        assertThat(reservations).hasSize(1);
-        assertThat(reservations.get(0)).isEqualTo(reservation);
+        assertThat(reservations).hasSize(2);
+        assertThat(reservations).isEqualTo(reservations);
     }
 
     @Test
     void findByRoomIdAndStartAfterAndActiveNoResultMatchRoomTest() {
-        Reservation reservation = new Reservation(user, room,
-                LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
-                LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0));
-        reservationRepository.save(reservation);
-
-        List<Reservation> queryResult = reservationRepository.findByRoomIdAndStartAfterAndActive(room.getId() + 1,
+        List<Reservation> reservations = reservationRepository.findByRoomIdAndStartAfterAndActive(room.getId() + 1,
                 LocalDateTime.of(2026, 5, 1, 0, 0, 0, 0));
-        assertThat(queryResult).hasSize(0);
+        assertThat(reservations).hasSize(0);
     }
 
     @Test
     void findByRoomIdAndStartAfterAndActiveNoResultMatchTimeTest() {
-        Reservation reservation = new Reservation(user, room,
-                LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
-                LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0));
-        reservationRepository.save(reservation);
-
-        List<Reservation> queryResult = reservationRepository.findByRoomIdAndStartAfterAndActive(room.getId(),
+        List<Reservation> reservations = reservationRepository.findByRoomIdAndStartAfterAndActive(room.getId(),
                 LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0));
-        assertThat(queryResult).hasSize(0);
+        assertThat(reservations).hasSize(0);
     }
 
     @Test
     void findByRoomIdAndStartAfterAndActiveNoResultMatchStatusTest() {
-        Reservation reservation = new Reservation(user, room,
-                LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
-                LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0));
-        reservation.setStatus(ReservationStatus.RESERVATION_STATUS_CANCELED);
-        reservationRepository.save(reservation);
-
+        reservations.forEach(reservation -> reservation.setStatus(ReservationStatus.RESERVATION_STATUS_CANCELED));
+        reservationRepository.saveAll(reservations);
         List<Reservation> queryResult = reservationRepository.findByRoomIdAndStartAfterAndActive(room.getId(),
                 LocalDateTime.of(2026, 5, 1, 0, 0, 0, 0));
         assertThat(queryResult).hasSize(0);
@@ -188,24 +176,14 @@ public class ReservationRepositoryTest {
     /* findByUserIdAndStartAfterAndActive */
     @Test
     void findByUserIdAndStartAfterAndActiveHasResultTest() {
-        Reservation reservation = new Reservation(user, room,
-                LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
-                LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0));
-        reservationRepository.save(reservation);
-
         List<Reservation> reservations = reservationRepository.findByUserIdAndStartAfterAndActive(user.getId(),
                 LocalDateTime.of(2026, 5, 1, 0, 0, 0, 0));
-        assertThat(reservations).hasSize(1);
-        assertThat(reservations.get(0)).isEqualTo(reservation);
+        assertThat(reservations).hasSize(2);
+        assertThat(reservations).isEqualTo(reservations);
     }
 
     @Test
     void findByUserIdAndStartAfterAndActiveNoResultMatchRoomTest() {
-        Reservation reservation = new Reservation(user, room,
-                LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
-                LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0));
-        reservationRepository.save(reservation);
-
         List<Reservation> queryResult = reservationRepository.findByUserIdAndStartAfterAndActive(user.getId() + 1,
                 LocalDateTime.of(2026, 5, 1, 0, 0, 0, 0));
         assertThat(queryResult).hasSize(0);
@@ -213,11 +191,6 @@ public class ReservationRepositoryTest {
 
     @Test
     void findByUserIdAndStartAfterAndActiveNoResultMatchTimeTest() {
-        Reservation reservation = new Reservation(user, room,
-                LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
-                LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0));
-        reservationRepository.save(reservation);
-
         List<Reservation> queryResult = reservationRepository.findByUserIdAndStartAfterAndActive(user.getId(),
                 LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0));
         assertThat(queryResult).hasSize(0);
@@ -225,11 +198,8 @@ public class ReservationRepositoryTest {
 
     @Test
     void findByUserIdAndStartAfterAndActiveNoResultMatchStatusTest() {
-        Reservation reservation = new Reservation(user, room,
-                LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
-                LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0));
-        reservation.setStatus(ReservationStatus.RESERVATION_STATUS_CANCELED);
-        reservationRepository.save(reservation);
+        reservations.forEach(reservation -> reservation.setStatus(ReservationStatus.RESERVATION_STATUS_CANCELED));
+        reservationRepository.saveAll(reservations);
 
         List<Reservation> queryResult = reservationRepository.findByUserIdAndStartAfterAndActive(user.getId(),
                 LocalDateTime.of(2026, 5, 1, 0, 0, 0, 0));

@@ -22,58 +22,45 @@ public class ClosureRepositoryTest {
     private RoomRepository roomRepository;
 
     private Room room;
+    private List<Closure> closures;
 
     /* DataJpaTest rollback DB after each test */
     @BeforeEach
     public void setup() {
         room = roomRepository.save(new Room("101", 12, "building A", null, null));
+        closures = closureRepository.saveAll(List.of(
+                new Closure(room,
+                        LocalDateTime.of(2026, 4, 30, 14, 30, 0, 0),
+                        LocalDateTime.of(2026, 5, 1, 15, 30, 0, 0)),
+                new Closure(room,
+                        LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
+                        LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0)),
+                new Closure(room,
+                        LocalDateTime.of(2026, 6, 30, 14, 30, 0, 0),
+                        LocalDateTime.of(2026, 7, 1, 15, 30, 0, 0)),
+                new Closure(room,
+                        LocalDateTime.of(2026, 4, 30, 14, 30, 0, 0),
+                        LocalDateTime.of(2026, 7, 1, 15, 30, 0, 0))
+        ));
     }
 
     @Test
     void findByRoomIdHasResultTest() {
-        Closure closure = new Closure(room,
-                LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
-                LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0));
-        closureRepository.save(closure);
         List<Closure> retrievedClosures = closureRepository.findByRoomId(room.getId());
-        assertThat(retrievedClosures).hasSize(1);
-        assertThat(retrievedClosures.get(0))
+        assertThat(retrievedClosures).hasSize(4);
+        assertThat(retrievedClosures)
                 .usingRecursiveComparison()
-                .isEqualTo(closure);
+                .isEqualTo(closures);
     }
 
     @Test
     void findByRoomIdNoResultMatchRoomTest() {
-        Closure closure = new Closure(room,
-                LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
-                LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0));
-        closureRepository.save(closure);
         List<Closure> retrievedClosures = closureRepository.findByRoomId(room.getId() + 1);
         assertThat(retrievedClosures).hasSize(0);
     }
 
-
     @Test
     void findByRoomIdAndOverlappingHasResultTest() {
-        List<Closure> closures = List.of(
-                /* startTime < lowerBound, lowerBound < end Time < upperBound */
-                new Closure(room,
-                        LocalDateTime.of(2026, 4, 30, 14, 30, 0, 0),
-                        LocalDateTime.of(2026, 5, 1, 15, 30, 0, 0)),
-                /* lowerBound < end Time < upperBound, lowerBound < endTime < upperBound */
-                new Closure(room,
-                        LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
-                        LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0)),
-                /* lowerBound < startTime < upperBound, end Time > upperBound */
-                new Closure(room,
-                        LocalDateTime.of(2026, 6, 30, 14, 30, 0, 0),
-                        LocalDateTime.of(2026, 7, 1, 15, 30, 0, 0)),
-                /* startTime < lowerBound, end Time > upperBound */
-                new Closure(room,
-                        LocalDateTime.of(2026, 4, 30, 14, 30, 0, 0),
-                        LocalDateTime.of(2026, 7, 1, 15, 30, 0, 0))
-        );
-        closureRepository.saveAll(closures);
         List<Closure> result = closureRepository.findByRoomIdAndOverlapping(room.getId(),
                 LocalDateTime.of(2026, 5, 1, 0, 0, 0, 0),
                 LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0));
@@ -83,14 +70,8 @@ public class ClosureRepositoryTest {
                 .isEqualTo(closures);
     }
 
-
     @Test
     void findByRoomIdAndOverlappingNoResultMatchRoomTest() {
-        Closure closure = new Closure(room,
-                LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
-                LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0));
-        closureRepository.save(closure);
-
         List<Closure> result = closureRepository.findByRoomIdAndOverlapping(room.getId() + 1,
                 LocalDateTime.of(2026, 5, 1, 0, 0, 0, 0),
                 LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0));
@@ -99,38 +80,17 @@ public class ClosureRepositoryTest {
 
     @Test
     void findByRoomIdAndOverlappingNoResultMatchTimeTest() {
-        Closure closure = new Closure(room,
-                LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
-                LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0));
-        closureRepository.save(closure);
-
         List<Closure> result = closureRepository.findByRoomIdAndOverlapping(room.getId(),
-                LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0),
-                LocalDateTime.of(2026, 8, 1, 0, 0, 0, 0));
+                LocalDateTime.of(2026, 8, 1, 0, 0, 0, 0),
+                LocalDateTime.of(2026, 9, 1, 0, 0, 0, 0));
         assertThat(result).hasSize(0);
     }
 
     @Test
     void findByRoomIdAndOverlappingOrAdjacentHasResultTest() {
-        List<Closure> closures = List.of(
-                new Closure(room,
-                        LocalDateTime.of(2026, 5, 1, 0, 0, 0, 0),
-                        LocalDateTime.of(2026, 5, 1, 15, 30, 0, 0)),
-                new Closure(room,
-                        LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
-                        LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0)),
-                new Closure(room,
-                        LocalDateTime.of(2026, 6, 30, 14, 30, 0, 0),
-                        LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0)),
-                new Closure(room,
-                        LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0),
-                        LocalDateTime.of(2026, 7, 1, 15, 30, 0, 0))
-        );
-        closureRepository.saveAll(closures);
-
         List<Closure> result = closureRepository.findByRoomIdAndOverlappingOrAdjacent(room.getId(),
-                LocalDateTime.of(2026, 5, 1, 0, 0, 0, 0),
-                LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0));
+                LocalDateTime.of(2026, 4, 30, 14, 30, 0, 0),
+                LocalDateTime.of(2026, 6, 30, 14, 30, 0, 0));
         assertThat(result).hasSize(4);
         assertThat(result)
                 .usingRecursiveComparison()
@@ -138,18 +98,9 @@ public class ClosureRepositoryTest {
     }
 
     @Test
-    void deleteByRoomIdTest() {
-        List<Closure> closures = List.of(
-                new Closure(room,
-                        LocalDateTime.of(2026, 5, 1, 14, 30, 0, 0),
-                        LocalDateTime.of(2026, 5, 1, 15, 30, 0, 0)),
-                new Closure(room,
-                        LocalDateTime.of(2026, 6, 1, 14, 30, 0, 0),
-                        LocalDateTime.of(2026, 6, 1, 15, 30, 0, 0)));
-        closureRepository.saveAll(closures);
-
+    void deleteByRoomIdAndAfterTimeTest() {
         closureRepository.deleteByRoomIdAndAfterTime(room.getId(),
                 LocalDateTime.of(2026, 6, 1, 0, 0, 0, 0));
-        assertThat(closureRepository.findByRoomId(room.getId())).hasSize(1);
+        assertThat(closureRepository.findByRoomId(room.getId())).hasSize(2);
     }
 }

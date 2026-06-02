@@ -4,12 +4,10 @@ import com.zsj.RoomBooking.model.RoomStatus;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Id;
 import jakarta.persistence.Version;
 
 import java.time.LocalTime;
-import java.util.Set;
 
 @Entity
 public class Room {
@@ -26,13 +24,6 @@ public class Room {
     private RoomStatus status = RoomStatus.ROOM_STATUS_ACTIVE;
     private LocalTime openTime = LocalTime.MIN;
     private LocalTime closeTime = LocalTime.MAX;
-
-    @OneToMany(mappedBy = "room")
-    private Set<Reservation> reservations;
-
-    /* TODO: need this or not? */
-    @OneToMany(mappedBy = "room")
-    private Set<Closure> closures;
 
     public Room(String name, int capacity, String area, LocalTime openTime, LocalTime closeTime) {
         this.name = name;

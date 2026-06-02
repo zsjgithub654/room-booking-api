@@ -8,6 +8,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Version;
 
 import java.time.LocalDateTime;
 
@@ -16,6 +17,9 @@ public class Reservation implements Occupation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Version
+    private Long version;
 
     @ManyToOne
     private User user;
@@ -95,5 +99,13 @@ public class Reservation implements Occupation {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
+    }
+
+    public void setEndTime(LocalDateTime endTime) {
+        this.endTime = endTime;
     }
 }

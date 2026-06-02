@@ -56,7 +56,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void closeUserAccount(Long id) {
-        User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found."));
+        /* verify and acquire lock on user */
+        User user = userRepository.findByIdWithLock(id).orElseThrow(() -> new ResourceNotFoundException("User not found."));
         if (user.getStatus() == UserStatus.USER_STATUS_CLOSED) {
             return;
         }

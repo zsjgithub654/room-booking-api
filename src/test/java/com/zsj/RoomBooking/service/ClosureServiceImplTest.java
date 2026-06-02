@@ -58,6 +58,15 @@ public class ClosureServiceImplTest {
     }
 
     @Test
+    void GetClosureNotFoundTest() {
+        Long searchId = 2L;
+        when(closureRepository.findById(eq(searchId))).thenThrow(new ResourceNotFoundException("Closure not found."));
+
+        Exception exception = assertThrows(ResourceNotFoundException.class, () -> closureService.getClosure(searchId));
+        assertThat(exception.getMessage()).isEqualTo("Closure not found.");
+    }
+
+    @Test
     void GetClosuresOfRoomSucceedTest() {
         Long searchRoomId = 2L;
         List<Closure> closures = List.of(
@@ -85,7 +94,7 @@ public class ClosureServiceImplTest {
     }
 
     @Test
-    void AddClosureTest() {
+    void AddClosureSucceedReservationsClosedTest() {
         Room room = new Room("101", 12, "Building A", null, null);
         LocalDateTime startTime = LocalDateTime.of(2026, 3, 1, 12, 0, 0, 0);
         LocalDateTime endTime = LocalDateTime.of(2026, 3, 1, 16, 0, 0, 0);
@@ -106,7 +115,7 @@ public class ClosureServiceImplTest {
         Long roomId = 2L;
         Long userId = 3L;
         /* mock */
-        when(roomRepository.findById(roomId)).thenReturn(Optional.of(room));
+        when(roomRepository.findByIdWithLock(roomId)).thenReturn(Optional.of(room));
         when(reservationRepository.findByRoomIdAndOverlappingAndActive(roomId, startTime, endTime))
                 .thenReturn(reservations);
         when(closureRepository.findByRoomIdAndOverlappingOrAdjacent(roomId, startTime, endTime))
@@ -121,6 +130,19 @@ public class ClosureServiceImplTest {
         assertThat(result.getCanceledReservations())
                 .usingRecursiveComparison()
                 .isEqualTo(reservations);
+    }
+
+    @Test
+    void AddClosureRoomNotFoundTest() {
+        LocalDateTime startTime = LocalDateTime.of(2026, 3, 1, 12, 0, 0, 0);
+        LocalDateTime endTime = LocalDateTime.of(2026, 3, 1, 16, 0, 0, 0);
+        Long roomId = 2L;
+        Long userId = 3L;
+        /* mock */
+        when(roomRepository.findByIdWithLock(roomId)).thenReturn(Optional.empty());
+        /* verify */
+        Exception exception = assertThrows(ResourceNotFoundException.class, () -> closureService.addClosure(roomId, userId, startTime, endTime));
+        assertThat(exception.getMessage()).isEqualTo("Room not found.");
     }
 
     @Test
@@ -143,15 +165,6 @@ public class ClosureServiceImplTest {
         when(closureRepository.findById(eq(searchId))).thenThrow(new ResourceNotFoundException("Closure not found."));
 
         Exception exception = assertThrows(ResourceNotFoundException.class, () -> closureService.deleteClosure(searchId));
-        assertThat(exception.getMessage()).isEqualTo("Closure not found.");
-    }
-
-    @Test
-    void GetClosureNotFoundTest() {
-        Long searchId = 2L;
-        when(closureRepository.findById(eq(searchId))).thenThrow(new ResourceNotFoundException("Closure not found."));
-
-        Exception exception = assertThrows(ResourceNotFoundException.class, () -> closureService.getClosure(searchId));
         assertThat(exception.getMessage()).isEqualTo("Closure not found.");
     }
 }

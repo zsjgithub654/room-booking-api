@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -65,6 +66,61 @@ public class ReservationRepositoryTest {
     void findByRoomIdNoResultTest() {
         List<Reservation> reservationsRetrieved = reservationRepository.findByRoomId(room.getId() + 1);
         assertThat(reservationsRetrieved).hasSize(0);
+    }
+
+    /* findByUserIdAndRoomIdAndDateAndStatus */
+    @Test
+    void findByUserIdAndRoomIdAndDateAndStatusHasResultTest() {
+        List<Reservation> result = reservationRepository.findByUserIdAndRoomIdAndDateAndStatus(
+                user.getId(),
+                room.getId(),
+                LocalDate.of(2026, 6, 1),
+                ReservationStatus.RESERVATION_STATUS_ACTIVE);
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0)).isEqualTo(reservations.get(1));
+    }
+
+    @Test
+    void findByUserIdAndRoomIdAndDateAndStatusNoResultMatchRoomTest() {
+        List<Reservation> result = reservationRepository.findByUserIdAndRoomIdAndDateAndStatus(
+                user.getId(),
+                room.getId() + 1,
+                LocalDate.of(2026, 6, 1),
+                ReservationStatus.RESERVATION_STATUS_ACTIVE);
+        assertThat(result).hasSize(0);
+    }
+
+    @Test
+    void findByUserIdAndRoomIdAndDateAndStatusNoResultMatchUserTest() {
+        List<Reservation> result = reservationRepository.findByUserIdAndRoomIdAndDateAndStatus(
+                user.getId() + 1,
+                room.getId(),
+                LocalDate.of(2026, 6, 1),
+                ReservationStatus.RESERVATION_STATUS_ACTIVE);
+        assertThat(result).hasSize(0);
+    }
+
+    @Test
+    void findByUserIdAndRoomIdAndDateAndStatusNoResultMatchDateTest() {
+        List<Reservation> result = reservationRepository.findByUserIdAndRoomIdAndDateAndStatus(
+                user.getId(),
+                room.getId(),
+                LocalDate.of(2026, 7, 1),
+                ReservationStatus.RESERVATION_STATUS_ACTIVE);
+        assertThat(result).hasSize(0);
+    }
+
+    @Test
+    void findByUserIdAndRoomIdAndDateAndStatusNoResultMatchStatusTest() {
+        reservations.get(1).setStatus(ReservationStatus.RESERVATION_STATUS_CANCELED);
+        reservationRepository.saveAll(reservations);
+
+        List<Reservation> result = reservationRepository.findByUserIdAndRoomIdAndDateAndStatus(
+                user.getId(),
+                room.getId(),
+                LocalDate.of(2026, 6, 1),
+                ReservationStatus.RESERVATION_STATUS_ACTIVE);
+        assertThat(result).hasSize(0);
     }
 
     /* getTimeByRoomIdAndOverlappingIntervalAndActive */

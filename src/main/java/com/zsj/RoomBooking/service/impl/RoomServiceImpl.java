@@ -23,6 +23,7 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 @Service
@@ -61,13 +62,13 @@ public class RoomServiceImpl implements RoomService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<RoomSchedule> searchAvailabilities(String name, Integer minCapacity, Integer maxCapacity, String area, LocalDateTime startTime, LocalDateTime endTime) {
         /* filter rooms */
         List<Room> rooms = searchRooms(name, minCapacity, maxCapacity, area);
         /* calculate availability */
         List<RoomSchedule> availabilities = new ArrayList<>();
         for (Room room : rooms) {
-            /* calculate available slots */
             List<Occupation> occupations = getOccupationsForRoom(room.getId(), startTime, endTime);
             /* skip rooms if no gap between occupations during the given range */
             if (!isAvailableDuringTime(room.getOpenTime(), room.getCloseTime(), startTime, endTime, occupations)) {
@@ -76,6 +77,18 @@ public class RoomServiceImpl implements RoomService {
             availabilities.add(new RoomSchedule(room, occupations));
         }
         return availabilities;
+    }
+
+    private List<Occupation> getOccupationsForRoom(Long roomId, LocalDateTime startTime, LocalDateTime endTime) {
+        /* get closures and reservations */
+        List<Closure> closures = closureRepository.findByRoomIdAndOverlapping(roomId, startTime, endTime);
+        List<Reservation> reservations = reservationRepository.findByRoomIdAndOverlappingAndActive(roomId, startTime, endTime);
+        /* combine occupations and sort by startTime */
+        return Stream.concat(
+                        reservations.stream(),
+                        closures.stream())
+                .sorted(Comparator.comparing(Occupation::getStartTime))
+                .toList();
     }
 
     private boolean isAvailableDuringTime(LocalTime openTime, LocalTime closeTime, LocalDateTime fromTime, LocalDateTime toTime, List<Occupation> occupations) {
@@ -104,18 +117,6 @@ public class RoomServiceImpl implements RoomService {
                 : time;
     }
 
-    private List<Occupation> getOccupationsForRoom(Long roomId, LocalDateTime startTime, LocalDateTime endTime) {
-        List<Closure> closures = closureRepository.findByRoomIdAndOverlapping(roomId, startTime, endTime);
-        List<Reservation> reservations = reservationRepository.findByRoomIdAndOverlappingAndActive(roomId, startTime, endTime);
-        /* combine occupations and sort by startTime */
-        return Stream.concat(
-                        reservations.stream(),
-                        closures.stream())
-                .sorted(Comparator.comparing(Occupation::getStartTime))
-                .toList();
-    }
-
-
     /* TODO: rename */
     @Override
     public Room getRoom(Long id) {
@@ -131,9 +132,8 @@ public class RoomServiceImpl implements RoomService {
     @Override
     public List<Reservation> deleteRoom(Long id) {
         /* TODO: admin required */
-        /* check if room exists */
+        /* verify and acquire lock on room */
         Room room = roomRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Room not found."));
-        /* already deleted */
         if (room.getStatus() == RoomStatus.ROOM_STATUS_DELETED) {
             return null;
         }
@@ -150,7 +150,11 @@ public class RoomServiceImpl implements RoomService {
 
     @Override
     public Room updateRoom(Long id, String name, Integer capacity, String area, LocalTime openTime, LocalTime closeTime) {
-        Room room = roomRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Room not found."));
+        Optional<Room> roomOptional = roomRepository.findByIdWithLock(id);
+        if (roomOptional.isEmpty() || roomOptional.get().getStatus() != RoomStatus.ROOM_STATUS_ACTIVE) {
+            throw new ResourceNotFoundException("Room not found.");
+        }
+        Room room = roomOptional.get();
         room.setName(name);
         room.setCapacity(capacity);
         room.setArea(area);

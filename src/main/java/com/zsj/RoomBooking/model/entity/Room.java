@@ -6,6 +6,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Id;
+import jakarta.persistence.Version;
 
 import java.time.LocalTime;
 import java.util.Set;
@@ -15,10 +16,14 @@ public class Room {
     @Id // mark the primary key
     @GeneratedValue(strategy = GenerationType.IDENTITY) // generate val for id as ID, unique and increment automatically
     private Long id;
+
+    @Version
+    private Long version;
+
     private String name;
     private Integer capacity;
     private String area;
-    private RoomStatus status;
+    private RoomStatus status = RoomStatus.ROOM_STATUS_ACTIVE;
     private LocalTime openTime = LocalTime.MIN;
     private LocalTime closeTime = LocalTime.MAX;
 
@@ -33,7 +38,6 @@ public class Room {
         this.name = name;
         this.capacity = capacity;
         this.area = area;
-        this.status = RoomStatus.ROOM_STATUS_ACTIVE;
         if (openTime != null) {
             this.openTime = openTime;
         }

@@ -233,12 +233,13 @@ public class RoomServiceImplTest {
                         LocalDateTime.of(2300, 3, 1, 14, 30, 0, 0),
                         LocalDateTime.of(2300, 3, 1, 15, 30, 0, 0)));
 
-        when(roomRepository.findById(eq((searchId)))).thenReturn(Optional.of(room));
+        when(roomRepository.findByIdWithLock(eq(searchId))).thenReturn(Optional.of(room));
         when(reservationRepository.findByRoomIdAndStartAfterAndActive(eq(searchId), any(LocalDateTime.class)))
                 .thenReturn(reservations);
         doNothing().when(closureRepository).deleteByRoomIdAndStartAfter(eq(searchId), any(LocalDateTime.class));
 
         List<Reservation> closedReservations = roomService.deleteRoom(searchId);
+        org.mockito.Mockito.verify(roomRepository).findByIdWithLock(searchId);
         assertThat(room.getStatus()).isEqualTo(RoomStatus.ROOM_STATUS_DELETED);
         assertThat(closedReservations).hasSize(2);
         assertThat(closedReservations)
@@ -252,7 +253,7 @@ public class RoomServiceImplTest {
     @Test
     void DeleteRoomNotFoundTest() {
         Long searchId = 2L;
-        when(roomRepository.findById(eq(searchId))).thenReturn(Optional.empty());
+        when(roomRepository.findByIdWithLock(eq(searchId))).thenReturn(Optional.empty());
 
         Exception exception = assertThrows(ResourceNotFoundException.class, () -> roomService.deleteRoom(searchId));
         assertThat(exception.getMessage()).isEqualTo("Room not found.");

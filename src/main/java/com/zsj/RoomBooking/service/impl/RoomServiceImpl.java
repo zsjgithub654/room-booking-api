@@ -133,7 +133,8 @@ public class RoomServiceImpl implements RoomService {
     public List<Reservation> deleteRoom(Long id) {
         /* TODO: admin required */
         /* verify and acquire lock on room */
-        Room room = roomRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Room not found."));
+        Room room = roomRepository.findByIdWithLock(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Room not found."));
         if (room.getStatus() == RoomStatus.ROOM_STATUS_DELETED) {
             return null;
         }

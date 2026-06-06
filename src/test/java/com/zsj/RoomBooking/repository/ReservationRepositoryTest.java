@@ -123,6 +123,17 @@ public class ReservationRepositoryTest {
         assertThat(result).hasSize(0);
     }
 
+    @Test
+    void findByUserIdAndRoomIdAndDateAndStatusAllNullArgsTest() {
+        List<Reservation> result = reservationRepository.findByUserIdAndRoomIdAndDateAndStatus(
+                null, null, null, null);
+        assertThat(result).hasSize(reservations.size());
+        assertThat(result)
+                .usingRecursiveComparison()
+                .ignoringFields("id")
+                .isEqualTo(reservations);
+    }
+
     /* getTimeByRoomIdAndOverlappingIntervalAndActive */
     @Test
     void findByRoomIdAndOverlappingAndActiveHasResultTest() {

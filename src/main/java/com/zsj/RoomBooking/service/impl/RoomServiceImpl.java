@@ -49,7 +49,7 @@ public class RoomServiceImpl implements RoomService {
             spec = spec.and(RoomSpecifications.minCapacity(minCapacity));
         }
         if (maxCapacity != null) {
-            spec = spec.and(RoomSpecifications.minCapacity(maxCapacity));
+            spec = spec.and(RoomSpecifications.maxCapacity(maxCapacity));
         }
         /* area */
         if (area != null) {

@@ -55,4 +55,11 @@ public class Closure implements Occupation {
     public LocalDateTime getEndTime() {
         return this.endTime;
     }
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
+    }
+
+    public void setEndTime(LocalDateTime endTime) {
+        this.endTime = endTime;
+    }
 }

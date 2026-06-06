@@ -23,7 +23,8 @@ public class Room {
     private String area;
     private RoomStatus status = RoomStatus.ROOM_STATUS_ACTIVE;
     private LocalTime openTime = LocalTime.MIN;
-    private LocalTime closeTime = LocalTime.MAX;
+    /* LocalTime.MAX will lose precision in PostgreSQL, use second precision to avoid inconsistency */
+    private LocalTime closeTime = LocalTime.of(23, 59, 59);
 
     public Room(String name, int capacity, String area, LocalTime openTime, LocalTime closeTime) {
         this.name = name;

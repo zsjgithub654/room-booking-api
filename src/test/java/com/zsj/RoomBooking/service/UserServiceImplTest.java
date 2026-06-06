@@ -155,7 +155,7 @@ public class UserServiceImplTest {
                         LocalDateTime.of(2026, 3, 1, 17, 0, 0, 0)));
         Long searchId = 2L;
 
-        when(userRepository.findById(eq((searchId)))).thenReturn(Optional.of(user));
+        when(userRepository.findByIdWithLock(eq(searchId))).thenReturn(Optional.of(user));
         when(reservationRepository.findByUserIdAndStartAfterAndActive(eq(searchId), any(LocalDateTime.class)))
                 .thenReturn(reservations);
 
@@ -167,7 +167,7 @@ public class UserServiceImplTest {
     @Test
     void closeUserAccountNotFoundTest() {
         Long searchId = 2L;
-        when(userRepository.findById(eq(searchId))).thenReturn(Optional.empty());
+        when(userRepository.findByIdWithLock(eq(searchId))).thenReturn(Optional.empty());
 
         Exception exception = assertThrows(ResourceNotFoundException.class, () -> userService.closeUserAccount(searchId));
         assertThat(exception.getMessage()).isEqualTo("User not found.");

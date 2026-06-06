@@ -113,8 +113,8 @@ public class ReservationControllerTest {
         /* request */
          Long userId = 10L;
         Long roomId = 11L;
-        LocalDateTime startTime = LocalDateTime.of(2026, 3, 1, 10, 30, 0, 0);
-        LocalDateTime endTime = LocalDateTime.of(2026, 3, 1, 11, 30, 0, 0);
+        LocalDateTime startTime = LocalDateTime.of(2300, 3, 1, 10, 30, 0, 0);
+        LocalDateTime endTime = LocalDateTime.of(2300, 3, 1, 11, 30, 0, 0);
         /* mock service response */
         Reservation reservation = new Reservation(new User(), new Room(), startTime, endTime);
         when(reservationService.addReservation(eq(userId), eq(roomId), eq(startTime), eq(endTime)))
@@ -154,8 +154,8 @@ public class ReservationControllerTest {
     void updateReservationTimeTest() throws Exception {
         /* request */
         Long id = 0L;
-        LocalDateTime startTime = LocalDateTime.of(2026, 3, 1, 10, 30, 0, 0);
-        LocalDateTime endTime = LocalDateTime.of(2026, 3, 1, 11, 30, 0, 0);
+        LocalDateTime startTime = LocalDateTime.of(2300, 3, 1, 10, 30, 0, 0);
+        LocalDateTime endTime = LocalDateTime.of(2300, 3, 1, 11, 30, 0, 0);
         /* mock service response */
         Reservation reservation = new Reservation(new User(), new Room(), startTime, endTime);
         when(reservationService.updateReservationTime(eq(id), eq(startTime), eq(endTime))).thenReturn(reservation);
@@ -180,8 +180,25 @@ public class ReservationControllerTest {
     void addReservationShouldRejectInvalidTimeRange() throws Exception {
         Long userId = 10L;
         Long roomId = 11L;
-        LocalDateTime startTime = LocalDateTime.of(2026, 3, 1, 11, 30, 0, 0);
-        LocalDateTime endTime = LocalDateTime.of(2026, 3, 1, 10, 30, 0, 0);
+        LocalDateTime startTime = LocalDateTime.of(2300, 3, 1, 11, 30, 0, 0);
+        LocalDateTime endTime = LocalDateTime.of(2300, 3, 1, 10, 30, 0, 0);
+
+        mockMvc.perform(post("/reservations")
+                        .param("userId", userId.toString())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper
+                                .writeValueAsString(new ReservationRequest(roomId, startTime, endTime))))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(reservationService);
+    }
+
+    @Test
+    void addReservationShouldRejectPastStartTime() throws Exception {
+        Long userId = 10L;
+        Long roomId = 11L;
+        LocalDateTime startTime = LocalDateTime.of(2026, 3, 1, 10, 30, 0, 0);
+        LocalDateTime endTime = LocalDateTime.of(2300, 3, 1, 11, 30, 0, 0);
 
         mockMvc.perform(post("/reservations")
                         .param("userId", userId.toString())

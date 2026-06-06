@@ -102,8 +102,8 @@ public class RoomControllerTest {
         SearchAvailabilityRequest request = new SearchAvailabilityRequest(null,
                 2, 20,
                 null,
-                LocalDateTime.of(2026, 3, 1, 10, 30, 0, 0),
-                LocalDateTime.of(2026, 3, 2, 10, 30, 0, 0));
+                LocalDateTime.of(2300, 3, 1, 10, 30, 0, 0),
+                LocalDateTime.of(2300, 3, 2, 10, 30, 0, 0));
         /* mock service result */
         List<RoomSchedule> roomSchedules = List.of(
                 new RoomSchedule(new Room("101", 12, "Building A", null, null),
@@ -153,8 +153,8 @@ public class RoomControllerTest {
     @Test
     void searchAvailabilitiesShouldRejectInvalidTimeRangeTest() throws Exception {
         mockMvc.perform(get("/rooms/availabilities")
-                        .param("startTime", LocalDateTime.of(2026, 3, 2, 10, 30, 0, 0).toString())
-                        .param("endTime", LocalDateTime.of(2026, 3, 1, 10, 30, 0, 0).toString()))
+                        .param("startTime", LocalDateTime.of(2300, 3, 2, 10, 30, 0, 0).toString())
+                        .param("endTime", LocalDateTime.of(2300, 3, 1, 10, 30, 0, 0).toString()))
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(roomService);

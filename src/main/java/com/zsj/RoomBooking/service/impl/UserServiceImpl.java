@@ -42,14 +42,18 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User updateUsername(Long id, String username) {
-        User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found."));
+        User user = userRepository.findById(id)
+                .filter(foundUser -> foundUser.getStatus() == UserStatus.USER_STATUS_ACTIVE)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found."));
         user.setUsername(username);
         return user;
     }
 
     @Override
     public User updatePassword(Long id, String password) {
-        User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found."));
+        User user = userRepository.findById(id)
+                .filter(foundUser -> foundUser.getStatus() == UserStatus.USER_STATUS_ACTIVE)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found."));
         user.setPassword(password);
         return user;
     }

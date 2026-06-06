@@ -151,11 +151,9 @@ public class RoomServiceImpl implements RoomService {
 
     @Override
     public Room updateRoom(Long id, String name, Integer capacity, String area, LocalTime openTime, LocalTime closeTime) {
-        Optional<Room> roomOptional = roomRepository.findById(id);
-        if (roomOptional.isEmpty() || roomOptional.get().getStatus() != RoomStatus.ROOM_STATUS_ACTIVE) {
-            throw new ResourceNotFoundException("Room not found.");
-        }
-        Room room = roomOptional.get();
+        Room room = roomRepository.findById(id)
+                .filter(foundRoom -> foundRoom.getStatus() == RoomStatus.ROOM_STATUS_ACTIVE)
+                .orElseThrow(() -> new ResourceNotFoundException("Room not found."));
         room.setName(name);
         room.setCapacity(capacity);
         room.setArea(area);

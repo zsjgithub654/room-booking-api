@@ -18,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Transactional
 @Service
@@ -46,18 +45,17 @@ public class ClosureServiceImpl implements ClosureService {
     @Override
     public AddClosureResult addClosure(Long roomId, Long userId, LocalDateTime startTime, LocalDateTime endTime) {
         /* check room and acquire lock */
-        Optional<Room> room = roomRepository.findByIdWithLock(roomId);
         /* TODO: consider add isActive() */
-        if (room.isEmpty() || room.get().getStatus() != RoomStatus.ROOM_STATUS_ACTIVE) {
-            throw new ResourceNotFoundException("Room not found.");
-        }
+        Room room = roomRepository.findByIdWithLock(roomId)
+                .filter(foundRoom -> foundRoom.getStatus() == RoomStatus.ROOM_STATUS_ACTIVE)
+                .orElseThrow(() -> new ResourceNotFoundException("Room not found."));
         /* close reservations during closure */
         List<Reservation> reservations = reservationRepository.findByRoomIdAndOverlappingAndActive(roomId, startTime, endTime);
         for (Reservation reservation : reservations) {
             reservation.setStatus(ReservationStatus.RESERVATION_STATUS_CLOSED);
         }
         /* add closure and merge with existing closures that overlap */
-        Closure closure = addClosureAndMerge(roomId, startTime, endTime, room.get());
+        Closure closure = addClosureAndMerge(roomId, startTime, endTime, room);
         return new AddClosureResult(closure, reservations);
     }
 

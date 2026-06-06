@@ -19,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Transactional
 @Service
@@ -49,21 +48,19 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     public Reservation addReservation(Long userId, Long roomId, LocalDateTime startTime, LocalDateTime endTime) {
         /* verify and acquire lock on user and room, keep order of acquiring locks consistent across transactions */
-        Optional<User> user = userRepository.findByIdWithLock(userId);
-        if (user.isEmpty() || user.get().getStatus() != UserStatus.USER_STATUS_ACTIVE) {
-            throw new ResourceNotFoundException("User not found.");
-        }
-        Optional<Room> room = roomRepository.findByIdWithLock(roomId);
-        if (room.isEmpty() || room.get().getStatus() != RoomStatus.ROOM_STATUS_ACTIVE) {
-            throw new ResourceNotFoundException("Room not found.");
-        }
+        User user = userRepository.findByIdWithLock(userId)
+                .filter(foundUser -> foundUser.getStatus() == UserStatus.USER_STATUS_ACTIVE)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found."));
+        Room room = roomRepository.findByIdWithLock(roomId)
+                .filter(foundRoom -> foundRoom.getStatus() == RoomStatus.ROOM_STATUS_ACTIVE)
+                .orElseThrow(() -> new ResourceNotFoundException("Room not found."));
         /* check existing closures and reservations */
         if (closureRepository.existsByRoomIdAndOverlapping(roomId, startTime, endTime)
                 || reservationRepository.existsByRoomIdAndOverlappingAndActive(roomId, startTime, endTime)) {
             throw new IllegalStateException("Room is not available in selected time.");
         }
         /* add reservation */
-        return reservationRepository.save(new Reservation(user.get(), room.get(), startTime, endTime));
+        return reservationRepository.save(new Reservation(user, room, startTime, endTime));
     }
 
     /* TODO: actually cancel */
@@ -75,11 +72,9 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     public Reservation updateReservationTime(Long id, LocalDateTime startTime, LocalDateTime endTime) {
-        Optional<Reservation> reservationOptional = reservationRepository.findById(id);
-        if (reservationOptional.isEmpty() || reservationOptional.get().getStatus() != ReservationStatus.RESERVATION_STATUS_ACTIVE) {
-                throw new ResourceNotFoundException("Reservation not found.");
-        }
-        Reservation reservation = reservationOptional.get();
+        Reservation reservation = reservationRepository.findById(id)
+                .filter(foundReservation -> foundReservation.getStatus() == ReservationStatus.RESERVATION_STATUS_ACTIVE)
+                .orElseThrow(() -> new ResourceNotFoundException("Reservation not found."));
         /* acquire lock on user and room */
         User user = userRepository.findByIdWithLock(reservation.getUser().getId()).orElseThrow(() -> new ResourceNotFoundException("User not found."));
         Room room = roomRepository.findByIdWithLock(reservation.getRoom().getId()).orElseThrow(() -> new ResourceNotFoundException("Room not found."));

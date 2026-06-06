@@ -6,6 +6,7 @@ import com.zsj.RoomBooking.model.dto.request.ClosureRequest;
 import com.zsj.RoomBooking.model.dto.response.AddClosureResponse;
 import com.zsj.RoomBooking.model.dto.response.ClosureResponse;
 import com.zsj.RoomBooking.service.ClosureService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -50,7 +51,7 @@ public class ClosureController {
 
     @PostMapping
     public ResponseEntity<AddClosureResponse> addClosure(
-            @RequestParam Long userId, @RequestBody ClosureRequest request) {
+            @RequestParam Long userId, @Valid @RequestBody ClosureRequest request) {
         return new ResponseEntity<>(
                 addClosureMapper.toResponse(
                         closureService.addClosure(request.roomId(), userId, request.startTime(), request.endTime())),

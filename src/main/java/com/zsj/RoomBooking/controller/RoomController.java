@@ -10,6 +10,7 @@ import com.zsj.RoomBooking.model.dto.response.RoomResponse;
 import com.zsj.RoomBooking.model.dto.request.SearchAvailabilityRequest;
 import com.zsj.RoomBooking.model.dto.response.RoomScheduleResponse;
 import com.zsj.RoomBooking.service.RoomService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -51,7 +52,7 @@ public class RoomController {
 
     /* TODO: add constraint on search time range length, or page the result */
     @GetMapping("/availabilities")
-    public List<RoomScheduleResponse> searchAvailabilities(@ModelAttribute SearchAvailabilityRequest request) {
+    public List<RoomScheduleResponse> searchAvailabilities(@Valid @ModelAttribute SearchAvailabilityRequest request) {
         return roomService.searchAvailabilities(
                 request.name(),
                 request.minCapacity(), request.maxCapacity(),
@@ -68,7 +69,7 @@ public class RoomController {
 
     /* TODO: Non-null type argument is expected for ResponseEntity */
     @PostMapping
-    public ResponseEntity<RoomResponse> addRoom(@RequestBody RoomRequest request) {
+    public ResponseEntity<RoomResponse> addRoom(@Valid @RequestBody RoomRequest request) {
         return new ResponseEntity<>(roomMapper.toResponse(
                 roomService.addRoom(roomMapper.toEntity(request))),
                 HttpStatus.CREATED
@@ -84,7 +85,7 @@ public class RoomController {
     }
 
     @PutMapping("/{roomId}")
-    public RoomResponse updateRoom(@PathVariable Long roomId, @RequestBody RoomRequest request) {
+    public RoomResponse updateRoom(@PathVariable Long roomId, @Valid @RequestBody RoomRequest request) {
         return roomMapper.toResponse(
                 roomService.updateRoom(roomId,
                         request.name(),

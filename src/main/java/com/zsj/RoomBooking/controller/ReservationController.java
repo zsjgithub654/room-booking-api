@@ -6,6 +6,7 @@ import com.zsj.RoomBooking.model.dto.response.ReservationResponse;
 import com.zsj.RoomBooking.model.dto.request.SearchReservationRequest;
 import com.zsj.RoomBooking.model.dto.request.UpdateReservationRequest;
 import com.zsj.RoomBooking.service.ReservationService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -43,7 +44,7 @@ public class ReservationController {
     }
 
     @PostMapping
-    public ResponseEntity<ReservationResponse> addReservation(@RequestParam Long userId, @RequestBody ReservationRequest request) {
+    public ResponseEntity<ReservationResponse> addReservation(@RequestParam Long userId, @Valid @RequestBody ReservationRequest request) {
         return new ResponseEntity<>(
                 reservationMapper.toResponse(service.addReservation(
                         userId, request.roomId(), request.startTime(), request.endTime())),
@@ -52,7 +53,7 @@ public class ReservationController {
 
     /* Only startTime and endTime are allowed to update */
     @PatchMapping(path = "/{id}")
-    public ReservationResponse updateReservationTime(@PathVariable Long id, @RequestBody UpdateReservationRequest request) {
+    public ReservationResponse updateReservationTime(@PathVariable Long id, @Valid @RequestBody UpdateReservationRequest request) {
         return reservationMapper.toResponse(service.updateReservationTime(id, request.startTime(), request.endTime()));
     }
 

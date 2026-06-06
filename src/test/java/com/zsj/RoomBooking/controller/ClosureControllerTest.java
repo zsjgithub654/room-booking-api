@@ -30,6 +30,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -154,5 +155,21 @@ public class ClosureControllerTest {
                 .usingRecursiveComparison()
                 .ignoringFields("userId", "roomId")
                 .isEqualTo(addClosureResult.getCanceledReservations());
+    }
+
+    @Test
+    void addClosureShouldRejectInvalidTimeRange() throws Exception {
+        Long userId = 1L;
+        Long roomId = 2L;
+        LocalDateTime startTime = LocalDateTime.of(2300, 1, 10, 10, 30, 0, 0);
+        LocalDateTime endTime = LocalDateTime.of(2300, 1, 1, 10, 30, 0, 0);
+
+        mockMvc.perform(post("/closures")
+                        .param("userId", userId.toString())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper.writeValueAsString(new ClosureRequest(roomId, startTime, endTime))))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(closureService);
     }
 }

@@ -27,6 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -173,5 +174,22 @@ public class ReservationControllerTest {
                 .usingRecursiveComparison()
                 .ignoringFields("userId", "roomId")
                 .isEqualTo(reservation);
+    }
+
+    @Test
+    void addReservationShouldRejectInvalidTimeRange() throws Exception {
+        Long userId = 10L;
+        Long roomId = 11L;
+        LocalDateTime startTime = LocalDateTime.of(2026, 3, 1, 11, 30, 0, 0);
+        LocalDateTime endTime = LocalDateTime.of(2026, 3, 1, 10, 30, 0, 0);
+
+        mockMvc.perform(post("/reservations")
+                        .param("userId", userId.toString())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper
+                                .writeValueAsString(new ReservationRequest(roomId, startTime, endTime))))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(reservationService);
     }
 }

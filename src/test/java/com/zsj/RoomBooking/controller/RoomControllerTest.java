@@ -33,6 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -148,6 +149,17 @@ public class RoomControllerTest {
                 .isEqualTo(roomSchedules);
     }
 
+
+    @Test
+    void searchAvailabilitiesShouldRejectInvalidTimeRangeTest() throws Exception {
+        mockMvc.perform(get("/rooms/availabilities")
+                        .param("startTime", LocalDateTime.of(2026, 3, 2, 10, 30, 0, 0).toString())
+                        .param("endTime", LocalDateTime.of(2026, 3, 1, 10, 30, 0, 0).toString()))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(roomService);
+    }
+
     @Test
     void getRoomTest() throws Exception {
         /* mock service result */
@@ -188,6 +200,20 @@ public class RoomControllerTest {
         assertThat(response)
                 .usingRecursiveComparison()
                 .isEqualTo(room);
+    }
+
+    @Test
+    void addRoomShouldRejectInvalidOperatingHours() throws Exception {
+        Room room = new Room("101", 12, "Building A",
+                LocalTime.of(16, 0, 0, 0),
+                LocalTime.of(9, 0, 0, 0));
+
+        mockMvc.perform(post("/rooms")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper.writeValueAsString(roomMapper.toResponse(room))))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(roomService);
     }
 
     @Test

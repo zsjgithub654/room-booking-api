@@ -209,4 +209,20 @@ public class ReservationControllerTest {
 
         verifyNoInteractions(reservationService);
     }
+
+    @Test
+    void addReservationShouldRejectNullRoomId() throws Exception {
+        Long userId = 10L;
+        LocalDateTime startTime = LocalDateTime.of(2300, 3, 1, 10, 30, 0, 0);
+        LocalDateTime endTime = LocalDateTime.of(2300, 3, 1, 11, 30, 0, 0);
+
+        mockMvc.perform(post("/reservations")
+                        .param("userId", userId.toString())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper
+                                .writeValueAsString(new ReservationRequest(null, startTime, endTime))))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(reservationService);
+    }
 }

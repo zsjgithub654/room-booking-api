@@ -24,6 +24,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -121,5 +122,39 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$.password").doesNotExist())
                 .andExpect(jsonPath("$.roles", hasItem(Role.ROLE_USER.name())));
         verify(userService).updatePassword(id, password);
+    }
+
+    @Test
+    void addUserShouldRejectBlankUsername() throws Exception {
+        mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper.writeValueAsString(new UserRequest("   ", "password1"))))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(userService);
+    }
+
+    @Test
+    void updateUsernameShouldRejectBlankUsername() throws Exception {
+        Long id = 1L;
+
+        mockMvc.perform(patch("/users/{id}/username", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper.writeValueAsString(new UpdateUsernameRequest("   "))))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(userService);
+    }
+
+    @Test
+    void updatePasswordShouldRejectBlankPassword() throws Exception {
+        Long id = 1L;
+
+        mockMvc.perform(patch("/users/{id}/password", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper.writeValueAsString(new UpdatePasswordRequest("   "))))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(userService);
     }
 }

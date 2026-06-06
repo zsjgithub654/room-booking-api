@@ -5,6 +5,7 @@ import com.zsj.RoomBooking.mapper.OccupationMapper;
 import com.zsj.RoomBooking.mapper.ReservationMapper;
 import com.zsj.RoomBooking.mapper.RoomMapper;
 import com.zsj.RoomBooking.model.RoomSchedule;
+import com.zsj.RoomBooking.model.dto.request.RoomRequest;
 import com.zsj.RoomBooking.model.dto.request.SearchRoomRequest;
 import com.zsj.RoomBooking.model.dto.response.DeleteRoomResponse;
 import com.zsj.RoomBooking.model.dto.response.RoomResponse;
@@ -190,7 +191,12 @@ public class RoomControllerTest {
 
         String responseString = mockMvc.perform(post("/rooms")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(this.objectMapper.writeValueAsString(roomMapper.toResponse(room))))
+                        .content(this.objectMapper.writeValueAsString(new RoomRequest(
+                                room.getName(),
+                                room.getCapacity(),
+                                room.getArea(),
+                                room.getOpenTime(), room.getCloseTime()
+                        ))))
                 // HTTP 201 Created is the successful status of post request
                 .andExpect(status().isCreated())
                 .andReturn()
@@ -204,13 +210,27 @@ public class RoomControllerTest {
 
     @Test
     void addRoomShouldRejectInvalidOperatingHours() throws Exception {
-        Room room = new Room("101", 12, "Building A",
+        RoomRequest request = new RoomRequest("101", 12, "Building A",
                 LocalTime.of(16, 0, 0, 0),
                 LocalTime.of(9, 0, 0, 0));
 
         mockMvc.perform(post("/rooms")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(this.objectMapper.writeValueAsString(roomMapper.toResponse(room))))
+                        .content(this.objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(roomService);
+    }
+
+    @Test
+    void addRoomShouldRejectBlankName() throws Exception {
+        RoomRequest request = new RoomRequest("   ", 12, "Building A",
+                LocalTime.of(9, 0, 0, 0),
+                LocalTime.of(16, 0, 0, 0));
+
+        mockMvc.perform(post("/rooms")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(roomService);
@@ -263,7 +283,12 @@ public class RoomControllerTest {
 
         String responseString = mockMvc.perform(put("/rooms/{id}", id)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(this.objectMapper.writeValueAsString(roomMapper.toResponse(room))))
+                        .content(this.objectMapper.writeValueAsString(new RoomRequest(
+                                room.getName(),
+                                room.getCapacity(),
+                                room.getArea(),
+                                room.getOpenTime(), room.getCloseTime()
+                        ))))
                 .andExpect(status().isOk())
                 .andReturn()
                 .getResponse()

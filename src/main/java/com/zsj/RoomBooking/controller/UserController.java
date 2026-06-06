@@ -8,6 +8,7 @@ import com.zsj.RoomBooking.model.dto.request.UpdateUsernameRequest;
 import com.zsj.RoomBooking.model.dto.request.UserRequest;
 import com.zsj.RoomBooking.model.dto.response.UserResponse;
 import com.zsj.RoomBooking.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -44,7 +45,7 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<UserResponse> addUser(@RequestBody UserRequest userRequest) {
+    public ResponseEntity<UserResponse> addUser(@Valid @RequestBody UserRequest userRequest) {
         return new ResponseEntity<>(
                 userMapper.toResponse(service.addUser(userMapper.toEntity(userRequest))),
                 HttpStatus.CREATED
@@ -52,12 +53,12 @@ public class UserController {
     }
 
     @PatchMapping("/{id}/username")
-    public UserResponse updateUsername(@PathVariable Long id, @RequestBody UpdateUsernameRequest request) {
+    public UserResponse updateUsername(@PathVariable Long id, @Valid @RequestBody UpdateUsernameRequest request) {
         return userMapper.toResponse(service.updateUsername(id, request.username()));
     }
 
     @PatchMapping("/{id}/password")
-    public UserResponse updatePassword(@PathVariable Long id, @RequestBody UpdatePasswordRequest request) {
+    public UserResponse updatePassword(@PathVariable Long id, @Valid @RequestBody UpdatePasswordRequest request) {
         return userMapper.toResponse(service.updatePassword(id, request.password()));
     }
 

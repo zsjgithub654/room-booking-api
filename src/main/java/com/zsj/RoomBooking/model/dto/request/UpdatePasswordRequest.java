@@ -1,4 +1,6 @@
 package com.zsj.RoomBooking.model.dto.request;
 
-public record UpdatePasswordRequest(String password) {
+import jakarta.validation.constraints.NotBlank;
+
+public record UpdatePasswordRequest(@NotBlank String password) {
 }

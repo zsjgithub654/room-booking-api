@@ -23,7 +23,6 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 @Service
@@ -71,7 +70,7 @@ public class RoomServiceImpl implements RoomService {
         for (Room room : rooms) {
             List<Occupation> occupations = getOccupationsForRoom(room.getId(), startTime, endTime);
             /* skip rooms if no gap between occupations during the given range */
-            if (!isAvailableDuringTime(room.getOpenTime(), room.getCloseTime(), startTime, endTime, occupations)) {
+            if (!isAvailableDuringTime(room, startTime, endTime, occupations)) {
                 continue;
             }
             availabilities.add(new RoomSchedule(room, occupations));
@@ -91,30 +90,32 @@ public class RoomServiceImpl implements RoomService {
                 .toList();
     }
 
-    private boolean isAvailableDuringTime(LocalTime openTime, LocalTime closeTime, LocalDateTime fromTime, LocalDateTime toTime, List<Occupation> occupations) {
-        LocalDateTime availableSince = getNoEarlierThanOpenTime(fromTime, openTime);
+    private boolean isAvailableDuringTime(Room room, LocalDateTime fromTime, LocalDateTime toTime, List<Occupation> occupations) {
+        LocalDateTime availableSince = getAvailableSince(room, fromTime);
         /* check if there is gap between occupations during the given range */
         for (Occupation occupation : occupations) {
-            LocalDateTime availableUntil = getNoLaterThanCloseTime(occupation.getStartTime(), closeTime);
+            LocalDateTime availableUntil = getAvailableUntil(room, occupation.getStartTime());
             if (availableSince.isBefore(availableUntil)) {
                 return true;
             }
-            availableSince = getNoEarlierThanOpenTime(occupation.getEndTime(), openTime);
+            availableSince = getAvailableSince(room, occupation.getEndTime());
         }
-        LocalDateTime availableUntil = getNoLaterThanCloseTime(toTime, closeTime);
+        LocalDateTime availableUntil = getAvailableUntil(room, toTime);
         return availableSince.isBefore(availableUntil);
     }
 
-    private LocalDateTime getNoEarlierThanOpenTime(LocalDateTime time, LocalTime openTime) {
-        return time.toLocalTime().isBefore(openTime)
-                ? time.toLocalDate().atTime(openTime)
-                : time;
+    /* normalize time to open time */
+    private LocalDateTime getAvailableSince(Room room, LocalDateTime time) {
+        return room.isOpenAllDay() || !time.toLocalTime().isBefore(room.getOpenTime())
+                ? time
+                : time.toLocalDate().atTime(room.getOpenTime());
     }
 
-    private LocalDateTime getNoLaterThanCloseTime(LocalDateTime time, LocalTime closeTime) {
-        return time.toLocalTime().isAfter(closeTime)
-                ? time.toLocalDate().atTime(closeTime)
-                : time;
+    /* normalize time to close time */
+    private LocalDateTime getAvailableUntil(Room room, LocalDateTime time) {
+        return room.isOpenAllDay() || !time.toLocalTime().isAfter(room.getCloseTime())
+                ? time
+                : time.toLocalDate().atTime(room.getCloseTime());
     }
 
     /* TODO: rename */
@@ -126,6 +127,7 @@ public class RoomServiceImpl implements RoomService {
 
     @Override
     public Room addRoom(Room room) {
+        room.setOpenHours(room.getOpenTime(), room.getCloseTime());
         return roomRepository.save(room);
     }
 
@@ -157,9 +159,7 @@ public class RoomServiceImpl implements RoomService {
         room.setName(name);
         room.setCapacity(capacity);
         room.setArea(area);
-        /* TODO: not null */
-        room.setOpenTime(openTime);
-        room.setCloseTime(closeTime);
+        room.setOpenHours(openTime, closeTime);
         return room;
     }
 }

@@ -254,10 +254,48 @@ public class RoomControllerTest {
     }
 
     @Test
+    void addRoomShouldAcceptOpenAllDayByOmittingHours() throws Exception {
+        Room room = new Room("101", 12, "Building A", null, null);
+
+        when(roomService.addRoom(any(Room.class))).thenReturn(room);
+
+        String responseString = mockMvc.perform(post("/rooms")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper.writeValueAsString(new RoomRequest(
+                                room.getName(),
+                                room.getCapacity(),
+                                room.getArea(),
+                                null, null
+                        ))))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        RoomResponse response = objectMapper.readValue(responseString, RoomResponse.class);
+        assertThat(response)
+                .usingRecursiveComparison()
+                .isEqualTo(room);
+    }
+
+    @Test
     void addRoomShouldRejectInvalidOperatingHours() throws Exception {
         RoomRequest request = new RoomRequest("101", 12, "Building A",
                 LocalTime.of(16, 0, 0, 0),
                 LocalTime.of(9, 0, 0, 0));
+
+        mockMvc.perform(post("/rooms")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(roomService);
+    }
+
+    @Test
+    void addRoomShouldRejectOneSidedOperatingHours() throws Exception {
+        RoomRequest request = new RoomRequest("101", 12, "Building A",
+                LocalTime.of(9, 0, 0, 0),
+                null);
 
         mockMvc.perform(post("/rooms")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -347,6 +385,36 @@ public class RoomControllerTest {
                                 room.getCapacity(),
                                 room.getArea(),
                                 room.getOpenTime(), room.getCloseTime()
+                        ))))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        RoomResponse response = objectMapper.readValue(responseString, RoomResponse.class);
+        assertThat(response)
+                .usingRecursiveComparison()
+                .isEqualTo(room);
+    }
+
+    @Test
+    void updateRoomShouldAcceptOpenAllDayByOmittingHours() throws Exception {
+        Long id = 1L;
+        Room room = new Room("101", 12, "Building A", null, null);
+
+        when(roomService.updateRoom(id,
+                room.getName(),
+                room.getCapacity(),
+                room.getArea(),
+                null, null))
+                .thenReturn(room);
+
+        String responseString = mockMvc.perform(put("/rooms/{id}", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper.writeValueAsString(new RoomRequest(
+                                room.getName(),
+                                room.getCapacity(),
+                                room.getArea(),
+                                null, null
                         ))))
                 .andExpect(status().isOk())
                 .andReturn()

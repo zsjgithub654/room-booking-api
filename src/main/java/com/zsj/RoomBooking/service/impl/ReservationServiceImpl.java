@@ -54,11 +54,8 @@ public class ReservationServiceImpl implements ReservationService {
         Room room = roomRepository.findByIdWithLock(roomId)
                 .filter(foundRoom -> foundRoom.getStatus() == RoomStatus.ROOM_STATUS_ACTIVE)
                 .orElseThrow(() -> new ResourceNotFoundException("Room not found."));
-        /* check existing closures and reservations */
-        if (closureRepository.existsByRoomIdAndOverlapping(roomId, startTime, endTime)
-                || reservationRepository.existsByRoomIdAndOverlappingAndActive(roomId, startTime, endTime)) {
-            throw new IllegalStateException("Room is not available in selected time.");
-        }
+        /* check availability */
+        validateReservationAvailability(room, startTime, endTime);
         /* add reservation */
         return reservationRepository.save(new Reservation(user, room, startTime, endTime));
     }
@@ -76,16 +73,34 @@ public class ReservationServiceImpl implements ReservationService {
                 .filter(foundReservation -> foundReservation.getStatus() == ReservationStatus.RESERVATION_STATUS_ACTIVE)
                 .orElseThrow(() -> new ResourceNotFoundException("Reservation not found."));
         /* acquire lock on user and room */
-        User user = userRepository.findByIdWithLock(reservation.getUser().getId()).orElseThrow(() -> new ResourceNotFoundException("User not found."));
-        Room room = roomRepository.findByIdWithLock(reservation.getRoom().getId()).orElseThrow(() -> new ResourceNotFoundException("Room not found."));
+        userRepository.findByIdWithLock(reservation.getUser().getId())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found."));
+        Room room = roomRepository.findByIdWithLock(reservation.getRoom().getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Room not found."));
         /* check availability */
-        if (closureRepository.existsByRoomIdAndOverlapping(room.getId(), startTime, endTime)
-                || reservationRepository.existsByRoomIdAndOverlappingAndActive(room.getId(), startTime, endTime)) {
-            throw new IllegalStateException("Room is not available in selected time.");
-        }
+        validateReservationAvailability(room, startTime, endTime);
         /* update reservation */
         reservation.setStartTime(startTime);
         reservation.setEndTime(endTime);
         return reservation;
+    }
+
+    private void validateReservationAvailability(Room room, LocalDateTime startTime, LocalDateTime endTime) {
+        if (!isReservationWithinRoomHours(room, startTime, endTime)) {
+            throw new IllegalStateException("Reservation is outside room open hours.");
+        }
+        if (closureRepository.existsByRoomIdAndOverlapping(room.getId(), startTime, endTime)
+                || reservationRepository.existsByRoomIdAndOverlappingAndActive(room.getId(), startTime, endTime)) {
+            throw new IllegalStateException("Room is not available in selected time.");
+        }
+    }
+
+    private boolean isReservationWithinRoomHours(Room room, LocalDateTime startTime, LocalDateTime endTime) {
+        if (room.isOpenAllDay()) {
+            return true;
+        }
+        return startTime.toLocalDate().equals(endTime.toLocalDate())
+                && !startTime.toLocalTime().isBefore(room.getOpenTime())
+                && !endTime.toLocalTime().isAfter(room.getCloseTime());
     }
 }

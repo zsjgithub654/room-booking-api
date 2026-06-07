@@ -87,7 +87,7 @@ public class RoomServiceImplTest {
         Room room = new Room("101", 12, "Building A", null, null);
         Room newRoom = new Room("102", 10, "Building 1",
                 LocalTime.of(8, 30, 0, 0),
-                null);
+                LocalTime.of(16, 30, 0, 0));
         Long searchId = 2L;
         when(roomRepository.findById(eq(searchId))).thenReturn(Optional.of(room));
         assertThat(roomService.updateRoom(searchId,
@@ -98,6 +98,24 @@ public class RoomServiceImplTest {
                 newRoom.getCloseTime()))
                 .usingRecursiveComparison()
                 .isEqualTo(newRoom);
+    }
+
+    @Test
+    void UpdateRoomCanSetBackToOpenAllDayTest() {
+        Room room = new Room("101", 12, "Building A",
+                LocalTime.of(8, 30, 0, 0),
+                LocalTime.of(16, 30, 0, 0));
+        Long searchId = 2L;
+        when(roomRepository.findById(eq(searchId))).thenReturn(Optional.of(room));
+
+        Room result = roomService.updateRoom(searchId,
+                room.getName(),
+                room.getCapacity(),
+                room.getArea(),
+                null,
+                null);
+
+        assertThat(result.isOpenAllDay()).isTrue();
     }
 
     @Test

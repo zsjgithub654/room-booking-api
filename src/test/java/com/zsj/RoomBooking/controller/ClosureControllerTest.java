@@ -234,4 +234,20 @@ public class ClosureControllerTest {
 
         verifyNoInteractions(closureService);
     }
+
+    @Test
+    void addClosureShouldRejectSecondPrecisionTime() throws Exception {
+        Long userId = 1L;
+        Long roomId = 2L;
+        LocalDateTime startTime = LocalDateTime.of(2300, 1, 1, 10, 30, 1, 0);
+        LocalDateTime endTime = LocalDateTime.of(2300, 1, 10, 10, 30, 0, 0);
+
+        mockMvc.perform(post("/closures")
+                        .param("userId", userId.toString())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper.writeValueAsString(new ClosureRequest(roomId, startTime, endTime))))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(closureService);
+    }
 }

@@ -5,18 +5,16 @@ import jakarta.validation.ConstraintValidatorContext;
 import org.springframework.beans.BeanWrapperImpl;
 
 /**
- * Validator for range, make sure the to value is greater than the from value, null is not checked here.
+ * Validator for @Range.
  */
 public class RangeValidator implements ConstraintValidator<Range, Object> {
-    private String fromField;
-    private String toField;
-    private boolean allowEqual;
+    private String minField;
+    private String maxField;
 
     @Override
     public void initialize(Range constraintAnnotation) {
-        fromField = constraintAnnotation.fromField();
-        toField = constraintAnnotation.toField();
-        allowEqual = constraintAnnotation.allowEqual();
+        minField = constraintAnnotation.minField();
+        maxField = constraintAnnotation.maxField();
     }
 
     @Override
@@ -27,28 +25,28 @@ public class RangeValidator implements ConstraintValidator<Range, Object> {
         }
         /* read the properties to validate from the annotated object */
         BeanWrapperImpl beanWrapper = new BeanWrapperImpl(value);
-        if (!beanWrapper.isReadableProperty(fromField) || !beanWrapper.isReadableProperty(toField)) {
+        if (!beanWrapper.isReadableProperty(minField) || !beanWrapper.isReadableProperty(maxField)) {
             throw new IllegalStateException("Invalid @Range configuration on " + value.getClass().getName());
         }
-        Object from = beanWrapper.getPropertyValue(fromField);
-        Object to = beanWrapper.getPropertyValue(toField);
-        if (from == null || to == null) {
+        Object min = beanWrapper.getPropertyValue(minField);
+        Object max = beanWrapper.getPropertyValue(maxField);
+        if (min == null || max == null) {
             return true;
         }
-        /* from and to are of the same type and comparable */
-        if (!from.getClass().isInstance(to) || !(from instanceof Comparable<?> comparableFrom)) {
+        /* minimum and maximum are of the same type and comparable */
+        if (!min.getClass().isInstance(max) || !(min instanceof Comparable<?> comparableMin)) {
             throw new IllegalStateException("Fields in @Range must be comparable and of the same type.");
         }
         /* validate */
-        int comparison = ((Comparable<Object>) comparableFrom).compareTo(to);
-        boolean valid = allowEqual ? comparison <= 0 : comparison < 0;
+        int comparison = ((Comparable<Object>) comparableMin).compareTo(max);
+        boolean valid = comparison <= 0;
         if (valid) {
             return true;
         }
         /* disable default constraint violation, indicate error on specific field */
         context.disableDefaultConstraintViolation();
         context.buildConstraintViolationWithTemplate(context.getDefaultConstraintMessageTemplate())
-                .addPropertyNode(toField)
+                .addPropertyNode(maxField)
                 .addConstraintViolation();
         return false;
     }

@@ -10,20 +10,20 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * A custom validation annotation for a range.
- * Range can have one or two bounds, bounds should be ordered and can be equal.
+ * A custom validation annotation for intervals.
+ * Interval should have both lower and upper bounds, bounds should be ordered and should not be equal.
  * Both bounds are null is allowed, not null should be validated by @NotNull if needed.
- * Example use case: filtering.
+ * Example use case: time periods.
  */
 @Documented
 /* specify that this annotation is to be used on class or record */
 @Target(ElementType.TYPE)
 /* this annotation is to be retained at runtime */
 @Retention(RetentionPolicy.RUNTIME)
-@Constraint(validatedBy = RangeValidator.class)
-public @interface Range {
+@Constraint(validatedBy = IntervalValidator.class)
+public @interface Interval {
     /* default message for validation failure */
-    String message() default "minimum value must be smaller than maximum value.";
+    String message() default "interval from value must be smaller than interval to value.";
 
     /* required by bean validation */
     Class<?>[] groups() default {};
@@ -31,7 +31,10 @@ public @interface Range {
     Class<? extends Payload>[] payload() default {};
 
     /* the fields to validate */
-    String minField();
+    String fromField();
 
-    String maxField();
+    String toField();
+
+    /* whether equality between from and to is allowed */
+    boolean allowEqual() default false;
 }

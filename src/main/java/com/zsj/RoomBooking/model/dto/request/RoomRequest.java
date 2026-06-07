@@ -1,12 +1,12 @@
 package com.zsj.RoomBooking.model.dto.request;
 
-import com.zsj.RoomBooking.validation.Range;
+import com.zsj.RoomBooking.validation.Interval;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 
 import java.time.LocalTime;
 
-@Range(
+@Interval(
         fromField = "openTime",
         toField = "closeTime",
         message = "open time must be before close time."

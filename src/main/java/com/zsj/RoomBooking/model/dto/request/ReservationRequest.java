@@ -1,14 +1,14 @@
 package com.zsj.RoomBooking.model.dto.request;
 
 import com.zsj.RoomBooking.validation.MinutePrecision;
-import com.zsj.RoomBooking.validation.Range;
+import com.zsj.RoomBooking.validation.Interval;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
 import java.time.LocalDateTime;
 
-@Range(fromField = "startTime", toField = "endTime", message = "start time must be before end time.")
+@Interval(fromField = "startTime", toField = "endTime", message = "start time must be before end time.")
 public record ReservationRequest(@NotNull @Positive Long roomId,
                                  @NotNull @Future @MinutePrecision LocalDateTime startTime,
                                  @NotNull @Future @MinutePrecision LocalDateTime endTime) {

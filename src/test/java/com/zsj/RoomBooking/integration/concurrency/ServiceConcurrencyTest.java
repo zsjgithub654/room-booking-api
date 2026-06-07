@@ -403,7 +403,7 @@ class ServiceConcurrencyTest {
                 () -> closureService.deleteClosure(initialClosure.getId())
         );
 
-        /* unless update and delete run in serial, one operation will fail */
+        /* unless add and delete run in serial, one operation will fail */
         assertThat(failures).hasSizeLessThanOrEqualTo(1);
         if (!failures.isEmpty()) {
             Throwable failure = failures.peek();
@@ -411,7 +411,7 @@ class ServiceConcurrencyTest {
                 /* deleteClosure read after addClosure commit, delete simply cannot find the target, no conflict */
                 assertThat(failure).hasMessage("Closure not found.");
             } else {
-                /* write conflict on @Version, one fails */
+                /* conflict on @Version, the later one committing deletion fails  */
                 assertOptimisticLockingFailure(failure);
             }
         }

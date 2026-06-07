@@ -127,7 +127,6 @@ public class RoomServiceImpl implements RoomService {
 
     @Override
     public Room addRoom(Room room) {
-        room.setOpenHours(room.getOpenTime(), room.getCloseTime());
         return roomRepository.save(room);
     }
 

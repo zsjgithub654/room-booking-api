@@ -154,7 +154,7 @@ class OptimisticLockingConcurrencyTest {
                 Reservation version1 = reservationRepository.findById(reservationId).orElseThrow();
                 Future<?> winner = executor.submit(() -> transactionTemplate.execute(innerStatus -> {
                     Reservation version2 = reservationRepository.findById(reservationId).orElseThrow();
-                    version2.setStartTime(startTime.plusMinutes(10));
+                    version2.setTime(startTime.plusMinutes(10), endTime.plusMinutes(10));
                     return null;
                 }));
                 try {
@@ -162,7 +162,7 @@ class OptimisticLockingConcurrencyTest {
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
-                version1.setStartTime(startTime.plusMinutes(20));
+                version1.setTime(startTime.plusMinutes(20), endTime.plusMinutes(20));
                 reservationRepository.flush();
                 return null;
             }));
@@ -188,7 +188,7 @@ class OptimisticLockingConcurrencyTest {
                 Closure version1 = closureRepository.findById(closureId).orElseThrow();
                 Future<?> winner = executor.submit(() -> transactionTemplate.execute(innerStatus -> {
                     Closure version2 = closureRepository.findById(closureId).orElseThrow();
-                    version2.setStartTime(startTime.plusMinutes(10));
+                    closureRepository.delete(version2);
                     return null;
                 }));
                 try {
@@ -196,7 +196,7 @@ class OptimisticLockingConcurrencyTest {
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
-                version1.setStartTime(startTime.plusMinutes(20));
+                closureRepository.delete(version1);
                 closureRepository.flush();
                 return null;
             }));

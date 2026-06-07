@@ -18,8 +18,8 @@ public class Room {
     /* mark the primary key */
     @Id
     /* generate val for id as ID, unique and increment automatically */
-    private Long id;
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @Version
     private Long version;
@@ -87,6 +87,9 @@ public class Room {
         }
         if (openTime == null || closeTime == null) {
             throw new IllegalArgumentException("Open time and close time must both be provided or both be omitted.");
+        }
+        if (!openTime.isBefore(closeTime)) {
+            throw new IllegalArgumentException("Open time must be before close time.");
         }
         this.openTime = openTime;
         this.closeTime = closeTime;

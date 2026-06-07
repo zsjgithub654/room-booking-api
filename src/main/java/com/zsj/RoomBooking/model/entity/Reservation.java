@@ -34,8 +34,7 @@ public class Reservation implements Occupation {
     public Reservation(User user, Room room, LocalDateTime startTime, LocalDateTime endTime) {
         this.user = user;
         this.room = room;
-        this.startTime = startTime;
-        this.endTime = endTime;
+        setTime(startTime, endTime);
         this.status = ReservationStatus.RESERVATION_STATUS_ACTIVE;
     }
 
@@ -85,6 +84,17 @@ public class Reservation implements Occupation {
         return endTime;
     }
 
+    public void setTime(LocalDateTime startTime, LocalDateTime endTime) {
+        if (startTime == null || endTime == null) {
+            throw new IllegalArgumentException("Start time and end time must not be null.");
+        }
+        if (!startTime.isBefore(endTime)) {
+            throw new IllegalArgumentException("Start time must be before end time.");
+        }
+        this.startTime = startTime;
+        this.endTime = endTime;
+    }
+
     public ReservationStatus getStatus() {
         return status;
     }
@@ -99,13 +109,5 @@ public class Reservation implements Occupation {
 
     public void setUser(User user) {
         this.user = user;
-    }
-
-    public void setStartTime(LocalDateTime startTime) {
-        this.startTime = startTime;
-    }
-
-    public void setEndTime(LocalDateTime endTime) {
-        this.endTime = endTime;
     }
 }

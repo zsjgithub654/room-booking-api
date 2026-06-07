@@ -83,6 +83,15 @@ public class RoomServiceImplTest {
     }
 
     @Test
+    void AddRoomInvalidOpenHoursTest() {
+        Exception exception = assertThrows(IllegalArgumentException.class,
+                () -> new Room("101", 12, "Building A",
+                        LocalTime.of(16, 0, 0, 0),
+                        LocalTime.of(9, 0, 0, 0)));
+        assertThat(exception.getMessage()).isEqualTo("Open time must be before close time.");
+    }
+
+    @Test
     void UpdateRoomSucceedTest() {
         Room room = new Room("101", 12, "Building A", null, null);
         Room newRoom = new Room("102", 10, "Building 1",

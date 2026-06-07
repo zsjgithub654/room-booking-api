@@ -28,6 +28,12 @@ public class Closure implements Occupation {
 
     public Closure(Room room, LocalDateTime startTime, LocalDateTime endTime) {
         this.room = room;
+        if (startTime == null || endTime == null) {
+            throw new IllegalArgumentException("Start time and end time must not be null.");
+        }
+        if (!startTime.isBefore(endTime)) {
+            throw new IllegalArgumentException("Start time must be before end time.");
+        }
         this.startTime = startTime;
         this.endTime = endTime;
     }
@@ -54,12 +60,5 @@ public class Closure implements Occupation {
 
     public LocalDateTime getEndTime() {
         return this.endTime;
-    }
-    public void setStartTime(LocalDateTime startTime) {
-        this.startTime = startTime;
-    }
-
-    public void setEndTime(LocalDateTime endTime) {
-        this.endTime = endTime;
     }
 }

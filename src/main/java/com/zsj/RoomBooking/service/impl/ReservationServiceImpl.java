@@ -80,8 +80,7 @@ public class ReservationServiceImpl implements ReservationService {
         /* check availability */
         validateReservationAvailability(room, startTime, endTime);
         /* update reservation */
-        reservation.setStartTime(startTime);
-        reservation.setEndTime(endTime);
+        reservation.setTime(startTime, endTime);
         return reservation;
     }
 

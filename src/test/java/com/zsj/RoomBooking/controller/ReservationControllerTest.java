@@ -238,6 +238,23 @@ public class ReservationControllerTest {
     }
 
     @Test
+    void addReservationShouldRejectSecondPrecisionTime() throws Exception {
+        Long userId = 10L;
+        Long roomId = 11L;
+        LocalDateTime startTime = LocalDateTime.of(2300, 3, 1, 10, 30, 1, 0);
+        LocalDateTime endTime = LocalDateTime.of(2300, 3, 1, 11, 30, 0, 0);
+
+        mockMvc.perform(post("/reservations")
+                        .param("userId", userId.toString())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper
+                                .writeValueAsString(new ReservationRequest(roomId, startTime, endTime))))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(reservationService);
+    }
+
+    @Test
     void deleteReservationTest() throws Exception {
         /* request */
         Long id = 1L;
@@ -273,5 +290,19 @@ public class ReservationControllerTest {
                 .usingRecursiveComparison()
                 .ignoringFields("userId", "roomId")
                 .isEqualTo(reservation);
+    }
+
+    @Test
+    void updateReservationTimeShouldRejectSecondPrecisionTime() throws Exception {
+        Long id = 1L;
+        LocalDateTime startTime = LocalDateTime.of(2300, 3, 1, 10, 30, 30, 0);
+        LocalDateTime endTime = LocalDateTime.of(2300, 3, 1, 11, 30, 0, 0);
+
+        mockMvc.perform(patch("/reservations/{id}", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper.writeValueAsString(new UpdateReservationRequest(startTime, endTime))))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(reservationService);
     }
 }

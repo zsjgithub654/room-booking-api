@@ -189,6 +189,16 @@ public class RoomControllerTest {
     }
 
     @Test
+    void searchAvailabilitiesShouldRejectSecondPrecisionTime() throws Exception {
+        mockMvc.perform(get("/rooms/availabilities")
+                        .param("startTime", LocalDateTime.of(2300, 3, 1, 10, 30, 1, 0).toString())
+                        .param("endTime", LocalDateTime.of(2300, 3, 2, 10, 30, 0, 0).toString()))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(roomService);
+    }
+
+    @Test
     void getRoomTest() throws Exception {
         /* mock service result */
         Long id = 1L;

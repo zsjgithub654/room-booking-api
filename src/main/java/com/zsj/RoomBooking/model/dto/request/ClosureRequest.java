@@ -1,13 +1,14 @@
 package com.zsj.RoomBooking.model.dto.request;
 
-import com.zsj.RoomBooking.validation.TimeRange;
+import com.zsj.RoomBooking.validation.Range;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 import java.time.LocalDateTime;
 
-@TimeRange(startField = "startTime", endField = "endTime")
-public record ClosureRequest(@NotNull Long roomId,
+@Range(fromField = "startTime", toField = "endTime", message = "start time must be before end time.")
+public record ClosureRequest(@NotNull @Positive Long roomId,
                              @NotNull @Future LocalDateTime startTime,
                              @NotNull @Future LocalDateTime endTime) {
 }

@@ -11,9 +11,11 @@ import com.zsj.RoomBooking.model.dto.request.SearchAvailabilityRequest;
 import com.zsj.RoomBooking.model.dto.response.RoomScheduleResponse;
 import com.zsj.RoomBooking.service.RoomService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -26,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+@Validated
 @RestController
 @RequestMapping("/rooms")
 public class RoomController {
@@ -42,7 +45,7 @@ public class RoomController {
     private RoomScheduleMapper roomScheduleMapper;
 
     @GetMapping
-    public List<RoomResponse> searchRooms(@ModelAttribute SearchRoomRequest request) {
+    public List<RoomResponse> searchRooms(@Valid @ModelAttribute SearchRoomRequest request) {
         return roomService.searchRooms(
                 request.name(),
                 request.minCapacity(), request.maxCapacity(),
@@ -63,7 +66,7 @@ public class RoomController {
 
     @GetMapping("/{roomId}")
     /* TODO: rename */
-    public RoomResponse getRoom(@PathVariable Long roomId) {
+    public RoomResponse getRoom(@PathVariable @Positive Long roomId) {
         return roomMapper.toResponse(roomService.getRoom(roomId));
     }
 
@@ -77,7 +80,7 @@ public class RoomController {
     }
 
     @DeleteMapping("/{roomId}")
-    public DeleteRoomResponse deleteRoom(@PathVariable Long roomId) {
+    public DeleteRoomResponse deleteRoom(@PathVariable @Positive Long roomId) {
         return new DeleteRoomResponse(
                 roomId,
                 roomService.deleteRoom(roomId).stream().map(reservationMapper::toResponse).toList()
@@ -85,7 +88,7 @@ public class RoomController {
     }
 
     @PutMapping("/{roomId}")
-    public RoomResponse updateRoom(@PathVariable Long roomId, @Valid @RequestBody RoomRequest request) {
+    public RoomResponse updateRoom(@PathVariable @Positive Long roomId, @Valid @RequestBody RoomRequest request) {
         return roomMapper.toResponse(
                 roomService.updateRoom(roomId,
                         request.name(),

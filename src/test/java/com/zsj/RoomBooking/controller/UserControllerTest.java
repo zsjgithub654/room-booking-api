@@ -61,6 +61,14 @@ public class UserControllerTest {
     }
 
     @Test
+    void getUserShouldRejectNonPositiveId() throws Exception {
+        mockMvc.perform(get("/users/{id}", 0))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(userService);
+    }
+
+    @Test
     void addUserTest() throws Exception {
         String username = "user1";
         String password = "password1";
@@ -75,6 +83,36 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$.username").value(username))
                 .andExpect(jsonPath("$.password").doesNotExist())
                 .andExpect(jsonPath("$.roles", hasItem(Role.ROLE_USER.name())));
+    }
+
+    @Test
+    void addUserShouldRejectBlankUsername() throws Exception {
+        mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper.writeValueAsString(new UserRequest("   ", "password1"))))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(userService);
+    }
+
+    @Test
+    void addUserShouldRejectInvalidUsernameCharacters() throws Exception {
+        mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper.writeValueAsString(new UserRequest("user 1", "password1!"))))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(userService);
+    }
+
+    @Test
+    void addUserShouldRejectShortPassword() throws Exception {
+        mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper.writeValueAsString(new UserRequest("user1", "short1!"))))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(userService);
     }
 
     @Test
@@ -107,6 +145,30 @@ public class UserControllerTest {
     }
 
     @Test
+    void updateUsernameShouldRejectBlankUsername() throws Exception {
+        Long id = 1L;
+
+        mockMvc.perform(patch("/users/{id}/username", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper.writeValueAsString(new UpdateUsernameRequest("   "))))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(userService);
+    }
+
+    @Test
+    void updateUsernameShouldRejectUsernameLongerThanTwentyChars() throws Exception {
+        Long id = 1L;
+
+        mockMvc.perform(patch("/users/{id}/username", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper.writeValueAsString(new UpdateUsernameRequest("this_username_is_too_long"))))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(userService);
+    }
+
+    @Test
     void updatePasswordTest() throws Exception {
         Long id = 1L;
         String password = "password1";
@@ -122,28 +184,6 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$.password").doesNotExist())
                 .andExpect(jsonPath("$.roles", hasItem(Role.ROLE_USER.name())));
         verify(userService).updatePassword(id, password);
-    }
-
-    @Test
-    void addUserShouldRejectBlankUsername() throws Exception {
-        mockMvc.perform(post("/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(this.objectMapper.writeValueAsString(new UserRequest("   ", "password1"))))
-                .andExpect(status().isBadRequest());
-
-        verifyNoInteractions(userService);
-    }
-
-    @Test
-    void updateUsernameShouldRejectBlankUsername() throws Exception {
-        Long id = 1L;
-
-        mockMvc.perform(patch("/users/{id}/username", id)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(this.objectMapper.writeValueAsString(new UpdateUsernameRequest("   "))))
-                .andExpect(status().isBadRequest());
-
-        verifyNoInteractions(userService);
     }
 
     @Test

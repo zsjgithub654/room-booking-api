@@ -7,9 +7,11 @@ import com.zsj.RoomBooking.model.dto.request.SearchReservationRequest;
 import com.zsj.RoomBooking.model.dto.request.UpdateReservationRequest;
 import com.zsj.RoomBooking.service.ReservationService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -23,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+@Validated
 @RestController
 @RequestMapping("/reservations")
 public class ReservationController {
@@ -33,18 +36,18 @@ public class ReservationController {
     private ReservationMapper reservationMapper;
 
     @GetMapping
-    public List<ReservationResponse> searchReservations(@ModelAttribute SearchReservationRequest request) {
+    public List<ReservationResponse> searchReservations(@Valid @ModelAttribute SearchReservationRequest request) {
         return service.searchReservations(request.userId(), request.roomId(), request.date(), request.status())
                 .stream().map(reservationMapper::toResponse).toList();
     }
 
     @GetMapping("/{id}")
-    public ReservationResponse getReservation(@PathVariable Long id) {
+    public ReservationResponse getReservation(@PathVariable @Positive Long id) {
         return reservationMapper.toResponse(service.getReservation(id));
     }
 
     @PostMapping
-    public ResponseEntity<ReservationResponse> addReservation(@RequestParam Long userId, @Valid @RequestBody ReservationRequest request) {
+    public ResponseEntity<ReservationResponse> addReservation(@RequestParam @Positive Long userId, @Valid @RequestBody ReservationRequest request) {
         return new ResponseEntity<>(
                 reservationMapper.toResponse(service.addReservation(
                         userId, request.roomId(), request.startTime(), request.endTime())),
@@ -53,12 +56,12 @@ public class ReservationController {
 
     /* Only startTime and endTime are allowed to update */
     @PatchMapping(path = "/{id}")
-    public ReservationResponse updateReservationTime(@PathVariable Long id, @Valid @RequestBody UpdateReservationRequest request) {
+    public ReservationResponse updateReservationTime(@PathVariable @Positive Long id, @Valid @RequestBody UpdateReservationRequest request) {
         return reservationMapper.toResponse(service.updateReservationTime(id, request.startTime(), request.endTime()));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteReservation(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteReservation(@PathVariable @Positive Long id) {
         service.deleteReservation(id);
         return ResponseEntity.noContent().build();
     }

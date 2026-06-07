@@ -9,9 +9,11 @@ import com.zsj.RoomBooking.model.dto.request.UserRequest;
 import com.zsj.RoomBooking.model.dto.response.UserResponse;
 import com.zsj.RoomBooking.service.UserService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -24,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+@Validated
 @RestController
 @RequestMapping("users")
 public class UserController {
@@ -34,7 +37,7 @@ public class UserController {
     private UserMapper userMapper;
 
     @GetMapping("/{id}")
-    public UserResponse getUser(@PathVariable Long id) {
+    public UserResponse getUser(@PathVariable @Positive Long id) {
         return userMapper.toResponse(service.getUser(id));
     }
 
@@ -53,17 +56,17 @@ public class UserController {
     }
 
     @PatchMapping("/{id}/username")
-    public UserResponse updateUsername(@PathVariable Long id, @Valid @RequestBody UpdateUsernameRequest request) {
+    public UserResponse updateUsername(@PathVariable @Positive Long id, @Valid @RequestBody UpdateUsernameRequest request) {
         return userMapper.toResponse(service.updateUsername(id, request.username()));
     }
 
     @PatchMapping("/{id}/password")
-    public UserResponse updatePassword(@PathVariable Long id, @Valid @RequestBody UpdatePasswordRequest request) {
+    public UserResponse updatePassword(@PathVariable @Positive Long id, @Valid @RequestBody UpdatePasswordRequest request) {
         return userMapper.toResponse(service.updatePassword(id, request.password()));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<UserResponse> closeUserAccount(@PathVariable Long id) {
+    public ResponseEntity<UserResponse> closeUserAccount(@PathVariable @Positive Long id) {
         service.closeUserAccount(id);
         return ResponseEntity.noContent().build();
     }

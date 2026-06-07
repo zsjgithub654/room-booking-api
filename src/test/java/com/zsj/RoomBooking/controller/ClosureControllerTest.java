@@ -55,7 +55,7 @@ public class ClosureControllerTest {
     @Test
     void getClosureTest() throws Exception {
         /* request */
-        Long closureId = 0L;
+        Long closureId = 1L;
         /* mock service response */
         Closure closure = new Closure(new Room(),
                 LocalDateTime.of(2026, 3, 1, 10, 30, 0, 0),
@@ -74,6 +74,14 @@ public class ClosureControllerTest {
                 .usingRecursiveComparison()
                 .ignoringFields("userId", "roomId")
                 .isEqualTo(closure);
+    }
+
+    @Test
+    void getClosureShouldRejectNonPositiveId() throws Exception {
+        mockMvc.perform(get("/closures/{closureId}", 0))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(closureService);
     }
 
     @Test
@@ -113,6 +121,15 @@ public class ClosureControllerTest {
                 .usingRecursiveComparison()
                 .ignoringFields("userId", "roomId")
                 .isEqualTo(closures);
+    }
+
+    @Test
+    void getClosuresOfRoomShouldRejectNonPositiveRoomId() throws Exception {
+        mockMvc.perform(get("/closures")
+                        .param("roomId", "0"))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(closureService);
     }
 
     @Test
@@ -183,6 +200,36 @@ public class ClosureControllerTest {
                         .param("userId", userId.toString())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(new ClosureRequest(null, startTime, endTime))))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(closureService);
+    }
+
+    @Test
+    void addClosureShouldRejectNonPositiveRoomId() throws Exception {
+        Long userId = 1L;
+        LocalDateTime startTime = LocalDateTime.of(2300, 1, 1, 10, 30, 0, 0);
+        LocalDateTime endTime = LocalDateTime.of(2300, 1, 10, 10, 30, 0, 0);
+
+        mockMvc.perform(post("/closures")
+                        .param("userId", userId.toString())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper.writeValueAsString(new ClosureRequest(0L, startTime, endTime))))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(closureService);
+    }
+
+    @Test
+    void addClosureShouldRejectNonPositiveUserId() throws Exception {
+        Long roomId = 2L;
+        LocalDateTime startTime = LocalDateTime.of(2300, 1, 1, 10, 30, 0, 0);
+        LocalDateTime endTime = LocalDateTime.of(2300, 1, 10, 10, 30, 0, 0);
+
+        mockMvc.perform(post("/closures")
+                        .param("userId", "0")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper.writeValueAsString(new ClosureRequest(roomId, startTime, endTime))))
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(closureService);

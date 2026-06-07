@@ -1,15 +1,15 @@
 package com.zsj.RoomBooking.controller;
 
-import com.zsj.RoomBooking.mapper.RoomScheduleMapper;
 import com.zsj.RoomBooking.mapper.OccupationMapper;
 import com.zsj.RoomBooking.mapper.ReservationMapper;
 import com.zsj.RoomBooking.mapper.RoomMapper;
+import com.zsj.RoomBooking.mapper.RoomScheduleMapper;
 import com.zsj.RoomBooking.model.RoomSchedule;
 import com.zsj.RoomBooking.model.dto.request.RoomRequest;
+import com.zsj.RoomBooking.model.dto.request.SearchAvailabilityRequest;
 import com.zsj.RoomBooking.model.dto.request.SearchRoomRequest;
 import com.zsj.RoomBooking.model.dto.response.DeleteRoomResponse;
 import com.zsj.RoomBooking.model.dto.response.RoomResponse;
-import com.zsj.RoomBooking.model.dto.request.SearchAvailabilityRequest;
 import com.zsj.RoomBooking.model.dto.response.RoomScheduleResponse;
 import com.zsj.RoomBooking.model.entity.Closure;
 import com.zsj.RoomBooking.model.entity.Reservation;
@@ -20,9 +20,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.http.MediaType;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 
@@ -98,6 +98,16 @@ public class RoomControllerTest {
     }
 
     @Test
+    void searchRoomsShouldRejectInvalidCapacityRange() throws Exception {
+        mockMvc.perform(get("/rooms")
+                        .param("minCapacity", "20")
+                        .param("maxCapacity", "2"))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(roomService);
+    }
+
+    @Test
     void searchAvailabilitiesTest() throws Exception {
         /* request */
         SearchAvailabilityRequest request = new SearchAvailabilityRequest(null,
@@ -150,7 +160,6 @@ public class RoomControllerTest {
                 .isEqualTo(roomSchedules);
     }
 
-
     @Test
     void searchAvailabilitiesShouldRejectInvalidTimeRangeTest() throws Exception {
         mockMvc.perform(get("/rooms/availabilities")
@@ -162,9 +171,27 @@ public class RoomControllerTest {
     }
 
     @Test
+    void searchAvailabilitiesShouldRejectMissingTimeRangeTest() throws Exception {
+        mockMvc.perform(get("/rooms/availabilities"))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(roomService);
+    }
+
+    @Test
+    void searchAvailabilitiesShouldRejectTimeRangeTooLongTest() throws Exception {
+        mockMvc.perform(get("/rooms/availabilities")
+                        .param("startTime", LocalDateTime.of(2300, 3, 1, 10, 30, 0, 0).toString())
+                        .param("endTime", LocalDateTime.of(2300, 3, 9, 10, 30, 1, 0).toString()))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(roomService);
+    }
+
+    @Test
     void getRoomTest() throws Exception {
         /* mock service result */
-        Long id = 0L;
+        Long id = 1L;
         Room room = new Room("101", 12, "Building A",
                 LocalTime.of(9, 0, 0, 0),
                 LocalTime.of(16, 0, 0, 0));
@@ -179,6 +206,14 @@ public class RoomControllerTest {
         assertThat(response)
                 .usingRecursiveComparison()
                 .isEqualTo(room);
+    }
+
+    @Test
+    void getRoomShouldRejectNonPositiveId() throws Exception {
+        mockMvc.perform(get("/rooms/{id}", 0))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(roomService);
     }
 
     @Test
@@ -237,6 +272,20 @@ public class RoomControllerTest {
     }
 
     @Test
+    void addRoomShouldRejectNonPositiveCapacity() throws Exception {
+        RoomRequest request = new RoomRequest("101", 0, "Building A",
+                LocalTime.of(9, 0, 0, 0),
+                LocalTime.of(16, 0, 0, 0));
+
+        mockMvc.perform(post("/rooms")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(roomService);
+    }
+
+    @Test
     void deleteRoomTest() throws Exception {
         /* request */
         Long roomId = 1L;
@@ -269,7 +318,7 @@ public class RoomControllerTest {
 
     @Test
     void updateRoomTest() throws Exception {
-        Long id = 0L;
+        Long id = 1L;
         Room room = new Room("101", 12, "Building A",
                 LocalTime.of(9, 0, 0, 0),
                 LocalTime.of(16, 0, 0, 0));

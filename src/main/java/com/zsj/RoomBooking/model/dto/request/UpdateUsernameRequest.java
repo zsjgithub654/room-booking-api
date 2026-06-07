@@ -1,6 +1,12 @@
 package com.zsj.RoomBooking.model.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
-public record UpdateUsernameRequest(@NotBlank String username) {
+public record UpdateUsernameRequest(
+        @NotBlank
+        @Size(min = 3, max = 20)
+        @Pattern(regexp = "^[A-Za-z0-9._-]+$", message = "username can only contain letters, numbers, dots, underscores, and hyphens.")
+        String username) {
 }

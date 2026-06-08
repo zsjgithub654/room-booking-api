@@ -45,6 +45,22 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     boolean existsByRoomIdAndOverlappingAndActive(Long roomId, LocalDateTime fromTime, LocalDateTime toTime);
 
     @Query("""
+                SELECT COUNT(reservation) > 0
+                FROM Reservation reservation
+                WHERE reservation.room.id = :roomId
+                  AND reservation.status = RESERVATION_STATUS_ACTIVE
+                  AND reservation.id <> :reservationId
+                  AND reservation.startTime < :toTime
+                  AND reservation.endTime > :fromTime
+            """)
+    boolean existsByRoomIdAndOverlappingAndActiveExcludingReservation(
+            Long roomId,
+            Long reservationId,
+            LocalDateTime fromTime,
+            LocalDateTime toTime
+    );
+
+    @Query("""
                 SELECT reservation
                 FROM Reservation reservation
                 WHERE reservation.room.id = :roomId

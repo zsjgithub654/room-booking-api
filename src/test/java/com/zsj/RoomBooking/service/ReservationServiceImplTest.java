@@ -2,6 +2,8 @@ package com.zsj.RoomBooking.service;
 
 import com.zsj.RoomBooking.exception.ResourceNotFoundException;
 import com.zsj.RoomBooking.model.ReservationStatus;
+import com.zsj.RoomBooking.model.RoomStatus;
+import com.zsj.RoomBooking.model.UserStatus;
 import com.zsj.RoomBooking.model.entity.Reservation;
 import com.zsj.RoomBooking.model.entity.Room;
 import com.zsj.RoomBooking.model.entity.User;
@@ -352,6 +354,29 @@ public class ReservationServiceImplTest {
     }
 
     @Test
+    void updateReservationInactiveUserTest() {
+        Long reservationId = 2L;
+        Long roomId = 3L;
+        LocalDateTime startTime = LocalDateTime.of(2026, 3, 1, 12, 0, 0, 0);
+        LocalDateTime endTime = LocalDateTime.of(2026, 3, 1, 13, 0, 0, 0);
+        User user = new User("user1", "");
+        user.setStatus(UserStatus.USER_STATUS_CLOSED);
+        Room room = new Room("101", 12, "Building A", null, null);
+        ReflectionTestUtils.setField(room, "id", roomId);
+        Reservation reservation = new Reservation(user, room,
+                LocalDateTime.of(2026, 3, 1, 10, 0, 0, 0),
+                LocalDateTime.of(2026, 3, 1, 11, 0, 0, 0));
+        ReflectionTestUtils.setField(reservation, "id", reservationId);
+
+        when(reservationRepository.findById(eq(reservationId))).thenReturn(Optional.of(reservation));
+        when(userRepository.findByIdWithLock(eq(user.getId()))).thenReturn(Optional.of(user));
+
+        Exception exception = assertThrows(ResourceNotFoundException.class,
+                () -> reservationService.updateReservationTime(reservationId, startTime, endTime));
+        assertThat(exception.getMessage()).isEqualTo("User not found.");
+    }
+
+    @Test
     void updateReservationRoomNotFoundTest() {
         Long reservationId = 2L;
         Long roomId = 3L;
@@ -368,6 +393,30 @@ public class ReservationServiceImplTest {
         when(reservationRepository.findById(eq(reservationId))).thenReturn(Optional.of(reservation));
         when(userRepository.findByIdWithLock(eq(user.getId()))).thenReturn(Optional.of(user));
         when(roomRepository.findByIdWithLock(eq(room.getId()))).thenReturn(Optional.empty());
+
+        Exception exception = assertThrows(ResourceNotFoundException.class,
+                () -> reservationService.updateReservationTime(reservationId, startTime, endTime));
+        assertThat(exception.getMessage()).isEqualTo("Room not found.");
+    }
+
+    @Test
+    void updateReservationInactiveRoomTest() {
+        Long reservationId = 2L;
+        Long roomId = 3L;
+        LocalDateTime startTime = LocalDateTime.of(2026, 3, 1, 12, 0, 0, 0);
+        LocalDateTime endTime = LocalDateTime.of(2026, 3, 1, 13, 0, 0, 0);
+        User user = new User("user1", "");
+        Room room = new Room("101", 12, "Building A", null, null);
+        room.setStatus(RoomStatus.ROOM_STATUS_DELETED);
+        ReflectionTestUtils.setField(room, "id", roomId);
+        Reservation reservation = new Reservation(user, room,
+                LocalDateTime.of(2026, 3, 1, 10, 0, 0, 0),
+                LocalDateTime.of(2026, 3, 1, 11, 0, 0, 0));
+        ReflectionTestUtils.setField(reservation, "id", reservationId);
+
+        when(reservationRepository.findById(eq(reservationId))).thenReturn(Optional.of(reservation));
+        when(userRepository.findByIdWithLock(eq(user.getId()))).thenReturn(Optional.of(user));
+        when(roomRepository.findByIdWithLock(eq(room.getId()))).thenReturn(Optional.of(room));
 
         Exception exception = assertThrows(ResourceNotFoundException.class,
                 () -> reservationService.updateReservationTime(reservationId, startTime, endTime));

@@ -76,8 +76,10 @@ public class ReservationServiceImpl implements ReservationService {
                 .orElseThrow(() -> new ResourceNotFoundException("Reservation not found."));
         /* acquire lock on user and room */
         userRepository.findByIdWithLock(reservation.getUser().getId())
+                .filter(foundUser -> foundUser.getStatus() == UserStatus.USER_STATUS_ACTIVE)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found."));
         Room room = roomRepository.findByIdWithLock(reservation.getRoom().getId())
+                .filter(foundRoom -> foundRoom.getStatus() == RoomStatus.ROOM_STATUS_ACTIVE)
                 .orElseThrow(() -> new ResourceNotFoundException("Room not found."));
         /* check availability */
         validateReservationWithinOpenHours(room, startTime, endTime);

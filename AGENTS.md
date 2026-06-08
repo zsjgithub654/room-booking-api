@@ -6,8 +6,11 @@
 2. Use explicit names and avoid single-letter naming.
 3. Use name start with `is` for methods that return a boolean.
 
-## Coding style
+## Comments
 1. Keep original comments on refactoring.
+
+## Coding style
+1. don't modify input parameters.
 
 ## Validation
 

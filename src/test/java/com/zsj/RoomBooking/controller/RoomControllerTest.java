@@ -26,6 +26,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
@@ -113,8 +114,9 @@ public class RoomControllerTest {
         SearchAvailabilityRequest request = new SearchAvailabilityRequest(null,
                 2, 20,
                 null,
-                LocalDateTime.of(2300, 3, 1, 10, 30, 0, 0),
-                LocalDateTime.of(2300, 3, 2, 10, 30, 0, 0));
+                LocalDate.of(2300, 3, 1),
+                LocalDate.of(2300, 3, 2),
+                true);
         /* mock service result */
         List<RoomSchedule> roomSchedules = List.of(
                 new RoomSchedule(new Room("101", 12, "Building A", null, null),
@@ -138,14 +140,16 @@ public class RoomControllerTest {
                 request.name(),
                 request.minCapacity(), request.maxCapacity(),
                 request.area(),
-                request.startTime(), request.endTime())
+                request.startDate(), request.endDate(),
+                request.includeUnavailable())
         ).thenReturn(roomSchedules);
         /* perform */
         String responseString = mockMvc.perform(get("/rooms/availabilities")
                         .param("minCapacity", request.minCapacity().toString())
                         .param("maxCapacity", request.maxCapacity().toString())
-                        .param("startTime", request.startTime().toString())
-                        .param("endTime", request.endTime().toString()))
+                        .param("startDate", request.startDate().toString())
+                        .param("endDate", request.endDate().toString())
+                        .param("includeUnavailable", request.includeUnavailable().toString()))
                 .andExpect(status().isOk())
                 .andReturn()
                 .getResponse()
@@ -163,8 +167,8 @@ public class RoomControllerTest {
     @Test
     void searchAvailabilitiesShouldRejectInvalidTimeRangeTest() throws Exception {
         mockMvc.perform(get("/rooms/availabilities")
-                        .param("startTime", LocalDateTime.of(2300, 3, 2, 10, 30, 0, 0).toString())
-                        .param("endTime", LocalDateTime.of(2300, 3, 1, 10, 30, 0, 0).toString()))
+                        .param("startDate", LocalDate.of(2300, 3, 2).toString())
+                        .param("endDate", LocalDate.of(2300, 3, 1).toString()))
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(roomService);
@@ -179,23 +183,34 @@ public class RoomControllerTest {
     }
 
     @Test
-    void searchAvailabilitiesShouldRejectTimeRangeTooLongTest() throws Exception {
+    void searchAvailabilitiesShouldValidateTimeRangeLengthTest() throws Exception {
+        LocalDate startDate = LocalDate.of(2300, 3, 1);
+        LocalDate validEndDate = LocalDate.of(2300, 3, 7);
+
+        when(roomService.searchAvailabilities(
+                null,
+                null, null,
+                null,
+                startDate, validEndDate,
+                null))
+                .thenReturn(List.of());
+
         mockMvc.perform(get("/rooms/availabilities")
-                        .param("startTime", LocalDateTime.of(2300, 3, 1, 10, 30, 0, 0).toString())
-                        .param("endTime", LocalDateTime.of(2300, 3, 9, 10, 30, 1, 0).toString()))
-                .andExpect(status().isBadRequest());
+                        .param("startDate", startDate.toString())
+                        .param("endDate", validEndDate.toString()))
+                .andExpect(status().isOk());
 
-        verifyNoInteractions(roomService);
-    }
+        verify(roomService).searchAvailabilities(
+                null,
+                null, null,
+                null,
+                startDate, validEndDate,
+                null);
 
-    @Test
-    void searchAvailabilitiesShouldRejectSecondPrecisionTime() throws Exception {
         mockMvc.perform(get("/rooms/availabilities")
-                        .param("startTime", LocalDateTime.of(2300, 3, 1, 10, 30, 1, 0).toString())
-                        .param("endTime", LocalDateTime.of(2300, 3, 2, 10, 30, 0, 0).toString()))
+                        .param("startDate", startDate.toString())
+                        .param("endDate", LocalDate.of(2300, 3, 8).toString()))
                 .andExpect(status().isBadRequest());
-
-        verifyNoInteractions(roomService);
     }
 
     @Test

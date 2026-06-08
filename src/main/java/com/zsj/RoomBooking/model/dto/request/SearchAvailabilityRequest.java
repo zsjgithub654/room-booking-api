@@ -1,25 +1,27 @@
 package com.zsj.RoomBooking.model.dto.request;
 
 import com.zsj.RoomBooking.validation.MaxDurationDays;
-import com.zsj.RoomBooking.validation.MinutePrecision;
-import com.zsj.RoomBooking.validation.Interval;
+import com.zsj.RoomBooking.validation.TimeInterval;
 import com.zsj.RoomBooking.validation.Range;
-import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Range(
         minField = "minCapacity",
         maxField = "maxCapacity",
         message = "minimum capacity must be less than or equal to maximum capacity."
 )
-@MaxDurationDays(startField = "startTime", endField = "endTime", days = 7)
-@Interval(fromField = "startTime", toField = "endTime", message = "start time must be before end time.")
+@MaxDurationDays(startField = "startDate", endField = "endDate", days = 7)
+@TimeInterval(fromField = "startDate", toField = "endDate", allowEqual = true,
+        message = "start date must be before or equal to end date.")
 public record SearchAvailabilityRequest(String name,
                                         @Positive Integer minCapacity, @Positive Integer maxCapacity, /* use wrapper to accept null */
                                         String area,
-                                        @NotNull @Future @MinutePrecision LocalDateTime startTime,
-                                        @NotNull @Future @MinutePrecision LocalDateTime endTime) {
+                                        @NotNull @FutureOrPresent LocalDate startDate,
+                                        @NotNull @FutureOrPresent LocalDate endDate,
+                                        Boolean includeUnavailable) {
 }
+

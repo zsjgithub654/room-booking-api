@@ -10,8 +10,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * A custom validation annotation for intervals.
- * Interval should have both lower and upper bounds, bounds should be ordered and should not be equal.
+ * A custom validation annotation for time intervals.
+ * Time interval should have both lower and upper bounds, bounds should be ordered, equality is not allowed by default.
  * Both bounds are null is allowed, not null should be validated by @NotNull if needed.
  * Example use case: time periods.
  */
@@ -20,10 +20,10 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 /* this annotation is to be retained at runtime */
 @Retention(RetentionPolicy.RUNTIME)
-@Constraint(validatedBy = IntervalValidator.class)
-public @interface Interval {
+@Constraint(validatedBy = TimeIntervalValidator.class)
+public @interface TimeInterval {
     /* default message for validation failure */
-    String message() default "interval from value must be smaller than interval to value.";
+    String message() default "time interval from value must be smaller than time interval to value.";
 
     /* required by bean validation */
     Class<?>[] groups() default {};

@@ -60,7 +60,8 @@ public class RoomController {
                 request.name(),
                 request.minCapacity(), request.maxCapacity(),
                 request.area(),
-                request.startTime(), request.endTime()
+                request.startDate(), request.endDate(),
+                request.includeUnavailable()
         ).stream().map(roomScheduleMapper::toResponse).toList();
     }
 

@@ -5,16 +5,18 @@ import jakarta.validation.ConstraintValidatorContext;
 import org.springframework.beans.BeanWrapperImpl;
 
 /**
- * Validator for @Interval.
+ * Validator for @TimeInterval.
  */
-public class IntervalValidator implements ConstraintValidator<Interval, Object> {
+public class TimeIntervalValidator implements ConstraintValidator<TimeInterval, Object> {
     private String fromField;
     private String toField;
+    private boolean allowEqual;
 
     @Override
-    public void initialize(Interval constraintAnnotation) {
+    public void initialize(TimeInterval constraintAnnotation) {
         fromField = constraintAnnotation.fromField();
         toField = constraintAnnotation.toField();
+        allowEqual = constraintAnnotation.allowEqual();
     }
 
     @Override
@@ -26,7 +28,7 @@ public class IntervalValidator implements ConstraintValidator<Interval, Object> 
         /* read the properties to validate from the annotated object */
         BeanWrapperImpl beanWrapper = new BeanWrapperImpl(value);
         if (!beanWrapper.isReadableProperty(fromField) || !beanWrapper.isReadableProperty(toField)) {
-            throw new IllegalStateException("Invalid @Interval configuration on " + value.getClass().getName());
+            throw new IllegalStateException("Invalid @TimeInterval configuration on " + value.getClass().getName());
         }
         Object from = beanWrapper.getPropertyValue(fromField);
         Object to = beanWrapper.getPropertyValue(toField);
@@ -35,18 +37,18 @@ public class IntervalValidator implements ConstraintValidator<Interval, Object> 
         }
         if (from == null || to == null) {
             context.disableDefaultConstraintViolation();
-            context.buildConstraintViolationWithTemplate("interval fields must both be provided or both be omitted.")
+            context.buildConstraintViolationWithTemplate("time interval fields must both be provided or both be omitted.")
                     .addPropertyNode(from == null ? fromField : toField)
                     .addConstraintViolation();
             return false;
         }
         /* from and to are of the same type and comparable */
         if (!from.getClass().isInstance(to) || !(from instanceof Comparable<?> comparableFrom)) {
-            throw new IllegalStateException("Fields in @Interval must be comparable and of the same type.");
+            throw new IllegalStateException("Fields in @TimeInterval must be comparable and of the same type.");
         }
         /* validate */
         int comparison = ((Comparable<Object>) comparableFrom).compareTo(to);
-        boolean valid = comparison < 0;
+        boolean valid = allowEqual ? comparison <= 0 : comparison < 0;
         if (valid) {
             return true;
         }

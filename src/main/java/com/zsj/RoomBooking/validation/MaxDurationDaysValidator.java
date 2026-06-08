@@ -4,8 +4,8 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.springframework.beans.BeanWrapperImpl;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 
 public class MaxDurationDaysValidator implements ConstraintValidator<MaxDurationDays, Object> {
     private String startField;
@@ -35,11 +35,11 @@ public class MaxDurationDaysValidator implements ConstraintValidator<MaxDuration
         if (start == null || end == null) {
             return true;
         }
-        if (!(start instanceof LocalDateTime startTime) || !(end instanceof LocalDateTime endTime)) {
-            throw new IllegalStateException("Fields in @MaxDurationDays must be LocalDateTime.");
+        if (!(start instanceof LocalDate startDate) || !(end instanceof LocalDate endDate)) {
+            throw new IllegalStateException("Fields in @MaxDurationDays must be LocalDate.");
         }
 
-        boolean valid = Duration.between(startTime, endTime).compareTo(Duration.ofDays(days)) <= 0;
+        boolean valid = ChronoUnit.DAYS.between(startDate, endDate) + 1 <= days;
         if (valid) {
             return true;
         }

@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -62,15 +63,19 @@ public class RoomServiceImpl implements RoomService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<RoomSchedule> searchAvailabilities(String name, Integer minCapacity, Integer maxCapacity, String area, LocalDateTime startTime, LocalDateTime endTime) {
+    public List<RoomSchedule> searchAvailabilities(String name, Integer minCapacity, Integer maxCapacity, String area,
+                                                   LocalDate startDate, LocalDate endDate, Boolean includeUnavailable) {
         /* filter rooms */
         List<Room> rooms = searchRooms(name, minCapacity, maxCapacity, area);
+        boolean shouldIncludeUnavailable = Boolean.TRUE.equals(includeUnavailable);
+        LocalDateTime startTime = startDate.atStartOfDay();
+        LocalDateTime endTime = endDate.plusDays(1).atStartOfDay();
         /* calculate availability */
         List<RoomSchedule> availabilities = new ArrayList<>();
         for (Room room : rooms) {
             List<Occupation> occupations = getOccupationsForRoom(room.getId(), startTime, endTime);
             /* skip rooms if no gap between occupations during the given range */
-            if (!isAvailableDuringTime(room, startTime, endTime, occupations)) {
+            if (!shouldIncludeUnavailable && !isRoomAvailableDuringDays(room, startDate, endDate, occupations)) {
                 continue;
             }
             availabilities.add(new RoomSchedule(room, occupations));
@@ -90,32 +95,53 @@ public class RoomServiceImpl implements RoomService {
                 .toList();
     }
 
-    private boolean isAvailableDuringTime(Room room, LocalDateTime fromTime, LocalDateTime toTime, List<Occupation> occupations) {
-        LocalDateTime availableSince = getAvailableSince(room, fromTime);
-        /* check if there is gap between occupations during the given range */
-        for (Occupation occupation : occupations) {
-            LocalDateTime availableUntil = getAvailableUntil(room, occupation.getStartTime());
-            if (availableSince.isBefore(availableUntil)) {
+    private boolean isRoomAvailableDuringDays(Room room, LocalDate fromDate, LocalDate toDate, List<Occupation> occupations) {
+        if (room.isOpenAllDay()) {
+            return getNextOccupationAfterTimeRangeFilled(fromDate.atStartOfDay(), toDate.plusDays(1).atStartOfDay(), occupations, 0) == -1;
+        }
+        int occupationIndex = 0;
+        for (LocalDate date = fromDate; !date.isAfter(toDate); date = date.plusDays(1)) {
+            occupationIndex = getNextOccupationAfterTimeRangeFilled(
+                    date.atTime(room.getOpenTime()),
+                    date.atTime(room.getCloseTime()),
+                    occupations,
+                    occupationIndex);
+            if (occupationIndex == -1) {
                 return true;
             }
-            availableSince = getAvailableSince(room, occupation.getEndTime());
         }
-        LocalDateTime availableUntil = getAvailableUntil(room, toTime);
-        return availableSince.isBefore(availableUntil);
+        return false;
     }
 
-    /* normalize time to open time */
-    private LocalDateTime getAvailableSince(Room room, LocalDateTime time) {
-        return room.isOpenAllDay() || !time.toLocalTime().isBefore(room.getOpenTime())
-                ? time
-                : time.toLocalDate().atTime(room.getOpenTime());
-    }
-
-    /* normalize time to close time */
-    private LocalDateTime getAvailableUntil(Room room, LocalDateTime time) {
-        return room.isOpenAllDay() || !time.toLocalTime().isAfter(room.getCloseTime())
-                ? time
-                : time.toLocalDate().atTime(room.getCloseTime());
+    /* return -1 if gap found, otherwise return next occupation index to continue from */
+    private int getNextOccupationAfterTimeRangeFilled(LocalDateTime fromTime, LocalDateTime toTime, List<Occupation> occupations, int startIndex) {
+        LocalDateTime releaseAt = fromTime;
+        while (startIndex < occupations.size()) {
+            Occupation occupation = occupations.get(startIndex);
+            /* ends before earliest available time */
+            if (!occupation.getEndTime().isAfter(releaseAt)) {
+                startIndex++;
+                continue;
+            }
+            /* starts after latest available time */
+            if (!occupation.getStartTime().isBefore(toTime)) {
+                break;
+            }
+            /* gap found */
+            if (releaseAt.isBefore(occupation.getStartTime())) {
+                return -1;
+            }
+            /* no gap, update releaseAt */
+            if (occupation.getEndTime().isAfter(releaseAt)) {
+                releaseAt = occupation.getEndTime();
+            }
+            /* window ends without gap */
+            if (!releaseAt.isBefore(toTime)) {
+                return startIndex;
+            }
+            startIndex++;
+        }
+        return releaseAt.isBefore(toTime) ? -1 : startIndex;
     }
 
     /* TODO: rename */

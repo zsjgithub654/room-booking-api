@@ -20,6 +20,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -166,27 +167,27 @@ public class RoomServiceImplTest {
                 LocalTime.of(16, 0, 0, 0));
         List<Reservation> reservations = List.of(
                 new Reservation(new User(), room,
-                        LocalDateTime.of(2026, 3, 1, 8, 0, 0, 0),
-                        LocalDateTime.of(2026, 3, 1, 10, 0, 0, 0)),
-                new Reservation(new User(), room,
-                        LocalDateTime.of(2026, 3, 1, 10, 0, 0, 0),
-                        LocalDateTime.of(2026, 3, 1, 13, 0, 0, 0)));
+                        LocalDateTime.of(2026, 3, 1, 8, 30, 0, 0),
+                        LocalDateTime.of(2026, 3, 1, 12, 0, 0, 0)));
         List<Closure> closures = List.of(
                 new Closure(room,
-                        LocalDateTime.of(2026, 3, 1, 14, 0, 0, 0),
-                        LocalDateTime.of(2026, 3, 2, 14, 0, 0, 0)));
-        LocalDateTime searchFromTime = LocalDateTime.of(2026, 3, 1, 6, 0, 0, 0);
-        LocalDateTime searchToTime = LocalDateTime.of(2026, 3, 2, 6, 0, 0, 0);
+                        LocalDateTime.of(2026, 3, 3, 0, 0, 0, 0),
+                        LocalDateTime.of(2026, 3, 3, 16, 30, 0, 0)));
+        LocalDate searchStartDate = LocalDate.of(2026, 3, 1);
+        LocalDate searchEndDate = LocalDate.of(2026, 3, 3);
         /* mock */
         when(roomRepository.findAll(any(Specification.class))).thenReturn(List.of(room));
-        when(closureRepository.findByRoomIdAndOverlapping(eq(null), eq(searchFromTime), eq(searchToTime)))
+        when(closureRepository.findByRoomIdAndOverlapping(eq(null),
+                eq(searchStartDate.atStartOfDay()),
+                eq(searchEndDate.plusDays(1).atStartOfDay())))
                 .thenReturn(closures);
-        when(reservationRepository.findByRoomIdAndOverlappingAndActive(eq(null), eq(searchFromTime), eq(searchToTime)))
+        when(reservationRepository.findByRoomIdAndOverlappingAndActive(eq(null),
+                eq(searchStartDate.atStartOfDay()),
+                eq(searchEndDate.plusDays(1).atStartOfDay())))
                 .thenReturn(reservations);
         /* verify */
-        /* search range start and end time don't overlapped with occupations in between */
         List<RoomSchedule> result = roomService.searchAvailabilities(
-                null, null, null, null, searchFromTime, searchToTime);
+                null, null, null, null, searchStartDate, searchEndDate, false);
         assertThat(result).hasSize(1);
         List<Occupation> expectedOccupations = new ArrayList<>();
         expectedOccupations.addAll(reservations);
@@ -200,52 +201,51 @@ public class RoomServiceImplTest {
                 .isEqualTo(expectedOccupations);
     }
     @Test
-    void searchAvailabilitiesFullyOccupiedNoResultTest() {
+    void searchAvailabilitiesCanIncludeUnavailableRoomsTest() {
+        /* full */
         Room room = new Room("101", 12, "Building A",
-                LocalTime.of(8, 0, 0, 0),
+                LocalTime.of(9, 0, 0, 0),
                 LocalTime.of(16, 0, 0, 0));
         List<Reservation> reservations = List.of(
                 new Reservation(new User(), room,
-                        LocalDateTime.of(2026, 3, 1, 8, 0, 0, 0),
-                        LocalDateTime.of(2026, 3, 1, 10, 0, 0, 0)),
-                new Reservation(new User(), room,
-                        LocalDateTime.of(2026, 3, 1, 10, 0, 0, 0),
+                        LocalDateTime.of(2026, 3, 1, 9, 0, 0, 0),
                         LocalDateTime.of(2026, 3, 1, 14, 0, 0, 0)));
         List<Closure> closures = List.of(
                 new Closure(room,
                         LocalDateTime.of(2026, 3, 1, 14, 0, 0, 0),
                         LocalDateTime.of(2026, 3, 1, 16, 0, 0, 0)));
-        LocalDateTime searchFromTime = LocalDateTime.of(2026, 3, 1, 6, 0, 0, 0);
-        LocalDateTime searchToTime = LocalDateTime.of(2026, 3, 1, 18, 0, 0, 0);
+        LocalDate searchStartDate = LocalDate.of(2026, 3, 1);
+        LocalDate searchEndDate = LocalDate.of(2026, 3, 1);
         /* mock */
         when(roomRepository.findAll(any(Specification.class))).thenReturn(List.of(room));
-        when(closureRepository.findByRoomIdAndOverlapping(eq(null), eq(searchFromTime), eq(searchToTime)))
+        when(closureRepository.findByRoomIdAndOverlapping(eq(null),
+                eq(searchStartDate.atStartOfDay()),
+                eq(searchEndDate.plusDays(1).atStartOfDay())))
                 .thenReturn(closures);
-        when(reservationRepository.findByRoomIdAndOverlappingAndActive(eq(null), eq(searchFromTime), eq(searchToTime)))
+        when(reservationRepository.findByRoomIdAndOverlappingAndActive(eq(null),
+                eq(searchStartDate.atStartOfDay()),
+                eq(searchEndDate.plusDays(1).atStartOfDay())))
                 .thenReturn(reservations);
         /* verify */
+        /* include unavailable rooms */
         List<RoomSchedule> result = roomService.searchAvailabilities(
-                null, null, null, null, searchFromTime, searchToTime);
-        assertThat(result).hasSize(0);
-    }
-
-    @Test
-    void searchAvailabilitiesNotInOpenHourNoResultTest() {
-        Room room = new Room("101", 12, "Building A",
-                LocalTime.of(8, 0, 0, 0),
-                LocalTime.of(16, 0, 0, 0));
-        LocalDateTime searchFromTime = LocalDateTime.of(2026, 3, 1, 0, 0, 0, 0);
-        LocalDateTime searchToTime = LocalDateTime.of(2026, 3, 1, 6, 0, 0, 0);
-        /* mock */
-        when(roomRepository.findAll(any(Specification.class))).thenReturn(List.of(room));
-        when(closureRepository.findByRoomIdAndOverlapping(eq(null), eq(searchFromTime), eq(searchToTime)))
-                .thenReturn(List.of());
-        when(reservationRepository.findByRoomIdAndOverlappingAndActive(eq(null), eq(searchFromTime), eq(searchToTime)))
-                .thenReturn(List.of());
-        /* verify */
-        List<RoomSchedule> result = roomService.searchAvailabilities(
-                null, null, null, null, searchFromTime, searchToTime);
-        assertThat(result).hasSize(0);
+                null, null, null, null, searchStartDate, searchEndDate, true);
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getRoom())
+                .usingRecursiveComparison()
+                .isEqualTo(room);
+        assertThat(result.get(0).getOccupations())
+                .usingRecursiveComparison()
+                .isEqualTo(List.of(
+                        reservations.get(0),
+                        closures.get(0)
+                ));
+        /* exclude unavailable rooms */
+        assertThat(roomService.searchAvailabilities(
+                null, null, null, null,
+                searchStartDate, searchEndDate,
+                false))
+                .hasSize(0);
     }
 
     @Test

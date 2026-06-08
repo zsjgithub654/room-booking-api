@@ -278,6 +278,17 @@ public class RoomServiceImplTest {
     }
 
     @Test
+    void DeleteRoomAlreadyDeletedTest() {
+        Room room = new Room("101", 12, "Building A", null, null);
+        room.setStatus(RoomStatus.ROOM_STATUS_DELETED);
+        Long searchId = 2L;
+
+        when(roomRepository.findByIdWithLock(eq(searchId))).thenReturn(Optional.of(room));
+
+        assertThat(roomService.deleteRoom(searchId)).isEmpty();
+    }
+
+    @Test
     void DeleteRoomNotFoundTest() {
         Long searchId = 2L;
         when(roomRepository.findByIdWithLock(eq(searchId))).thenReturn(Optional.empty());

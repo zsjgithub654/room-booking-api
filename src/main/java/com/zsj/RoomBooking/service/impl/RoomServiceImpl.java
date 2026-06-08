@@ -22,6 +22,7 @@ import java.time.LocalDateTime;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
@@ -163,7 +164,7 @@ public class RoomServiceImpl implements RoomService {
         Room room = roomRepository.findByIdWithLock(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Room not found."));
         if (room.getStatus() == RoomStatus.ROOM_STATUS_DELETED) {
-            return null;
+            return Collections.emptyList();
         }
         room.setStatus(RoomStatus.ROOM_STATUS_DELETED);
         /* delete future closures */

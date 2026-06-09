@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -60,7 +59,7 @@ public class ReservationController {
         return reservationMapper.toResponse(service.updateReservationTime(id, request.startTime(), request.endTime()));
     }
 
-    @DeleteMapping("/{id}")
+    @PatchMapping("/{id}/cancel")
     public ResponseEntity<Void> deleteReservation(@PathVariable @Positive Long id) {
         service.deleteReservation(id);
         return ResponseEntity.noContent().build();

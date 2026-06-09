@@ -30,7 +30,6 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -257,13 +256,13 @@ public class ReservationControllerTest {
     }
 
     @Test
-    void deleteReservationTest() throws Exception {
+    void cancelReservationTest() throws Exception {
         /* request */
         Long id = 1L;
         /* mock */
         doNothing().when(reservationService).deleteReservation(eq(id));
         /* perform */
-        mockMvc.perform(delete("/reservations/{id}", id))
+        mockMvc.perform(patch("/reservations/{id}/cancel", id))
                 .andExpect(status().isNoContent());
         verify(reservationService).deleteReservation(id);
     }

@@ -30,6 +30,7 @@ public class User {
     private Long version;
 
     /* TODO: length limit */
+    @Column(unique = true)
     private String username;
     private String password;
     private UserStatus status;

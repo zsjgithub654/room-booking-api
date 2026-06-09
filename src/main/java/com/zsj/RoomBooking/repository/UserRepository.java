@@ -13,6 +13,8 @@ import java.util.Optional;
 import static jakarta.persistence.LockModeType.PESSIMISTIC_WRITE;
 
 public interface UserRepository extends JpaRepository<User, Long> {
+    Optional<User> findByUsername(String username);
+
     /* select all when arg is null */
     @Query("""
             SELECT user FROM User user

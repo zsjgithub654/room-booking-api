@@ -10,6 +10,7 @@ import com.zsj.RoomBooking.repository.ReservationRepository;
 import com.zsj.RoomBooking.repository.UserRepository;
 import com.zsj.RoomBooking.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +26,9 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private ReservationRepository reservationRepository;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @Override
     public List<User> searchUsers(String username, Role role, UserStatus status) {
         return userRepository.findByUsernameAndRoleAndStatus(username, role, status);
@@ -37,6 +41,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User addUser(User user) {
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
 
@@ -54,7 +59,7 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(id)
                 .filter(foundUser -> foundUser.getStatus() == UserStatus.USER_STATUS_ACTIVE)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found."));
-        user.setPassword(password);
+        user.setPassword(passwordEncoder.encode(password));
         return user;
     }
 

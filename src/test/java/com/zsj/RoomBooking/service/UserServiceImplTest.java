@@ -16,6 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -35,6 +36,9 @@ public class UserServiceImplTest {
 
     @Mock
     private ReservationRepository reservationRepository;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private UserServiceImpl userService;
@@ -60,10 +64,12 @@ public class UserServiceImplTest {
     @Test
     void AddUserTest() {
         User user = new User("user1", "");
+        when(passwordEncoder.encode(eq(user.getPassword()))).thenReturn("encoded-password");
         when(userRepository.save(any(User.class))).thenReturn(user);
         assertThat(userService.addUser(user))
                 .usingRecursiveComparison()
                 .isEqualTo(user);
+        assertThat(user.getPassword()).isEqualTo("encoded-password");
     }
 
     @Test
@@ -99,15 +105,17 @@ public class UserServiceImplTest {
         User user = new User("user1", "");
         Long searchId = 2L;
         String newPassword = "11111";
+        String encodedPassword = "encoded-password";
 
         when(userRepository.findById(eq(searchId))).thenReturn(Optional.of(user));
+        when(passwordEncoder.encode(eq(newPassword))).thenReturn(encodedPassword);
         User newUser = userService.updatePassword(searchId, newPassword);
 
         assertThat(newUser)
                 .usingRecursiveComparison()
                 .ignoringFields("password")
                 .isEqualTo(user);
-        assertThat(newUser.getPassword()).isEqualTo(newPassword);
+        assertThat(newUser.getPassword()).isEqualTo(encodedPassword);
     }
 
     @Test

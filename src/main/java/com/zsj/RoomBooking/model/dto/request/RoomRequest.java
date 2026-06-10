@@ -16,12 +16,12 @@ import java.time.LocalTime;
 /* TODO: maybe add blank lines between params */
 public record RoomRequest(
         @NotBlank
-        @Size(max = 20)
-        @Pattern(regexp = "^[A-Za-z0-9._-]+$", message = "name can only contain letters, numbers, dots, underscores, and hyphens.")
+        @Size(max = 50)
+        @Pattern(regexp = "^[A-Za-z0-9._ -]+$", message = "name can only contain letters, numbers, spaces, dots, underscores, and hyphens.")
         String name,
         @Positive Integer capacity,
-        @Size(max = 20)
-        @Pattern(regexp = "^[A-Za-z0-9._-]+$", message = "name can only contain letters, numbers, dots, underscores, and hyphens.")
+        @Size(max = 50)
+        @Pattern(regexp = "^(?=.*\\S)[A-Za-z0-9._ -]+$", message = "area can only contain letters, numbers, spaces, dots, underscores, and hyphens.")
         String area,
         LocalTime openTime,
         LocalTime closeTime) {

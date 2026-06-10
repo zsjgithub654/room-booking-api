@@ -18,9 +18,9 @@ import java.time.LocalDate;
 @MaxDurationDays(startField = "startDate", endField = "endDate", days = 7)
 @TimeInterval(fromField = "startDate", toField = "endDate", allowEqual = true,
         message = "start date must be before or equal to end date.")
-public record SearchAvailabilityRequest(@Size(max = 20) String name,
+public record SearchAvailabilityRequest(@Size(max = 50) String name,
                                         @Positive Integer minCapacity, @Positive Integer maxCapacity, /* use wrapper to accept null */
-                                        String area,
+                                        @Size(max = 50) String area,
                                         @NotNull @FutureOrPresent LocalDate startDate,
                                         @NotNull @FutureOrPresent LocalDate endDate,
                                         Boolean includeUnavailable) {

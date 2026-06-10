@@ -339,6 +339,20 @@ public class RoomControllerTest {
     }
 
     @Test
+    void addRoomShouldRejectBlankArea() throws Exception {
+        RoomRequest request = new RoomRequest("101", 12, "   ",
+                LocalTime.of(9, 0, 0, 0),
+                LocalTime.of(16, 0, 0, 0));
+
+        mockMvc.perform(post("/rooms")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(roomService);
+    }
+
+    @Test
     void addRoomShouldRejectNonPositiveCapacity() throws Exception {
         RoomRequest request = new RoomRequest("101", 0, "Building A",
                 LocalTime.of(9, 0, 0, 0),

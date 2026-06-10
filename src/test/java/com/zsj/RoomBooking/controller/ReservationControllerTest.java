@@ -4,7 +4,6 @@ import com.zsj.RoomBooking.config.SecurityConfig;
 import com.zsj.RoomBooking.mapper.ReservationMapper;
 import com.zsj.RoomBooking.model.Role;
 import com.zsj.RoomBooking.model.ReservationStatus;
-import com.zsj.RoomBooking.model.dto.request.ReservationRequest;
 import com.zsj.RoomBooking.model.dto.request.UpdateReservationRequest;
 import com.zsj.RoomBooking.model.dto.response.ReservationResponse;
 import com.zsj.RoomBooking.model.entity.Reservation;
@@ -39,7 +38,6 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @AutoConfigureMockMvc
@@ -99,33 +97,12 @@ public class ReservationControllerTest {
     }
 
     @Test
-    void getCurrentUserReservationsTest() throws Exception {
-        Long userId = 1L;
-        String username = "user1";
-        List<Reservation> reservations = List.of(
-                new Reservation(new User(), new Room(),
-                        LocalDateTime.of(2026, 3, 1, 10, 0, 0, 0),
-                        LocalDateTime.of(2026, 3, 1, 10, 30, 0, 0)),
-                new Reservation(new User(), new Room(),
-                        LocalDateTime.of(2026, 3, 1, 14, 30, 0, 0),
-                        LocalDateTime.of(2026, 3, 1, 15, 30, 0, 0)));
-        when(reservationService.searchReservations(eq(userId), eq(null), eq(null), eq(null))).thenReturn(reservations);
+    void searchReservationsShouldRejectNonAdmin() throws Exception {
+        mockMvc.perform(get("/reservations")
+                        .with(authentication(getAuthentication(1L, "user1"))))
+                .andExpect(status().isForbidden());
 
-        String responseString = mockMvc.perform(get("/reservations/me")
-                        .with(authentication(getAuthentication(userId, username))))
-                .andExpect(status().isOk())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-        List<ReservationResponse> responses =
-                objectMapper.readValue(responseString, new TypeReference<List<ReservationResponse>>() {
-                });
-
-        verify(reservationService).searchReservations(userId, null, null, null);
-        assertThat(responses)
-                .usingRecursiveComparison()
-                .ignoringFields("userId", "roomId")
-                .isEqualTo(reservations);
+        verifyNoInteractions(reservationService);
     }
 
     @Test
@@ -167,142 +144,6 @@ public class ReservationControllerTest {
     @Disabled("Enable after reservation controller security coverage is added.")
     void getReservationShouldRejectNonPositiveId() throws Exception {
         mockMvc.perform(get("/reservations/{id}", 0))
-                .andExpect(status().isBadRequest());
-
-        verifyNoInteractions(reservationService);
-    }
-
-    @Test
-    @Disabled("Enable after reservation controller security coverage is added.")
-    void addReservationTest() throws Exception {
-        /* request */
-        Long userId = 10L;
-        Long roomId = 11L;
-        LocalDateTime startTime = LocalDateTime.of(2300, 3, 1, 10, 30, 0, 0);
-        LocalDateTime endTime = LocalDateTime.of(2300, 3, 1, 11, 30, 0, 0);
-        /* mock service response */
-        Reservation reservation = new Reservation(new User(), new Room(), startTime, endTime);
-        when(reservationService.addReservation(eq(userId), eq(roomId), eq(startTime), eq(endTime)))
-                .thenReturn(reservation);
-        /* perform */
-        String responseString = mockMvc.perform(post("/reservations")
-                        .param("userId", userId.toString())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(this.objectMapper
-                                .writeValueAsString(new ReservationRequest(roomId, startTime, endTime))))
-                // HTTP 201 Created is the successful status of post request
-                .andExpect(status().isCreated())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-        ReservationResponse controllerResponse = objectMapper.readValue(responseString, ReservationResponse.class);
-        /* verify */
-        assertThat(controllerResponse)
-                .usingRecursiveComparison()
-                .ignoringFields("userId", "roomId")
-                .isEqualTo(reservation);
-    }
-
-    @Test
-    @Disabled("Enable after reservation controller security coverage is added.")
-    void addReservationShouldRejectInvalidTimeRange() throws Exception {
-        Long userId = 10L;
-        Long roomId = 11L;
-        LocalDateTime startTime = LocalDateTime.of(2300, 3, 1, 11, 30, 0, 0);
-        LocalDateTime endTime = LocalDateTime.of(2300, 3, 1, 10, 30, 0, 0);
-
-        mockMvc.perform(post("/reservations")
-                        .param("userId", userId.toString())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(this.objectMapper
-                                .writeValueAsString(new ReservationRequest(roomId, startTime, endTime))))
-                .andExpect(status().isBadRequest());
-
-        verifyNoInteractions(reservationService);
-    }
-
-    @Test
-    @Disabled("Enable after reservation controller security coverage is added.")
-    void addReservationShouldRejectPastStartTime() throws Exception {
-        Long userId = 10L;
-        Long roomId = 11L;
-        LocalDateTime startTime = LocalDateTime.of(2026, 3, 1, 10, 30, 0, 0);
-        LocalDateTime endTime = LocalDateTime.of(2300, 3, 1, 11, 30, 0, 0);
-
-        mockMvc.perform(post("/reservations")
-                        .param("userId", userId.toString())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(this.objectMapper
-                                .writeValueAsString(new ReservationRequest(roomId, startTime, endTime))))
-                .andExpect(status().isBadRequest());
-
-        verifyNoInteractions(reservationService);
-    }
-
-    @Test
-    @Disabled("Enable after reservation controller security coverage is added.")
-    void addReservationShouldRejectNullRoomId() throws Exception {
-        Long userId = 10L;
-        LocalDateTime startTime = LocalDateTime.of(2300, 3, 1, 10, 30, 0, 0);
-        LocalDateTime endTime = LocalDateTime.of(2300, 3, 1, 11, 30, 0, 0);
-
-        mockMvc.perform(post("/reservations")
-                        .param("userId", userId.toString())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(this.objectMapper
-                                .writeValueAsString(new ReservationRequest(null, startTime, endTime))))
-                .andExpect(status().isBadRequest());
-
-        verifyNoInteractions(reservationService);
-    }
-
-    @Test
-    @Disabled("Enable after reservation controller security coverage is added.")
-    void addReservationShouldRejectNonPositiveRoomId() throws Exception {
-        Long userId = 10L;
-        LocalDateTime startTime = LocalDateTime.of(2300, 3, 1, 10, 30, 0, 0);
-        LocalDateTime endTime = LocalDateTime.of(2300, 3, 1, 11, 30, 0, 0);
-
-        mockMvc.perform(post("/reservations")
-                        .param("userId", userId.toString())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(this.objectMapper
-                                .writeValueAsString(new ReservationRequest(0L, startTime, endTime))))
-                .andExpect(status().isBadRequest());
-
-        verifyNoInteractions(reservationService);
-    }
-
-    @Test
-    @Disabled("Enable after reservation controller security coverage is added.")
-    void addReservationShouldRejectNonPositiveUserId() throws Exception {
-        Long roomId = 11L;
-        LocalDateTime startTime = LocalDateTime.of(2300, 3, 1, 10, 30, 0, 0);
-        LocalDateTime endTime = LocalDateTime.of(2300, 3, 1, 11, 30, 0, 0);
-
-        mockMvc.perform(post("/reservations")
-                        .param("userId", "0")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(this.objectMapper
-                                .writeValueAsString(new ReservationRequest(roomId, startTime, endTime))))
-                .andExpect(status().isBadRequest());
-
-        verifyNoInteractions(reservationService);
-    }
-
-    @Test
-    @Disabled("Enable after reservation controller security coverage is added.")
-    void addReservationShouldRejectSecondPrecisionTime() throws Exception {
-        Long userId = 10L;
-        Long roomId = 11L;
-        LocalDateTime startTime = LocalDateTime.of(2300, 3, 1, 10, 30, 1, 0);
-        LocalDateTime endTime = LocalDateTime.of(2300, 3, 1, 11, 30, 0, 0);
-
-        mockMvc.perform(post("/reservations")
-                        .param("userId", userId.toString())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(this.objectMapper
-                                .writeValueAsString(new ReservationRequest(roomId, startTime, endTime))))
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(reservationService);

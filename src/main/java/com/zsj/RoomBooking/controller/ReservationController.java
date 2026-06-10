@@ -5,12 +5,14 @@ import com.zsj.RoomBooking.model.dto.request.ReservationRequest;
 import com.zsj.RoomBooking.model.dto.response.ReservationResponse;
 import com.zsj.RoomBooking.model.dto.request.SearchReservationRequest;
 import com.zsj.RoomBooking.model.dto.request.UpdateReservationRequest;
+import com.zsj.RoomBooking.security.CustomUserDetails;
 import com.zsj.RoomBooking.service.ReservationService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -37,6 +39,12 @@ public class ReservationController {
     @GetMapping
     public List<ReservationResponse> searchReservations(@Valid @ModelAttribute SearchReservationRequest request) {
         return service.searchReservations(request.userId(), request.roomId(), request.date(), request.status())
+                .stream().map(reservationMapper::toResponse).toList();
+    }
+
+    @GetMapping("/me")
+    public List<ReservationResponse> getCurrentUserReservations(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
+        return service.searchReservations(customUserDetails.getId(), null, null, null)
                 .stream().map(reservationMapper::toResponse).toList();
     }
 

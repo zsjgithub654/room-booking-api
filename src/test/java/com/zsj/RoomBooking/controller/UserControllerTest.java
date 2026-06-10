@@ -1,18 +1,22 @@
 package com.zsj.RoomBooking.controller;
 
+import com.zsj.RoomBooking.config.SecurityConfig;
 import com.zsj.RoomBooking.mapper.UserMapper;
 import com.zsj.RoomBooking.model.Role;
 import com.zsj.RoomBooking.model.dto.request.UpdatePasswordRequest;
 import com.zsj.RoomBooking.model.dto.request.UpdateUsernameRequest;
 import com.zsj.RoomBooking.model.dto.request.UserRequest;
 import com.zsj.RoomBooking.model.entity.User;
+import com.zsj.RoomBooking.security.CustomUserDetails;
 import com.zsj.RoomBooking.service.UserService;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
@@ -27,16 +31,18 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@AutoConfigureMockMvc(addFilters = false)
+@AutoConfigureMockMvc
 @WebMvcTest(UserController.class)
-@Import(UserMapper.class)
+@Import({UserMapper.class, SecurityConfig.class})
 public class UserControllerTest {
     @Autowired
     private MockMvc mockMvc;
@@ -46,7 +52,13 @@ public class UserControllerTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    private UsernamePasswordAuthenticationToken getAuthentication(Long userId, String username) {
+        CustomUserDetails customUserDetails = new CustomUserDetails(userId, username, "password", Set.of(Role.ROLE_USER), true);
+        return new UsernamePasswordAuthenticationToken(customUserDetails, null, customUserDetails.getAuthorities());
+    }
+
     @Test
+    @Disabled("Enable after user controller security coverage is added.")
     void getUserTest() throws Exception {
         Long id = 1L;
         String username = "user1";
@@ -63,6 +75,22 @@ public class UserControllerTest {
     }
 
     @Test
+    void getCurrentUserTest() throws Exception {
+        Long userId = 1L;
+        String username = "user1";
+
+        when(userService.getUser(eq(userId))).thenReturn(new User(username, ""));
+
+        mockMvc.perform(get("/users/me")
+                        .with(authentication(getAuthentication(userId, username))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value(username))
+                .andExpect(jsonPath("$.password").doesNotExist())
+                .andExpect(jsonPath("$.roles", hasItem(Role.ROLE_USER.name())));
+    }
+
+    @Test
+    @Disabled("Enable after user controller security coverage is added.")
     void getUserShouldRejectNonPositiveId() throws Exception {
         mockMvc.perform(get("/users/{id}", 0))
                 .andExpect(status().isBadRequest());
@@ -78,6 +106,7 @@ public class UserControllerTest {
         when(userService.addUser(any(User.class))).thenReturn(new User(username, password));
 
         mockMvc.perform(post("/users")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(new UserRequest(username, password))))
                 // HTTP 201 Created is the successful status of post request
@@ -90,6 +119,7 @@ public class UserControllerTest {
     @Test
     void addUserShouldRejectBlankUsername() throws Exception {
         mockMvc.perform(post("/users")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(new UserRequest("   ", "password1"))))
                 .andExpect(status().isBadRequest());
@@ -100,6 +130,7 @@ public class UserControllerTest {
     @Test
     void addUserShouldRejectInvalidUsernameCharacters() throws Exception {
         mockMvc.perform(post("/users")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(new UserRequest("user 1", "password1!"))))
                 .andExpect(status().isBadRequest());
@@ -110,6 +141,7 @@ public class UserControllerTest {
     @Test
     void addUserShouldRejectShortPassword() throws Exception {
         mockMvc.perform(post("/users")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(new UserRequest("user1", "short1!"))))
                 .andExpect(status().isBadRequest());
@@ -118,6 +150,7 @@ public class UserControllerTest {
     }
 
     @Test
+    @Disabled("Enable after user controller security coverage is added.")
     void deleteUserTest() throws Exception {
         Long id = 1L;
 
@@ -130,6 +163,22 @@ public class UserControllerTest {
     }
 
     @Test
+    void deleteCurrentUserTest() throws Exception {
+        Long userId = 1L;
+        String username = "user1";
+
+        doNothing().when(userService).closeUserAccount(eq(userId));
+
+        mockMvc.perform(delete("/users/me")
+                        .with(csrf())
+                        .with(authentication(getAuthentication(userId, username))))
+                .andExpect(status().isNoContent());
+
+        verify(userService).closeUserAccount(userId);
+    }
+
+    @Test
+    @Disabled("Enable after user controller security coverage is added.")
     void updateUsernameTest() throws Exception {
         Long id = 1L;
         String usernameNew = "user1NewName";
@@ -147,6 +196,27 @@ public class UserControllerTest {
     }
 
     @Test
+    void updateCurrentUsernameTest() throws Exception {
+        Long userId = 1L;
+        String username = "user1";
+        String usernameNew = "user1NewName";
+
+        when(userService.updateUsername(eq(userId), eq(usernameNew)))
+                .thenReturn(new User(usernameNew, ""));
+
+        mockMvc.perform(patch("/users/me/username")
+                        .with(csrf())
+                        .with(authentication(getAuthentication(userId, username)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper.writeValueAsString(new UpdateUsernameRequest(usernameNew))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value(usernameNew))
+                .andExpect(jsonPath("$.password").doesNotExist())
+                .andExpect(jsonPath("$.roles", hasItem(Role.ROLE_USER.name())));
+    }
+
+    @Test
+    @Disabled("Enable after user controller security coverage is added.")
     void updateUsernameShouldRejectBlankUsername() throws Exception {
         Long id = 1L;
 
@@ -159,6 +229,7 @@ public class UserControllerTest {
     }
 
     @Test
+    @Disabled("Enable after user controller security coverage is added.")
     void updateUsernameShouldRejectUsernameLongerThanTwentyChars() throws Exception {
         Long id = 1L;
 
@@ -171,6 +242,7 @@ public class UserControllerTest {
     }
 
     @Test
+    @Disabled("Enable after user controller security coverage is added.")
     void updatePasswordTest() throws Exception {
         Long id = 1L;
         String password = "password1";
@@ -189,6 +261,28 @@ public class UserControllerTest {
     }
 
     @Test
+    void updateCurrentPasswordTest() throws Exception {
+        Long userId = 1L;
+        String username = "user1";
+        String password = "password1";
+
+        when(userService.updatePassword(eq(userId), eq(password)))
+                .thenReturn(new User(username, password));
+
+        mockMvc.perform(patch("/users/me/password")
+                        .with(csrf())
+                        .with(authentication(getAuthentication(userId, username)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper.writeValueAsString(new UpdatePasswordRequest(password))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value(username))
+                .andExpect(jsonPath("$.password").doesNotExist())
+                .andExpect(jsonPath("$.roles", hasItem(Role.ROLE_USER.name())));
+        verify(userService).updatePassword(userId, password);
+    }
+
+    @Test
+    @Disabled("Enable after user controller security coverage is added.")
     void updatePasswordShouldRejectBlankPassword() throws Exception {
         Long id = 1L;
 

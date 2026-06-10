@@ -19,10 +19,12 @@ public class RoomBookingUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found."));
-        return org.springframework.security.core.userdetails.User.withUsername(user.getUsername())
-                .password(user.getPassword())
-                .authorities(user.getRoles().stream().map(Enum::name).toArray(String[]::new))
-                .disabled(user.getStatus() != com.zsj.RoomBooking.model.UserStatus.USER_STATUS_ACTIVE)
-                .build();
+        return new CustomUserDetails(
+                user.getId(),
+                user.getUsername(),
+                user.getPassword(),
+                user.getRoles(),
+                user.getStatus() == com.zsj.RoomBooking.model.UserStatus.USER_STATUS_ACTIVE
+        );
     }
 }

@@ -15,7 +15,6 @@ import com.zsj.RoomBooking.model.entity.User;
 import com.zsj.RoomBooking.security.CustomUserDetails;
 import com.zsj.RoomBooking.service.ReservationService;
 import com.zsj.RoomBooking.service.UserService;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -75,7 +74,6 @@ public class UserControllerTest {
     }
 
     @Test
-    @Disabled("Enable after user controller security coverage is added.")
     void getUserTest() throws Exception {
         Long id = 1L;
         String username = "user1";
@@ -84,7 +82,8 @@ public class UserControllerTest {
 
         when(userService.getUser(id)).thenReturn(new User(username, ""));
 
-        mockMvc.perform(get("/users/{id}", id))
+        mockMvc.perform(get("/users/{id}", id)
+                        .with(authentication(getAdminAuthentication(1L, "admin1"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value(username))
                 .andExpect(jsonPath("$.password").doesNotExist())
@@ -150,9 +149,9 @@ public class UserControllerTest {
     }
 
     @Test
-    @Disabled("Enable after user controller security coverage is added.")
     void getUserShouldRejectNonPositiveId() throws Exception {
-        mockMvc.perform(get("/users/{id}", 0))
+        mockMvc.perform(get("/users/{id}", 0)
+                        .with(authentication(getAdminAuthentication(1L, "admin1"))))
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(userService);
@@ -312,13 +311,14 @@ public class UserControllerTest {
     }
 
     @Test
-    @Disabled("Enable after user controller security coverage is added.")
     void deleteUserTest() throws Exception {
         Long id = 1L;
 
         doNothing().when(userService).closeUserAccount(id);
 
-        mockMvc.perform(delete("/users/{id}", id))
+        mockMvc.perform(delete("/users/{id}", id)
+                        .with(csrf())
+                        .with(authentication(getAdminAuthentication(1L, "admin1"))))
                 .andExpect(status().isNoContent());
 
         verify(userService).closeUserAccount(id);
@@ -340,7 +340,6 @@ public class UserControllerTest {
     }
 
     @Test
-    @Disabled("Enable after user controller security coverage is added.")
     void updateUsernameTest() throws Exception {
         Long id = 1L;
         String usernameNew = "user1NewName";
@@ -349,6 +348,8 @@ public class UserControllerTest {
                 .thenReturn(new User(usernameNew, ""));
 
         mockMvc.perform(patch("/users/{id}/username", id)
+                        .with(csrf())
+                        .with(authentication(getAdminAuthentication(1L, "admin1")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(new UpdateUsernameRequest(usernameNew))))
                 .andExpect(status().isOk())
@@ -378,11 +379,12 @@ public class UserControllerTest {
     }
 
     @Test
-    @Disabled("Enable after user controller security coverage is added.")
     void updateUsernameShouldRejectBlankUsername() throws Exception {
         Long id = 1L;
 
         mockMvc.perform(patch("/users/{id}/username", id)
+                        .with(csrf())
+                        .with(authentication(getAdminAuthentication(1L, "admin1")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(new UpdateUsernameRequest("   "))))
                 .andExpect(status().isBadRequest());
@@ -391,11 +393,12 @@ public class UserControllerTest {
     }
 
     @Test
-    @Disabled("Enable after user controller security coverage is added.")
     void updateUsernameShouldRejectUsernameLongerThanTwentyChars() throws Exception {
         Long id = 1L;
 
         mockMvc.perform(patch("/users/{id}/username", id)
+                        .with(csrf())
+                        .with(authentication(getAdminAuthentication(1L, "admin1")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(new UpdateUsernameRequest("this_username_is_too_long"))))
                 .andExpect(status().isBadRequest());
@@ -404,7 +407,6 @@ public class UserControllerTest {
     }
 
     @Test
-    @Disabled("Enable after user controller security coverage is added.")
     void updatePasswordTest() throws Exception {
         Long id = 1L;
         String password = "password1";
@@ -413,6 +415,8 @@ public class UserControllerTest {
                 .thenReturn(new User("user1", password));
 
         mockMvc.perform(patch("/users/{id}/password", id)
+                        .with(csrf())
+                        .with(authentication(getAdminAuthentication(1L, "admin1")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(new UpdatePasswordRequest(password))))
                 .andExpect(status().isOk())
@@ -444,11 +448,12 @@ public class UserControllerTest {
     }
 
     @Test
-    @Disabled("Enable after user controller security coverage is added.")
     void updatePasswordShouldRejectBlankPassword() throws Exception {
         Long id = 1L;
 
         mockMvc.perform(patch("/users/{id}/password", id)
+                        .with(csrf())
+                        .with(authentication(getAdminAuthentication(1L, "admin1")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(new UpdatePasswordRequest("   "))))
                 .andExpect(status().isBadRequest());

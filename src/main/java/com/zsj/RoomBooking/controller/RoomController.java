@@ -15,6 +15,7 @@ import jakarta.validation.constraints.Positive;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -45,6 +46,7 @@ public class RoomController {
     private RoomScheduleMapper roomScheduleMapper;
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public List<RoomResponse> searchRooms(@Valid @ModelAttribute SearchRoomRequest request) {
         return roomService.searchRooms(
                 request.name(),
@@ -67,12 +69,14 @@ public class RoomController {
 
     @GetMapping("/{roomId}")
     /* TODO: rename */
+    @PreAuthorize("hasRole('ADMIN')")
     public RoomResponse getRoom(@PathVariable @Positive Long roomId) {
         return roomMapper.toResponse(roomService.getRoom(roomId));
     }
 
     /* TODO: Non-null type argument is expected for ResponseEntity */
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<RoomResponse> addRoom(@Valid @RequestBody RoomRequest request) {
         return new ResponseEntity<>(roomMapper.toResponse(
                 roomService.addRoom(roomMapper.toEntity(request))),
@@ -81,6 +85,7 @@ public class RoomController {
     }
 
     @DeleteMapping("/{roomId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public DeleteRoomResponse deleteRoom(@PathVariable @Positive Long roomId) {
         return new DeleteRoomResponse(
                 roomId,
@@ -89,6 +94,7 @@ public class RoomController {
     }
 
     @PutMapping("/{roomId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public RoomResponse updateRoom(@PathVariable @Positive Long roomId, @Valid @RequestBody RoomRequest request) {
         return roomMapper.toResponse(
                 roomService.updateRoom(roomId,

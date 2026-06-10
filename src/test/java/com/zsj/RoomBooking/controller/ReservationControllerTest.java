@@ -4,6 +4,7 @@ import com.zsj.RoomBooking.config.SecurityConfig;
 import com.zsj.RoomBooking.mapper.ReservationMapper;
 import com.zsj.RoomBooking.model.Role;
 import com.zsj.RoomBooking.model.ReservationStatus;
+import com.zsj.RoomBooking.model.dto.request.ReservationRequest;
 import com.zsj.RoomBooking.model.dto.request.UpdateReservationRequest;
 import com.zsj.RoomBooking.model.dto.response.ReservationResponse;
 import com.zsj.RoomBooking.model.entity.Reservation;
@@ -39,6 +40,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @AutoConfigureMockMvc
@@ -114,6 +116,7 @@ public class ReservationControllerTest {
         verifyNoInteractions(reservationService);
     }
 
+
     @Test
     void searchReservationsShouldRejectNonPositiveRoomId() throws Exception {
         mockMvc.perform(get("/reservations")
@@ -154,6 +157,137 @@ public class ReservationControllerTest {
         mockMvc.perform(get("/reservations/{id}", 0)
                         .with(authentication(getAdminAuthentication(1L, "admin1"))))
                 .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(reservationService);
+    }
+
+    @Test
+    void getCurrentUserReservationsTest() throws Exception {
+        Long userId = 1L;
+        String username = "user1";
+        List<Reservation> reservations = List.of(
+                new Reservation(new User(), new Room(),
+                        LocalDateTime.of(2026, 3, 1, 10, 0, 0, 0),
+                        LocalDateTime.of(2026, 3, 1, 10, 30, 0, 0)),
+                new Reservation(new User(), new Room(),
+                        LocalDateTime.of(2026, 3, 1, 14, 30, 0, 0),
+                        LocalDateTime.of(2026, 3, 1, 15, 30, 0, 0)));
+        when(reservationService.searchReservations(eq(userId), eq(null), eq(null), eq(null))).thenReturn(reservations);
+
+        String responseString = mockMvc.perform(get("/users/me/reservations")
+                        .with(authentication(getAuthentication(userId, username))))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        List<ReservationResponse> responses =
+                objectMapper.readValue(responseString, new TypeReference<List<ReservationResponse>>() {
+                });
+
+        verify(reservationService).searchReservations(userId, null, null, null);
+        assertThat(responses)
+                .usingRecursiveComparison()
+                .ignoringFields("userId", "roomId")
+                .isEqualTo(reservations);
+    }
+
+    @Test
+    void getCurrentUserReservationsShouldRequireAuthentication() throws Exception {
+        mockMvc.perform(get("/users/me/reservations"))
+                .andExpect(status().isUnauthorized());
+
+        verifyNoInteractions(reservationService);
+    }
+
+    @Test
+    void addReservationTest() throws Exception {
+        Long adminId = 1L;
+        Long userId = 10L;
+        Long roomId = 11L;
+        LocalDateTime startTime = LocalDateTime.of(2300, 3, 1, 10, 30, 0, 0);
+        LocalDateTime endTime = LocalDateTime.of(2300, 3, 1, 11, 30, 0, 0);
+        Reservation reservation = new Reservation(new User(), new Room(), startTime, endTime);
+        when(reservationService.addReservation(eq(userId), eq(roomId), eq(startTime), eq(endTime)))
+                .thenReturn(reservation);
+
+        String responseString = mockMvc.perform(post("/users/{id}/reservations", userId)
+                        .with(csrf())
+                        .with(authentication(getAdminAuthentication(adminId, "admin1")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper
+                                .writeValueAsString(new ReservationRequest(roomId, startTime, endTime))))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        ReservationResponse response = objectMapper.readValue(responseString, ReservationResponse.class);
+
+        verify(reservationService).addReservation(userId, roomId, startTime, endTime);
+        assertThat(response)
+                .usingRecursiveComparison()
+                .ignoringFields("userId", "roomId")
+                .isEqualTo(reservation);
+    }
+
+    @Test
+    void addReservationShouldRejectNonAdmin() throws Exception {
+        Long userId = 10L;
+        Long roomId = 11L;
+        LocalDateTime startTime = LocalDateTime.of(2300, 3, 1, 10, 30, 0, 0);
+        LocalDateTime endTime = LocalDateTime.of(2300, 3, 1, 11, 30, 0, 0);
+
+        mockMvc.perform(post("/users/{id}/reservations", userId)
+                        .with(csrf())
+                        .with(authentication(getAuthentication(1L, "user1")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper
+                                .writeValueAsString(new ReservationRequest(roomId, startTime, endTime))))
+                .andExpect(status().isForbidden());
+
+        verifyNoInteractions(reservationService);
+    }
+
+    @Test
+    void addCurrentUserReservationTest() throws Exception {
+        Long userId = 10L;
+        Long roomId = 11L;
+        LocalDateTime startTime = LocalDateTime.of(2300, 3, 1, 10, 30, 0, 0);
+        LocalDateTime endTime = LocalDateTime.of(2300, 3, 1, 11, 30, 0, 0);
+        Reservation reservation = new Reservation(new User(), new Room(), startTime, endTime);
+        when(reservationService.addReservation(eq(userId), eq(roomId), eq(startTime), eq(endTime)))
+                .thenReturn(reservation);
+
+        String responseString = mockMvc.perform(post("/users/me/reservations")
+                        .with(csrf())
+                        .with(authentication(getAuthentication(userId, "user1")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper
+                                .writeValueAsString(new ReservationRequest(roomId, startTime, endTime))))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        ReservationResponse response = objectMapper.readValue(responseString, ReservationResponse.class);
+
+        verify(reservationService).addReservation(userId, roomId, startTime, endTime);
+        assertThat(response)
+                .usingRecursiveComparison()
+                .ignoringFields("userId", "roomId")
+                .isEqualTo(reservation);
+    }
+
+    @Test
+    void addCurrentUserReservationShouldRequireAuthentication() throws Exception {
+        Long roomId = 11L;
+        LocalDateTime startTime = LocalDateTime.of(2300, 3, 1, 10, 30, 0, 0);
+        LocalDateTime endTime = LocalDateTime.of(2300, 3, 1, 11, 30, 0, 0);
+
+        mockMvc.perform(post("/users/me/reservations")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper
+                                .writeValueAsString(new ReservationRequest(roomId, startTime, endTime))))
+                .andExpect(status().isUnauthorized());
 
         verifyNoInteractions(reservationService);
     }

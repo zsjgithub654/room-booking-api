@@ -18,15 +18,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
 @Validated
 @RestController
-@RequestMapping("/closures")
 @PreAuthorize("hasRole('ADMIN')")
 public class ClosureController {
     @Autowired
@@ -38,27 +35,27 @@ public class ClosureController {
     @Autowired
     private AddClosureMapper addClosureMapper;
 
-    @GetMapping("/{closureId}")
+    @GetMapping("/closures/{closureId}")
     public ClosureResponse getClosure(@PathVariable @Positive Long closureId) {
         return closureMapper.toResponse(closureService.getClosure(closureId));
     }
 
-    @DeleteMapping("/{closureId}")
+    @DeleteMapping("/closures/{closureId}")
     public ResponseEntity<Void> deleteClosure(@PathVariable @Positive Long closureId) {
         closureService.deleteClosure(closureId);
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping
-    public List<ClosureResponse> getClosuresOfRoom(@RequestParam @Positive Long roomId) {
+    @GetMapping("/rooms/{roomId}/closures")
+    public List<ClosureResponse> getClosuresOfRoom(@PathVariable @Positive Long roomId) {
         return closureService.getClosuresOfRoom(roomId).stream().map(closureMapper::toResponse).toList();
     }
 
-    @PostMapping
-    public ResponseEntity<AddClosureResponse> addClosure(@Valid @RequestBody ClosureRequest request) {
+    @PostMapping("/rooms/{roomId}/closures")
+    public ResponseEntity<AddClosureResponse> addClosure(@PathVariable @Positive Long roomId, @Valid @RequestBody ClosureRequest request) {
         return new ResponseEntity<>(
                 addClosureMapper.toResponse(
-                        closureService.addClosure(request.roomId(), request.startTime(), request.endTime())),
+                        closureService.addClosure(roomId, request.startTime(), request.endTime())),
                 HttpStatus.CREATED
         );
     }

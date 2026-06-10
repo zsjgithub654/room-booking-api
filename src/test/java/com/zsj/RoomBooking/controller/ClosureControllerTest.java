@@ -134,9 +134,8 @@ public class ClosureControllerTest {
                 new Closure(new Room(), LocalDateTime.of(2026, 3, 3, 8, 30, 0, 0), LocalDateTime.of(2026, 3, 3, 12, 0, 0, 0)));
         when(closureService.getClosuresOfRoom(eq(roomId))).thenReturn(closures);
         /* perform, to compare LocalDateTime, parse response to dto object */
-        String responseString = mockMvc.perform(get("/closures")
-                        .with(authentication(getAdminAuthentication(1L, "admin1")))
-                        .param("roomId", roomId.toString()))
+        String responseString = mockMvc.perform(get("/rooms/{roomId}/closures", roomId)
+                        .with(authentication(getAdminAuthentication(1L, "admin1"))))
                 .andExpect(status().isOk())
                 .andReturn()
                 .getResponse()
@@ -154,9 +153,8 @@ public class ClosureControllerTest {
 
     @Test
     void getClosuresOfRoomShouldRejectNonPositiveRoomId() throws Exception {
-        mockMvc.perform(get("/closures")
-                        .with(authentication(getAdminAuthentication(1L, "admin1")))
-                        .param("roomId", "0"))
+        mockMvc.perform(get("/rooms/{roomId}/closures", 0)
+                        .with(authentication(getAdminAuthentication(1L, "admin1"))))
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(closureService);
@@ -182,11 +180,11 @@ public class ClosureControllerTest {
         when(closureService.addClosure(eq(roomId), eq(startTime), eq(endTime))).thenReturn(addClosureResult);
 
         /* perform, need to parse response to dto object to compare LocalDateTime */
-        String responseString = mockMvc.perform(post("/closures")
+        String responseString = mockMvc.perform(post("/rooms/{roomId}/closures", roomId)
                         .with(csrf())
                         .with(authentication(getAdminAuthentication(1L, "admin1")))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(this.objectMapper.writeValueAsString(new ClosureRequest(roomId, startTime, endTime))))
+                        .content(this.objectMapper.writeValueAsString(new ClosureRequest(startTime, endTime))))
                 .andExpect(status().isCreated())
                 .andReturn()
                 .getResponse()
@@ -210,26 +208,11 @@ public class ClosureControllerTest {
         LocalDateTime startTime = LocalDateTime.of(2300, 1, 10, 10, 30, 0, 0);
         LocalDateTime endTime = LocalDateTime.of(2300, 1, 1, 10, 30, 0, 0);
 
-        mockMvc.perform(post("/closures")
+        mockMvc.perform(post("/rooms/{roomId}/closures", roomId)
                         .with(csrf())
                         .with(authentication(getAdminAuthentication(1L, "admin1")))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(this.objectMapper.writeValueAsString(new ClosureRequest(roomId, startTime, endTime))))
-                .andExpect(status().isBadRequest());
-
-        verifyNoInteractions(closureService);
-    }
-
-    @Test
-    void addClosureShouldRejectNullRoomId() throws Exception {
-        LocalDateTime startTime = LocalDateTime.of(2300, 1, 1, 10, 30, 0, 0);
-        LocalDateTime endTime = LocalDateTime.of(2300, 1, 10, 10, 30, 0, 0);
-
-        mockMvc.perform(post("/closures")
-                        .with(csrf())
-                        .with(authentication(getAdminAuthentication(1L, "admin1")))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(this.objectMapper.writeValueAsString(new ClosureRequest(null, startTime, endTime))))
+                        .content(this.objectMapper.writeValueAsString(new ClosureRequest(startTime, endTime))))
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(closureService);
@@ -240,11 +223,11 @@ public class ClosureControllerTest {
         LocalDateTime startTime = LocalDateTime.of(2300, 1, 1, 10, 30, 0, 0);
         LocalDateTime endTime = LocalDateTime.of(2300, 1, 10, 10, 30, 0, 0);
 
-        mockMvc.perform(post("/closures")
+        mockMvc.perform(post("/rooms/{roomId}/closures", 0)
                         .with(csrf())
                         .with(authentication(getAdminAuthentication(1L, "admin1")))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(this.objectMapper.writeValueAsString(new ClosureRequest(0L, startTime, endTime))))
+                        .content(this.objectMapper.writeValueAsString(new ClosureRequest(startTime, endTime))))
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(closureService);
@@ -256,11 +239,11 @@ public class ClosureControllerTest {
         LocalDateTime startTime = LocalDateTime.of(2300, 1, 1, 10, 30, 1, 0);
         LocalDateTime endTime = LocalDateTime.of(2300, 1, 10, 10, 30, 0, 0);
 
-        mockMvc.perform(post("/closures")
+        mockMvc.perform(post("/rooms/{roomId}/closures", roomId)
                         .with(csrf())
                         .with(authentication(getAdminAuthentication(1L, "admin1")))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(this.objectMapper.writeValueAsString(new ClosureRequest(roomId, startTime, endTime))))
+                        .content(this.objectMapper.writeValueAsString(new ClosureRequest(startTime, endTime))))
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(closureService);

@@ -164,7 +164,7 @@ class ServiceConcurrencyTest {
         ConcurrentLinkedQueue<Throwable> failures = new ConcurrentLinkedQueue<>();
         runConcurrentActions(failures,
                 () -> reservationService.addReservation(user1.getId(), room.getId(), startTime, endTime),
-                () -> closureService.addClosure(room.getId(), user2.getId(), startTime, endTime)
+                () -> closureService.addClosure(room.getId(), startTime, endTime)
         );
 
         /* closure should be added either way */
@@ -399,7 +399,7 @@ class ServiceConcurrencyTest {
 
         ConcurrentLinkedQueue<Throwable> failures = new ConcurrentLinkedQueue<>();
         runConcurrentActions(failures,
-                () -> closureService.addClosure(room.getId(), user1.getId(), newStartTime, newEndTime),
+                () -> closureService.addClosure(room.getId(), newStartTime, newEndTime),
                 () -> closureService.deleteClosure(initialClosure.getId())
         );
 

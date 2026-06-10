@@ -43,7 +43,7 @@ public class ClosureServiceImpl implements ClosureService {
 
     /* TODO: constraints on time */
     @Override
-    public AddClosureResult addClosure(Long roomId, Long userId, LocalDateTime startTime, LocalDateTime endTime) {
+    public AddClosureResult addClosure(Long roomId, LocalDateTime startTime, LocalDateTime endTime) {
         /* check room and acquire lock */
         /* TODO: consider add isActive() */
         Room room = roomRepository.findByIdWithLock(roomId)

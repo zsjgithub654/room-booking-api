@@ -113,7 +113,6 @@ public class ClosureServiceImplTest {
                         LocalDateTime.of(2026, 3, 1, 16, 0, 0, 0),
                         LocalDateTime.of(2026, 3, 1, 17, 0, 0, 0)));
         Long roomId = 2L;
-        Long userId = 3L;
         /* mock */
         when(roomRepository.findByIdWithLock(roomId)).thenReturn(Optional.of(room));
         when(reservationRepository.findByRoomIdAndOverlappingAndActive(roomId, startTime, endTime))
@@ -123,7 +122,7 @@ public class ClosureServiceImplTest {
         doAnswer(returnsFirstArg()).when(closureRepository).save(any(Closure.class));
         doNothing().when(closureRepository).deleteAll(eq(overlappingClosures));
         /* verify */
-        AddClosureResult result = closureService.addClosure(roomId, userId, startTime, endTime);
+        AddClosureResult result = closureService.addClosure(roomId, startTime, endTime);
         assertThat(result.getClosure().getStartTime()).isEqualTo(startTime);
         assertThat(result.getClosure().getEndTime()).isEqualTo(LocalDateTime.of(2026, 3, 1, 17, 0, 0, 0));
         assertThat(result.getCanceledReservations()).hasSize(reservations.size());
@@ -137,11 +136,10 @@ public class ClosureServiceImplTest {
         LocalDateTime startTime = LocalDateTime.of(2026, 3, 1, 12, 0, 0, 0);
         LocalDateTime endTime = LocalDateTime.of(2026, 3, 1, 16, 0, 0, 0);
         Long roomId = 2L;
-        Long userId = 3L;
         /* mock */
         when(roomRepository.findByIdWithLock(roomId)).thenReturn(Optional.empty());
         /* verify */
-        Exception exception = assertThrows(ResourceNotFoundException.class, () -> closureService.addClosure(roomId, userId, startTime, endTime));
+        Exception exception = assertThrows(ResourceNotFoundException.class, () -> closureService.addClosure(roomId, startTime, endTime));
         assertThat(exception.getMessage()).isEqualTo("Room not found.");
     }
 

@@ -53,11 +53,10 @@ public class ClosureController {
     }
 
     @PostMapping
-    public ResponseEntity<AddClosureResponse> addClosure(
-            @RequestParam @Positive Long userId, @Valid @RequestBody ClosureRequest request) {
+    public ResponseEntity<AddClosureResponse> addClosure(@Valid @RequestBody ClosureRequest request) {
         return new ResponseEntity<>(
                 addClosureMapper.toResponse(
-                        closureService.addClosure(request.roomId(), userId, request.startTime(), request.endTime())),
+                        closureService.addClosure(request.roomId(), request.startTime(), request.endTime())),
                 HttpStatus.CREATED
         );
     }

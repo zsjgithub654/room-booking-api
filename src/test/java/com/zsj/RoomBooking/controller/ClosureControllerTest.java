@@ -139,7 +139,6 @@ public class ClosureControllerTest {
     @Test
     void addClosureTest() throws Exception {
         /* request */
-        Long userId = 1L;
         Long roomId = 2L;
         LocalDateTime startTime = LocalDateTime.of(2300, 1, 1, 10, 30, 0, 0);
         LocalDateTime endTime = LocalDateTime.of(2300, 1, 10, 10, 30, 0, 0);
@@ -154,11 +153,10 @@ public class ClosureControllerTest {
                                 LocalDateTime.of(2300, 1, 2, 8, 0, 0, 0),
                                 LocalDateTime.of(2300, 1, 2, 9, 0, 0, 0))
                 ));
-        when(closureService.addClosure(eq(roomId), eq(userId), eq(startTime), eq(endTime))).thenReturn(addClosureResult);
+        when(closureService.addClosure(eq(roomId), eq(startTime), eq(endTime))).thenReturn(addClosureResult);
 
         /* perform, need to parse response to dto object to compare LocalDateTime */
         String responseString = mockMvc.perform(post("/closures")
-                        .param("userId", userId.toString())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(new ClosureRequest(roomId, startTime, endTime))))
                 .andExpect(status().isCreated())
@@ -167,7 +165,7 @@ public class ClosureControllerTest {
                 .getContentAsString();
         AddClosureResponse response = objectMapper.readValue(responseString, AddClosureResponse.class);
         /* verify */
-        verify(closureService).addClosure(roomId, userId, startTime, endTime);
+        verify(closureService).addClosure(roomId, startTime, endTime);
         Assertions.assertThat(response.closure())
                 .usingRecursiveComparison()
                 .ignoringFields("userId", "roomId")
@@ -180,13 +178,11 @@ public class ClosureControllerTest {
 
     @Test
     void addClosureShouldRejectInvalidTimeRange() throws Exception {
-        Long userId = 1L;
         Long roomId = 2L;
         LocalDateTime startTime = LocalDateTime.of(2300, 1, 10, 10, 30, 0, 0);
         LocalDateTime endTime = LocalDateTime.of(2300, 1, 1, 10, 30, 0, 0);
 
         mockMvc.perform(post("/closures")
-                        .param("userId", userId.toString())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(new ClosureRequest(roomId, startTime, endTime))))
                 .andExpect(status().isBadRequest());
@@ -196,12 +192,10 @@ public class ClosureControllerTest {
 
     @Test
     void addClosureShouldRejectNullRoomId() throws Exception {
-        Long userId = 1L;
         LocalDateTime startTime = LocalDateTime.of(2300, 1, 1, 10, 30, 0, 0);
         LocalDateTime endTime = LocalDateTime.of(2300, 1, 10, 10, 30, 0, 0);
 
         mockMvc.perform(post("/closures")
-                        .param("userId", userId.toString())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(new ClosureRequest(null, startTime, endTime))))
                 .andExpect(status().isBadRequest());
@@ -211,12 +205,10 @@ public class ClosureControllerTest {
 
     @Test
     void addClosureShouldRejectNonPositiveRoomId() throws Exception {
-        Long userId = 1L;
         LocalDateTime startTime = LocalDateTime.of(2300, 1, 1, 10, 30, 0, 0);
         LocalDateTime endTime = LocalDateTime.of(2300, 1, 10, 10, 30, 0, 0);
 
         mockMvc.perform(post("/closures")
-                        .param("userId", userId.toString())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(new ClosureRequest(0L, startTime, endTime))))
                 .andExpect(status().isBadRequest());
@@ -225,29 +217,12 @@ public class ClosureControllerTest {
     }
 
     @Test
-    void addClosureShouldRejectNonPositiveUserId() throws Exception {
-        Long roomId = 2L;
-        LocalDateTime startTime = LocalDateTime.of(2300, 1, 1, 10, 30, 0, 0);
-        LocalDateTime endTime = LocalDateTime.of(2300, 1, 10, 10, 30, 0, 0);
-
-        mockMvc.perform(post("/closures")
-                        .param("userId", "0")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(this.objectMapper.writeValueAsString(new ClosureRequest(roomId, startTime, endTime))))
-                .andExpect(status().isBadRequest());
-
-        verifyNoInteractions(closureService);
-    }
-
-    @Test
     void addClosureShouldRejectSecondPrecisionTime() throws Exception {
-        Long userId = 1L;
         Long roomId = 2L;
         LocalDateTime startTime = LocalDateTime.of(2300, 1, 1, 10, 30, 1, 0);
         LocalDateTime endTime = LocalDateTime.of(2300, 1, 10, 10, 30, 0, 0);
 
         mockMvc.perform(post("/closures")
-                        .param("userId", userId.toString())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(new ClosureRequest(roomId, startTime, endTime))))
                 .andExpect(status().isBadRequest());

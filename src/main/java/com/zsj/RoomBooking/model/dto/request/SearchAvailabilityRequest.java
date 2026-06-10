@@ -6,6 +6,7 @@ import com.zsj.RoomBooking.validation.Range;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 
 import java.time.LocalDate;
 
@@ -17,7 +18,7 @@ import java.time.LocalDate;
 @MaxDurationDays(startField = "startDate", endField = "endDate", days = 7)
 @TimeInterval(fromField = "startDate", toField = "endDate", allowEqual = true,
         message = "start date must be before or equal to end date.")
-public record SearchAvailabilityRequest(String name,
+public record SearchAvailabilityRequest(@Size(max = 20) String name,
                                         @Positive Integer minCapacity, @Positive Integer maxCapacity, /* use wrapper to accept null */
                                         String area,
                                         @NotNull @FutureOrPresent LocalDate startDate,

@@ -52,6 +52,10 @@ public class UserController {
     public List<UserResponse> searchUser(@RequestParam String username, @RequestParam Role role,
                                          @RequestParam UserStatus status) {
         return service.searchUsers(username, role, status).stream().map(userMapper::toResponse).toList();
+    public List<UserResponse> searchUser(@Valid @ModelAttribute SearchUserRequest request) {
+        return service.searchUsers(request.username(), request.role(), request.status()).stream()
+                .map(userMapper::toResponse)
+                .toList();
     }
 
     @PostMapping

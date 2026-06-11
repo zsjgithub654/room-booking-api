@@ -65,9 +65,6 @@ public class RoomControllerTest {
     @MockitoBean
     private RoomService roomService;
 
-    @Autowired
-    private RoomMapper roomMapper;
-
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private UsernamePasswordAuthenticationToken getAdminAuthentication(Long userId, String username) {

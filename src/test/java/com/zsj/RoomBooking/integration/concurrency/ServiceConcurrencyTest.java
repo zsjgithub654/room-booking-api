@@ -115,7 +115,7 @@ class ServiceConcurrencyTest {
         assertThat(failures).hasSize(1);
         assertThat(failures.peek())
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessage("Room is not available in selected time.");
+                .hasMessage("Room is reserved in selected time.");
         /* exact one reservation has the desired room and time */
         List<Reservation> reservations = reservationRepository.findByRoomId(room.getId());
         assertThat(reservations).hasSize(1);
@@ -146,7 +146,7 @@ class ServiceConcurrencyTest {
         assertThat(failures).hasSize(1);
         assertThat(failures.peek())
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessage("Room is not available in selected time.");
+                .hasMessage("Room is reserved in selected time.");
         /* exact one reservation has the desired room and time */
         List<Reservation> reservations = reservationRepository.findByRoomId(room.getId());
         assertThat(reservations).filteredOn(reservation ->
@@ -186,7 +186,7 @@ class ServiceConcurrencyTest {
             assertThat(failures).hasSize(1);
             assertThat(failures.peek())
                     .isInstanceOf(IllegalStateException.class)
-                    .hasMessage("Room is not available in selected time.");
+                    .hasMessage("Room is in closure during selected time.");
             assertThat(reservationRepository.findByRoomId(room.getId())).isEmpty();
         }
     }

@@ -10,7 +10,6 @@ import com.zsj.RoomBooking.model.entity.User;
 import com.zsj.RoomBooking.repository.ReservationRepository;
 import com.zsj.RoomBooking.repository.UserRepository;
 import com.zsj.RoomBooking.service.impl.UserServiceImpl;
-import org.assertj.core.api.AssertionsForInterfaceTypes;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -22,7 +21,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -131,6 +130,52 @@ public class UserServiceImplTest {
     }
 
     @Test
+    void AddAdminRoleSucceedTest() {
+        User user = new User("user1", "");
+        Long searchId = 2L;
+
+        when(userRepository.findById(eq(searchId))).thenReturn(Optional.of(user));
+        User updatedUser = userService.addAdminRole(searchId);
+
+        assertThat(updatedUser.getRoles()).contains(Role.ROLE_ADMIN);
+    }
+
+    @Test
+    void AddAdminRoleNotFoundTest() {
+        Long searchId = 2L;
+
+        when(userRepository.findById(eq(searchId))).thenReturn(Optional.empty());
+
+        Exception exception = assertThrows(ResourceNotFoundException.class,
+                () -> userService.addAdminRole(searchId));
+        assertThat(exception.getMessage()).isEqualTo("User not found.");
+    }
+
+    @Test
+    void RemoveAdminRoleSucceedTest() {
+        User user = new User("user1", "");
+        user.addAdminRole();
+        Long searchId = 2L;
+
+        when(userRepository.findById(eq(searchId))).thenReturn(Optional.of(user));
+        User updatedUser = userService.removeAdminRole(searchId);
+
+        assertThat(updatedUser.getRoles()).doesNotContain(Role.ROLE_ADMIN);
+        assertThat(updatedUser.getRoles()).contains(Role.ROLE_USER);
+    }
+
+    @Test
+    void RemoveAdminRoleNotFoundTest() {
+        Long searchId = 2L;
+
+        when(userRepository.findById(eq(searchId))).thenReturn(Optional.empty());
+
+        Exception exception = assertThrows(ResourceNotFoundException.class,
+                () -> userService.removeAdminRole(searchId));
+        assertThat(exception.getMessage()).isEqualTo("User not found.");
+    }
+
+    @Test
     void SearchUsersTest() {
         List<User> users = List.of(
                 new User("user1", ""),
@@ -145,7 +190,7 @@ public class UserServiceImplTest {
                 eq(searchUsername), eq(searchRole), eq(searchStatus))).thenReturn(users);
 
         List<User> result = userService.searchUsers(searchUsername, searchRole, searchStatus);
-        AssertionsForInterfaceTypes.assertThat(result).hasSize(3);
+        assertThat(result).hasSize(3);
         assertThat(result)
                 .usingRecursiveComparison()
                 .isEqualTo(users);

@@ -12,5 +12,7 @@ public interface UserService {
     User addUser(User user);
     User updateUsername(Long id, String username);
     User updatePassword(Long id, String password);
+    User addAdminRole(Long id);
+    User removeAdminRole(Long id);
     void closeUserAccount(Long id);
 }

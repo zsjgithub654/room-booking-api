@@ -52,12 +52,12 @@ public class User {
         this.roles.add(Role.ROLE_USER);
     }
 
-    public boolean addRole(Role role) {
-        return true;
+    public void addAdminRole() {
+        roles.add(Role.ROLE_ADMIN);
     }
 
-    public boolean removeRole(Role role) {
-        return true;
+    public void removeAdminRole() {
+        roles.remove(Role.ROLE_ADMIN);
     }
 
     /* required by JPA */

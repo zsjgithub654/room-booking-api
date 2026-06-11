@@ -64,6 +64,24 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public User addAdminRole(Long id) {
+        User user = userRepository.findById(id)
+                .filter(foundUser -> foundUser.getStatus() == UserStatus.USER_STATUS_ACTIVE)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found."));
+        user.addAdminRole();
+        return user;
+    }
+
+    @Override
+    public User removeAdminRole(Long id) {
+        User user = userRepository.findById(id)
+                .filter(foundUser -> foundUser.getStatus() == UserStatus.USER_STATUS_ACTIVE)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found."));
+        user.removeAdminRole();
+        return user;
+    }
+
+    @Override
     public void closeUserAccount(Long id) {
         /* verify and acquire lock on user */
         User user = userRepository.findByIdWithLock(id).orElseThrow(() -> new ResourceNotFoundException("User not found."));

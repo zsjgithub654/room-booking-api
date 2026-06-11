@@ -83,6 +83,18 @@ public class UserController {
         return userMapper.toResponse(service.updatePassword(id, request.password()));
     }
 
+    @PatchMapping("/{id}/roles/admin")
+    @PreAuthorize("hasRole('ADMIN')")
+    public UserResponse addAdminRole(@PathVariable @Positive Long id) {
+        return userMapper.toResponse(service.addAdminRole(id));
+    }
+
+    @DeleteMapping("/{id}/roles/admin")
+    @PreAuthorize("hasRole('ADMIN')")
+    public UserResponse removeAdminRole(@PathVariable @Positive Long id) {
+        return userMapper.toResponse(service.removeAdminRole(id));
+    }
+
     @PatchMapping("/me/password")
     public UserResponse updateCurrentPassword(@AuthenticationPrincipal CustomUserDetails customUserDetails, @Valid @RequestBody UpdatePasswordRequest request) {
         return userMapper.toResponse(service.updatePassword(customUserDetails.getId(), request.password()));

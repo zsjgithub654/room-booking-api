@@ -285,6 +285,61 @@ public class UserControllerTest {
     }
 
     @Test
+    void addAdminRoleTest() throws Exception {
+        Long id = 1L;
+        User user = new User("user1", "");
+        user.addAdminRole();
+
+        when(userService.addAdminRole(eq(id))).thenReturn(user);
+
+        mockMvc.perform(patch("/users/{id}/roles/admin", id)
+                        .with(csrf())
+                        .with(authentication(getAdminAuthentication(1L, "admin1"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value("user1"))
+                .andExpect(jsonPath("$.roles", hasItem(Role.ROLE_ADMIN.name())));
+
+        verify(userService).addAdminRole(id);
+    }
+
+    @Test
+    void addAdminRoleShouldRejectNonAdmin() throws Exception {
+        mockMvc.perform(patch("/users/{id}/roles/admin", 1L)
+                        .with(csrf())
+                        .with(authentication(getAuthentication(1L, "user1"))))
+                .andExpect(status().isForbidden());
+
+        verifyNoInteractions(userService);
+    }
+
+    @Test
+    void removeAdminRoleTest() throws Exception {
+        Long id = 1L;
+        User user = new User("user1", "");
+
+        when(userService.removeAdminRole(eq(id))).thenReturn(user);
+
+        mockMvc.perform(delete("/users/{id}/roles/admin", id)
+                        .with(csrf())
+                        .with(authentication(getAdminAuthentication(1L, "admin1"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value("user1"))
+                .andExpect(jsonPath("$.roles", hasItem(Role.ROLE_USER.name())));
+
+        verify(userService).removeAdminRole(id);
+    }
+
+    @Test
+    void removeAdminRoleShouldRejectNonAdmin() throws Exception {
+        mockMvc.perform(delete("/users/{id}/roles/admin", 1L)
+                        .with(csrf())
+                        .with(authentication(getAuthentication(1L, "user1"))))
+                .andExpect(status().isForbidden());
+
+        verifyNoInteractions(userService);
+    }
+
+    @Test
     void updateCurrentPasswordTest() throws Exception {
         Long userId = 1L;
         String username = "user1";

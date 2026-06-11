@@ -14,6 +14,8 @@ import com.zsj.RoomBooking.repository.RoomRepository;
 import com.zsj.RoomBooking.repository.RoomSpecifications;
 import com.zsj.RoomBooking.service.RoomService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,7 +41,7 @@ public class RoomServiceImpl implements RoomService {
     @Autowired
     private ReservationRepository reservationRepository;
 
-    public List<Room> searchRooms(String name, Integer minCapacity, Integer maxCapacity, String area) {
+    public Page<Room> searchRooms(String name, Integer minCapacity, Integer maxCapacity, String area, Pageable pageable) {
         Specification<Room> spec = Specification.unrestricted();
         /* name contains given string */
         if (name != null && !name.isBlank()) {
@@ -59,7 +61,7 @@ public class RoomServiceImpl implements RoomService {
         /* status */
         /* TODO: only show active for now, enable admin to see all later */
         spec = spec.and(RoomSpecifications.hasStatus(RoomStatus.ROOM_STATUS_ACTIVE));
-        return roomRepository.findAll(spec);
+        return roomRepository.findAll(spec, pageable);
     }
 
     @Override
@@ -67,7 +69,7 @@ public class RoomServiceImpl implements RoomService {
     public List<RoomSchedule> searchAvailabilities(String name, Integer minCapacity, Integer maxCapacity, String area,
                                                    LocalDate startDate, LocalDate endDate, Boolean includeUnavailable) {
         /* filter rooms */
-        List<Room> rooms = searchRooms(name, minCapacity, maxCapacity, area);
+        List<Room> rooms = searchRooms(name, minCapacity, maxCapacity, area, Pageable.unpaged()).getContent();
         boolean shouldIncludeUnavailable = Boolean.TRUE.equals(includeUnavailable);
         LocalDateTime startTime = startDate.atStartOfDay();
         LocalDateTime endTime = endDate.plusDays(1).atStartOfDay();

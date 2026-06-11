@@ -2,6 +2,8 @@ package com.zsj.RoomBooking.repository;
 
 import com.zsj.RoomBooking.model.ReservationStatus;
 import com.zsj.RoomBooking.model.entity.Reservation;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -22,7 +24,8 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
               AND (:date IS NULL OR cast(reservation.startTime as date) = :date)
               AND (:status IS NULL OR reservation.status = :status)
             """)
-    List<Reservation> findByUserIdAndRoomIdAndDateAndStatus(Long userId, Long roomId, LocalDate date, ReservationStatus status);
+    Page<Reservation> findByUserIdAndRoomIdAndDateAndStatus(
+            Long userId, Long roomId, LocalDate date, ReservationStatus status, Pageable pageable);
 
     @Query("""
                 SELECT reservation

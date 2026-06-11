@@ -3,11 +3,11 @@ package com.zsj.RoomBooking.service;
 import com.zsj.RoomBooking.model.Role;
 import com.zsj.RoomBooking.model.UserStatus;
 import com.zsj.RoomBooking.model.entity.User;
-
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface UserService {
-    List<User> searchUsers(String username, Role role, UserStatus status);
+    Page<User> searchUsers(String username, Role role, UserStatus status, Pageable pageable);
     User getUser(Long id);
     User addUser(User user);
     User updateUsername(Long id, String username);

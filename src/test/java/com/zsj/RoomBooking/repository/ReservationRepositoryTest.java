@@ -8,6 +8,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -75,7 +79,8 @@ public class ReservationRepositoryTest {
                 user.getId(),
                 room.getId(),
                 LocalDate.of(2026, 6, 1),
-                ReservationStatus.RESERVATION_STATUS_ACTIVE);
+                ReservationStatus.RESERVATION_STATUS_ACTIVE,
+                Pageable.unpaged()).getContent();
         assertThat(result).hasSize(1);
         assertThat(result.get(0)).isEqualTo(reservations.get(1));
     }
@@ -86,7 +91,8 @@ public class ReservationRepositoryTest {
                 user.getId(),
                 room.getId() + 1,
                 LocalDate.of(2026, 6, 1),
-                ReservationStatus.RESERVATION_STATUS_ACTIVE);
+                ReservationStatus.RESERVATION_STATUS_ACTIVE,
+                Pageable.unpaged()).getContent();
         assertThat(result).hasSize(0);
     }
 
@@ -96,7 +102,8 @@ public class ReservationRepositoryTest {
                 user.getId() + 1,
                 room.getId(),
                 LocalDate.of(2026, 6, 1),
-                ReservationStatus.RESERVATION_STATUS_ACTIVE);
+                ReservationStatus.RESERVATION_STATUS_ACTIVE,
+                Pageable.unpaged()).getContent();
         assertThat(result).hasSize(0);
     }
 
@@ -106,7 +113,8 @@ public class ReservationRepositoryTest {
                 user.getId(),
                 room.getId(),
                 LocalDate.of(2026, 7, 1),
-                ReservationStatus.RESERVATION_STATUS_ACTIVE);
+                ReservationStatus.RESERVATION_STATUS_ACTIVE,
+                Pageable.unpaged()).getContent();
         assertThat(result).hasSize(0);
     }
 
@@ -119,19 +127,38 @@ public class ReservationRepositoryTest {
                 user.getId(),
                 room.getId(),
                 LocalDate.of(2026, 6, 1),
-                ReservationStatus.RESERVATION_STATUS_ACTIVE);
+                ReservationStatus.RESERVATION_STATUS_ACTIVE,
+                Pageable.unpaged()).getContent();
         assertThat(result).hasSize(0);
     }
 
     @Test
     void findByUserIdAndRoomIdAndDateAndStatusAllNullArgsTest() {
         List<Reservation> result = reservationRepository.findByUserIdAndRoomIdAndDateAndStatus(
-                null, null, null, null);
+                null, null, null, null, Pageable.unpaged()).getContent();
         assertThat(result).hasSize(reservations.size());
         assertThat(result)
                 .usingRecursiveComparison()
                 .ignoringFields("id")
                 .isEqualTo(reservations);
+    }
+
+    @Test
+    void findByUserIdAndRoomIdAndDateAndStatusPagedTest() {
+        Page<Reservation> result = reservationRepository.findByUserIdAndRoomIdAndDateAndStatus(
+                user.getId(),
+                room.getId(),
+                null,
+                ReservationStatus.RESERVATION_STATUS_ACTIVE,
+                PageRequest.of(0, 2, Sort.by("startTime")));
+
+        assertThat(result.getTotalElements()).isEqualTo(4);
+        assertThat(result.getContent()).hasSize(2);
+        assertThat(result.getContent())
+                .extracting(Reservation::getStartTime)
+                .containsExactly(
+                        LocalDateTime.of(2026, 4, 30, 14, 30, 0, 0),
+                        LocalDateTime.of(2026, 4, 30, 14, 30, 0, 0));
     }
 
     /* getTimeByRoomIdAndOverlappingIntervalAndActive */

@@ -18,6 +18,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDate;
@@ -152,8 +154,8 @@ public class RoomServiceImplTest {
                 new Room("102", 4, "Building A", null, null),
                 new Room("101", 6, "Building B", null, null)
         );
-        when(roomRepository.findAll(any(Specification.class))).thenReturn(rooms);
-        List<Room> result = roomService.searchRooms(null, null, null, null);
+        when(roomRepository.findAll(any(Specification.class), eq(Pageable.unpaged()))).thenReturn(new PageImpl<>(rooms));
+        List<Room> result = roomService.searchRooms(null, null, null, null, Pageable.unpaged()).getContent();
         assertThat(result).hasSize(3);
         assertThat(result)
                 .usingRecursiveComparison()
@@ -176,7 +178,7 @@ public class RoomServiceImplTest {
         LocalDate searchStartDate = LocalDate.of(2026, 3, 1);
         LocalDate searchEndDate = LocalDate.of(2026, 3, 3);
         /* mock */
-        when(roomRepository.findAll(any(Specification.class))).thenReturn(List.of(room));
+        when(roomRepository.findAll(any(Specification.class), eq(Pageable.unpaged()))).thenReturn(new PageImpl<>(List.of(room)));
         when(closureRepository.findByRoomIdAndOverlapping(eq(null),
                 eq(searchStartDate.atStartOfDay()),
                 eq(searchEndDate.plusDays(1).atStartOfDay())))
@@ -217,7 +219,7 @@ public class RoomServiceImplTest {
         LocalDate searchStartDate = LocalDate.of(2026, 3, 1);
         LocalDate searchEndDate = LocalDate.of(2026, 3, 1);
         /* mock */
-        when(roomRepository.findAll(any(Specification.class))).thenReturn(List.of(room));
+        when(roomRepository.findAll(any(Specification.class), eq(Pageable.unpaged()))).thenReturn(new PageImpl<>(List.of(room)));
         when(closureRepository.findByRoomIdAndOverlapping(eq(null),
                 eq(searchStartDate.atStartOfDay()),
                 eq(searchEndDate.plusDays(1).atStartOfDay())))

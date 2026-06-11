@@ -10,6 +10,8 @@ import com.zsj.RoomBooking.service.ReservationService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -36,14 +38,14 @@ public class ReservationController {
 
     @GetMapping("/reservations")
     @PreAuthorize("hasRole('ADMIN')")
-    public List<ReservationResponse> searchReservations(@Valid @ModelAttribute SearchReservationRequest request) {
-        return service.searchReservations(request.userId(), request.roomId(), request.date(), request.status())
-                .stream().map(reservationMapper::toResponse).toList();
+    public Page<ReservationResponse> searchReservations(@Valid @ModelAttribute SearchReservationRequest request, Pageable pageable) {
+        return service.searchReservations(request.userId(), request.roomId(), request.date(), request.status(), pageable)
+                .map(reservationMapper::toResponse);
     }
 
     @GetMapping("/users/me/reservations")
     public List<ReservationResponse> getCurrentUserReservations(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
-        return service.searchReservations(customUserDetails.getId(), null, null, null).stream()
+        return service.searchReservations(customUserDetails.getId(), null, null, null, Pageable.unpaged()).stream()
                 .map(reservationMapper::toResponse)
                 .toList();
     }

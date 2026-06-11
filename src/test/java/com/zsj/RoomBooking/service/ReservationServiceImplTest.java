@@ -17,6 +17,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
@@ -88,10 +90,11 @@ public class ReservationServiceImplTest {
                         LocalDateTime.of(2026, 3, 1, 12, 0, 0, 0),
                         LocalDateTime.of(2026, 3, 1, 13, 0, 0, 0)));
 
-        when(reservationRepository.findByUserIdAndRoomIdAndDateAndStatus(eq(userId), eq(roomId), eq(date), eq(status)))
-                .thenReturn(reservations);
+        when(reservationRepository.findByUserIdAndRoomIdAndDateAndStatus(
+                eq(userId), eq(roomId), eq(date), eq(status), eq(Pageable.unpaged())))
+                .thenReturn(new PageImpl<>(reservations));
 
-        List<Reservation> result = reservationService.searchReservations(userId, roomId, date, status);
+        List<Reservation> result = reservationService.searchReservations(userId, roomId, date, status, Pageable.unpaged()).getContent();
         assertThat(result).hasSize(2);
         assertThat(result)
                 .usingRecursiveComparison()

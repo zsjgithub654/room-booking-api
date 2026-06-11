@@ -15,6 +15,9 @@ import com.zsj.RoomBooking.security.ReservationAuthorizationService;
 import com.zsj.RoomBooking.service.ReservationService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -41,6 +44,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @AutoConfigureMockMvc
@@ -83,24 +87,31 @@ public class ReservationControllerTest {
                 new Reservation(new User(), new Room(),
                         LocalDateTime.of(2026, 3, 1, 14, 30, 0, 0),
                         LocalDateTime.of(2026, 3, 1, 15, 30, 0, 0)));
-        when(reservationService.searchReservations(eq(userId), eq(roomId), eq(date), eq(status))).thenReturn(reservations);
+        when(reservationService.searchReservations(eq(userId), eq(roomId), eq(date), eq(status), eq(PageRequest.of(0, 20))))
+                .thenReturn(new PageImpl<>(reservations, PageRequest.of(0, 20), reservations.size()));
 
-        /* perform, to compare LocalDateTime, need to parse response to dto object */
         String responseString = mockMvc.perform(get("/reservations")
                         .with(authentication(getAdminAuthentication(1L, "admin1")))
                         .param("userId", userId.toString())
                         .param("roomId", roomId.toString())
                         .param("date", date.toString())
-                        .param("status", status.name()))
+                        .param("status", status.name())
+                        .param("page", "0")
+                        .param("size", "20"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.totalElements").value(2))
+                .andExpect(jsonPath("$.size").value(20))
+                .andExpect(jsonPath("$.number").value(0))
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
-        List<ReservationResponse> responses =
-                objectMapper.readValue(responseString, new TypeReference<List<ReservationResponse>>() {
-                });
-        /* verify */
-        verify(reservationService).searchReservations(userId, roomId, date, status);
+
+        verify(reservationService).searchReservations(userId, roomId, date, status, PageRequest.of(0, 20));
+        TypeReference<List<ReservationResponse>> typeReference = new TypeReference<List<ReservationResponse>>() {
+        };
+        String contentString = objectMapper.readTree(responseString).get("content").toString();
+        List<ReservationResponse> responses = objectMapper.readValue(contentString, typeReference);
         assertThat(responses)
                 .usingRecursiveComparison()
                 .ignoringFields("userId", "roomId")
@@ -172,7 +183,8 @@ public class ReservationControllerTest {
                 new Reservation(new User(), new Room(),
                         LocalDateTime.of(2026, 3, 1, 14, 30, 0, 0),
                         LocalDateTime.of(2026, 3, 1, 15, 30, 0, 0)));
-        when(reservationService.searchReservations(eq(userId), eq(null), eq(null), eq(null))).thenReturn(reservations);
+        when(reservationService.searchReservations(eq(userId), eq(null), eq(null), eq(null), eq(Pageable.unpaged())))
+                .thenReturn(new PageImpl<>(reservations));
 
         String responseString = mockMvc.perform(get("/users/me/reservations")
                         .with(authentication(getAuthentication(userId, username))))
@@ -184,7 +196,7 @@ public class ReservationControllerTest {
                 objectMapper.readValue(responseString, new TypeReference<List<ReservationResponse>>() {
                 });
 
-        verify(reservationService).searchReservations(userId, null, null, null);
+        verify(reservationService).searchReservations(userId, null, null, null, Pageable.unpaged());
         assertThat(responses)
                 .usingRecursiveComparison()
                 .ignoringFields("userId", "roomId")

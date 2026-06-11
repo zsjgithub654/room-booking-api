@@ -21,6 +21,8 @@ import com.zsj.RoomBooking.security.CustomUserDetails;
 import com.zsj.RoomBooking.service.RoomService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -48,6 +50,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @AutoConfigureMockMvc
@@ -88,23 +91,30 @@ public class RoomControllerTest {
                 eq(request.name()),
                 eq(request.minCapacity()),
                 eq(request.maxCapacity()),
-                eq(request.area())
-        )).thenReturn(rooms);
+                eq(request.area()),
+                eq(PageRequest.of(0, 20))
+        )).thenReturn(new PageImpl<>(rooms, PageRequest.of(0, 20), rooms.size()));
         /* perform */
         String responseString = mockMvc.perform(get("/rooms")
                         .with(authentication(getAdminAuthentication(1L, "admin1")))
                         .param("minCapacity", request.minCapacity().toString())
-                        .param("maxCapacity", request.maxCapacity().toString()))
+                        .param("maxCapacity", request.maxCapacity().toString())
+                        .param("page", "0")
+                        .param("size", "20"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(3))
+                .andExpect(jsonPath("$.totalElements").value(3))
+                .andExpect(jsonPath("$.size").value(20))
+                .andExpect(jsonPath("$.number").value(0))
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
         /* verify params passed to service */
-        verify(roomService).searchRooms(request.name(), request.minCapacity(), request.maxCapacity(), request.area());
-        /* verify response */
-        List<RoomResponse> responses =
-                objectMapper.readValue(responseString, new TypeReference<List<RoomResponse>>() {
-                });
+        verify(roomService).searchRooms(request.name(), request.minCapacity(), request.maxCapacity(), request.area(), PageRequest.of(0, 20));
+        TypeReference<List<RoomResponse>> typeReference = new TypeReference<List<RoomResponse>>() {
+        };
+        String contentString = objectMapper.readTree(responseString).get("content").toString();
+        List<RoomResponse> responses = objectMapper.readValue(contentString, typeReference);
         assertThat(responses)
                 .usingRecursiveComparison()
                 .isEqualTo(rooms);

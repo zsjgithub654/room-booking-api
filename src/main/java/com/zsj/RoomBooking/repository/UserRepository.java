@@ -6,8 +6,9 @@ import com.zsj.RoomBooking.model.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-import java.util.List;
 import java.util.Optional;
 
 import static jakarta.persistence.LockModeType.PESSIMISTIC_WRITE;
@@ -22,7 +23,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
             AND (:role IS NULL OR :role MEMBER OF user.roles)
             AND (:status IS NULL OR :status = user.status)
             """)
-    List<User> findByUsernameAndRoleAndStatus(String username, Role role, UserStatus status);
+    Page<User> findByUsernameAndRoleAndStatus(String username, Role role, UserStatus status, Pageable pageable);
 
     /* TODO: make query parameter binding explicit with @Param across the repositories */
     @Lock(PESSIMISTIC_WRITE)

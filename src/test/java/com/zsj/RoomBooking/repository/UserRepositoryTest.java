@@ -5,6 +5,10 @@ import com.zsj.RoomBooking.model.UserStatus;
 import com.zsj.RoomBooking.model.entity.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 
 import java.util.List;
@@ -22,7 +26,7 @@ public class UserRepositoryTest {
         userRepository.save(user);
 
         List<User> result = userRepository.findByUsernameAndRoleAndStatus(
-                "user", Role.ROLE_USER, UserStatus.USER_STATUS_ACTIVE);
+                "user", Role.ROLE_USER, UserStatus.USER_STATUS_ACTIVE, Pageable.unpaged()).getContent();
         assertThat(result).hasSize(1);
         assertThat(result.get(0))
                 .usingRecursiveComparison()
@@ -35,7 +39,7 @@ public class UserRepositoryTest {
         userRepository.save(user);
 
         List<User> result = userRepository.findByUsernameAndRoleAndStatus(
-                null, Role.ROLE_USER, UserStatus.USER_STATUS_ACTIVE);
+                null, Role.ROLE_USER, UserStatus.USER_STATUS_ACTIVE, Pageable.unpaged()).getContent();
         assertThat(result).hasSize(1);
         assertThat(result.get(0))
                 .usingRecursiveComparison()
@@ -48,7 +52,7 @@ public class UserRepositoryTest {
         userRepository.save(user);
 
         List<User> result = userRepository.findByUsernameAndRoleAndStatus(
-                "user", null, UserStatus.USER_STATUS_ACTIVE);
+                "user", null, UserStatus.USER_STATUS_ACTIVE, Pageable.unpaged()).getContent();
         assertThat(result).hasSize(1);
         assertThat(result.get(0))
                 .usingRecursiveComparison()
@@ -61,7 +65,7 @@ public class UserRepositoryTest {
         userRepository.save(user);
 
         List<User> result = userRepository.findByUsernameAndRoleAndStatus(
-                "user", Role.ROLE_USER, null);
+                "user", Role.ROLE_USER, null, Pageable.unpaged()).getContent();
         assertThat(result).hasSize(1);
         assertThat(result.get(0))
                 .usingRecursiveComparison()
@@ -74,7 +78,7 @@ public class UserRepositoryTest {
         userRepository.save(user);
 
         List<User> result = userRepository.findByUsernameAndRoleAndStatus(
-                "user2", Role.ROLE_USER, UserStatus.USER_STATUS_ACTIVE);
+                "user2", Role.ROLE_USER, UserStatus.USER_STATUS_ACTIVE, Pageable.unpaged()).getContent();
         assertThat(result).hasSize(0);
     }
 
@@ -84,7 +88,7 @@ public class UserRepositoryTest {
         userRepository.save(user);
 
         List<User> result = userRepository.findByUsernameAndRoleAndStatus(
-                "user", Role.ROLE_ADMIN, UserStatus.USER_STATUS_ACTIVE);
+                "user", Role.ROLE_ADMIN, UserStatus.USER_STATUS_ACTIVE, Pageable.unpaged()).getContent();
         assertThat(result).hasSize(0);
     }
 
@@ -94,7 +98,24 @@ public class UserRepositoryTest {
         userRepository.save(user);
 
         List<User> result = userRepository.findByUsernameAndRoleAndStatus(
-                "user", Role.ROLE_USER, UserStatus.USER_STATUS_CLOSED);
+                "user", Role.ROLE_USER, UserStatus.USER_STATUS_CLOSED, Pageable.unpaged()).getContent();
         assertThat(result).hasSize(0);
+    }
+
+    @Test
+    void findByUsernameAndRoleAndStatusPagedTest() {
+        userRepository.save(new User("user1", ""));
+        userRepository.save(new User("user2", ""));
+        userRepository.save(new User("user3", ""));
+
+        Page<User> result = userRepository.findByUsernameAndRoleAndStatus(
+                "user",
+                Role.ROLE_USER,
+                UserStatus.USER_STATUS_ACTIVE,
+                PageRequest.of(1, 2, Sort.by("username")));
+
+        assertThat(result.getTotalElements()).isEqualTo(3);
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).getUsername()).isEqualTo("user3");
     }
 }

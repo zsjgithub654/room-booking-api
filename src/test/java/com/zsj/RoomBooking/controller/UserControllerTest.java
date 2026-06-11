@@ -6,11 +6,14 @@ import com.zsj.RoomBooking.model.Role;
 import com.zsj.RoomBooking.model.dto.request.UpdatePasswordRequest;
 import com.zsj.RoomBooking.model.dto.request.UpdateUsernameRequest;
 import com.zsj.RoomBooking.model.dto.request.UserRequest;
+import com.zsj.RoomBooking.model.dto.response.UserResponse;
 import com.zsj.RoomBooking.model.entity.User;
 import com.zsj.RoomBooking.security.CustomUserDetails;
 import com.zsj.RoomBooking.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -18,11 +21,14 @@ import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -97,6 +103,38 @@ public class UserControllerTest {
     void getCurrentUserShouldRequireAuthentication() throws Exception {
         mockMvc.perform(get("/users/me"))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void searchUserTest() throws Exception {
+        User user = new User("user1", "");
+
+        when(userService.searchUsers(eq("user"), eq(null), eq(null), eq(PageRequest.of(0, 20))))
+                .thenReturn(new PageImpl<>(java.util.List.of(user), PageRequest.of(0, 20), 1));
+
+        String responseString = mockMvc.perform(get("/users")
+                        .with(authentication(getAdminAuthentication(1L, "admin1")))
+                        .param("username", "user")
+                        .param("page", "0")
+                        .param("size", "20"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.content[0].username").value("user1"))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.size").value(20))
+                .andExpect(jsonPath("$.number").value(0))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        verify(userService).searchUsers("user", null, null, PageRequest.of(0, 20));
+        TypeReference<List<UserResponse>> typeReference = new TypeReference<List<UserResponse>>() {
+        };
+        String contentString = objectMapper.readTree(responseString).get("content").toString();
+        List<UserResponse> responses = objectMapper.readValue(contentString, typeReference);
+        assertThat(responses)
+                .usingRecursiveComparison()
+                .isEqualTo(List.of(user));
     }
 
     @Test

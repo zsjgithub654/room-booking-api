@@ -13,12 +13,13 @@ import com.zsj.RoomBooking.repository.RoomRepository;
 import com.zsj.RoomBooking.repository.UserRepository;
 import com.zsj.RoomBooking.service.ReservationService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Transactional
 @Service
@@ -36,8 +37,8 @@ public class ReservationServiceImpl implements ReservationService {
     private ClosureRepository closureRepository;
 
     @Override
-    public List<Reservation> searchReservations(Long userId, Long roomId, LocalDate date, ReservationStatus status) {
-        return reservationRepository.findByUserIdAndRoomIdAndDateAndStatus(userId, roomId, date, status);
+    public Page<Reservation> searchReservations(Long userId, Long roomId, LocalDate date, ReservationStatus status, Pageable pageable) {
+        return reservationRepository.findByUserIdAndRoomIdAndDateAndStatus(userId, roomId, date, status, pageable);
     }
 
     @Override

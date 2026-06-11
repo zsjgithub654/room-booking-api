@@ -10,6 +10,8 @@ import com.zsj.RoomBooking.repository.ReservationRepository;
 import com.zsj.RoomBooking.repository.UserRepository;
 import com.zsj.RoomBooking.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,8 +32,8 @@ public class UserServiceImpl implements UserService {
     private PasswordEncoder passwordEncoder;
 
     @Override
-    public List<User> searchUsers(String username, Role role, UserStatus status) {
-        return userRepository.findByUsernameAndRoleAndStatus(username, role, status);
+    public Page<User> searchUsers(String username, Role role, UserStatus status, Pageable pageable) {
+        return userRepository.findByUsernameAndRoleAndStatus(username, role, status, pageable);
     }
 
     @Override

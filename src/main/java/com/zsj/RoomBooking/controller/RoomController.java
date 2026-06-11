@@ -13,6 +13,8 @@ import com.zsj.RoomBooking.service.RoomService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -47,12 +49,13 @@ public class RoomController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public List<RoomResponse> searchRooms(@Valid @ModelAttribute SearchRoomRequest request) {
+    public Page<RoomResponse> searchRooms(@Valid @ModelAttribute SearchRoomRequest request, Pageable pageable) {
         return roomService.searchRooms(
                 request.name(),
                 request.minCapacity(), request.maxCapacity(),
-                request.area()
-        ).stream().map(roomMapper::toResponse).toList();
+                request.area(),
+                pageable
+        ).map(roomMapper::toResponse);
     }
 
     /* TODO: add constraint on search time range length, or page the result */

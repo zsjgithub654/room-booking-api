@@ -15,6 +15,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
@@ -187,9 +189,10 @@ public class UserServiceImplTest {
         UserStatus searchStatus = UserStatus.USER_STATUS_ACTIVE;
 
         when(userRepository.findByUsernameAndRoleAndStatus(
-                eq(searchUsername), eq(searchRole), eq(searchStatus))).thenReturn(users);
+                eq(searchUsername), eq(searchRole), eq(searchStatus), eq(Pageable.unpaged())))
+                .thenReturn(new PageImpl<>(users));
 
-        List<User> result = userService.searchUsers(searchUsername, searchRole, searchStatus);
+        List<User> result = userService.searchUsers(searchUsername, searchRole, searchStatus, Pageable.unpaged()).getContent();
         assertThat(result).hasSize(3);
         assertThat(result)
                 .usingRecursiveComparison()

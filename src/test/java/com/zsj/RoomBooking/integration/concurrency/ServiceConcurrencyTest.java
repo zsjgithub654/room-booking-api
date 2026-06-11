@@ -37,14 +37,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static com.zsj.RoomBooking.integration.concurrency.ConcurrencyTestUtils.assertOptimisticLockingFailure;
 
 /**
- * This suite tests concurrent operations.
+ * This suite tests concurrent operations on the service layer.
  * The tests cannot guarantee the race condition will occur, and the winner in the race is not fixed. The focus is to
  * validate the final state.
  */
 @Testcontainers
 @SpringBootTest(
-        /* skip web layer */
-        webEnvironment = SpringBootTest.WebEnvironment.NONE,
+        /* mock web layer to keep servlet/security beans */
+        webEnvironment = SpringBootTest.WebEnvironment.MOCK,
         /* create DB schema on start and drop on end */
         properties = {"spring.jpa.hibernate.ddl-auto=create-drop"}
 )

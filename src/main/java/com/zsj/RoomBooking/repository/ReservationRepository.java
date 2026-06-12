@@ -4,6 +4,7 @@ import com.zsj.RoomBooking.model.ReservationStatus;
 import com.zsj.RoomBooking.model.entity.Reservation;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -35,7 +36,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                   AND reservation.startTime < :toTime
                   AND reservation.endTime > :fromTime
             """)
-    List<Reservation> findByRoomIdAndOverlappingAndActive(Long roomId, LocalDateTime fromTime, LocalDateTime toTime);
+    List<Reservation> findByRoomIdAndOverlappingAndActive(Long roomId, LocalDateTime fromTime, LocalDateTime toTime, Sort sort);
 
     @Query("""
                 SELECT COUNT(reservation) > 0
@@ -70,7 +71,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                   AND reservation.status = RESERVATION_STATUS_ACTIVE
                   AND reservation.startTime > :fromTime
             """)
-    List<Reservation> findByRoomIdAndStartAfterAndActive(Long roomId, LocalDateTime fromTime);
+    List<Reservation> findByRoomIdAndStartAfterAndActive(Long roomId, LocalDateTime fromTime, Sort sort);
 
     @Query("""
                 SELECT reservation
@@ -79,5 +80,5 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                   AND reservation.status = RESERVATION_STATUS_ACTIVE
                   AND reservation.startTime > :fromTime
             """)
-    List<Reservation> findByUserIdAndStartAfterAndActive(Long userId, LocalDateTime fromTime);
+    List<Reservation> findByUserIdAndStartAfterAndActive(Long userId, LocalDateTime fromTime, Sort sort);
 }

@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.data.domain.Sort;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -168,7 +169,7 @@ class ServiceConcurrencyTest {
         );
 
         /* closure should be added either way */
-        List<Closure> closures = closureRepository.findByRoomId(room.getId());
+        List<Closure> closures = closureRepository.findByRoomId(room.getId(), Sort.unsorted());
         assertThat(closures).hasSize(1);
         assertThat(closures.get(0).getStartTime()).isEqualTo(startTime);
         assertThat(closures.get(0).getEndTime()).isEqualTo(endTime);
@@ -416,7 +417,7 @@ class ServiceConcurrencyTest {
             }
         }
 
-        List<Closure> closures = closureRepository.findByRoomId(room.getId());
+        List<Closure> closures = closureRepository.findByRoomId(room.getId(), Sort.unsorted());
         /* if conflict on @Version and delete succeeded, add closure fails, no closure left */
         assertThat(closures).hasSizeLessThanOrEqualTo(1);
         /* if no conflict or add closure succeeds, 1 closure left */

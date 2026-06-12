@@ -38,7 +38,9 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     public Page<Reservation> searchReservations(Long userId, Long roomId, LocalDate date, ReservationStatus status, Pageable pageable) {
-        return reservationRepository.findByUserIdAndRoomIdAndDateAndStatus(userId, roomId, date, status, pageable);
+        Pageable queryPageable = DefaultSorts.addReservationDefaultSort(pageable);
+        return reservationRepository.findByUserIdAndRoomIdAndDateAndStatus(
+                userId, roomId, date, status, queryPageable);
     }
 
     @Override

@@ -33,7 +33,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Page<User> searchUsers(String username, Role role, UserStatus status, Pageable pageable) {
-        return userRepository.findByUsernameAndRoleAndStatus(username, role, status, pageable);
+        Pageable queryPageable = DefaultSorts.addUserDefaultSort(pageable);
+        return userRepository.findByUsernameAndRoleAndStatus(username, role, status, queryPageable);
     }
 
     @Override
@@ -95,7 +96,10 @@ public class UserServiceImpl implements UserService {
         user.setUsername(null);
         user.setPassword(null);
         /* close reservations */
-        List<Reservation> reservations = reservationRepository.findByUserIdAndStartAfterAndActive(id, LocalDateTime.now());
+        List<Reservation> reservations = reservationRepository.findByUserIdAndStartAfterAndActive(
+                id,
+                LocalDateTime.now(),
+                DefaultSorts.occupationSort());
         for (Reservation reservation : reservations) {
             reservation.setStatus(ReservationStatus.RESERVATION_STATUS_CLOSED);
         }

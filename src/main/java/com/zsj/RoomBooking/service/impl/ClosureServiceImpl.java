@@ -38,7 +38,7 @@ public class ClosureServiceImpl implements ClosureService {
 
     @Override
     public List<Closure> getClosuresOfRoom(Long roomId) {
-        return closureRepository.findByRoomId(roomId);
+        return closureRepository.findByRoomId(roomId, DefaultSorts.occupationSort());
     }
 
     /* TODO: constraints on time */
@@ -50,7 +50,8 @@ public class ClosureServiceImpl implements ClosureService {
                 .filter(foundRoom -> foundRoom.getStatus() == RoomStatus.ROOM_STATUS_ACTIVE)
                 .orElseThrow(() -> new ResourceNotFoundException("Room not found."));
         /* close reservations during closure */
-        List<Reservation> reservations = reservationRepository.findByRoomIdAndOverlappingAndActive(roomId, startTime, endTime);
+        List<Reservation> reservations = reservationRepository.findByRoomIdAndOverlappingAndActive(
+                roomId, startTime, endTime, DefaultSorts.occupationSort());
         for (Reservation reservation : reservations) {
             reservation.setStatus(ReservationStatus.RESERVATION_STATUS_CLOSED);
         }

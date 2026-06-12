@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.data.domain.Sort;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -46,16 +47,19 @@ public class ClosureRepositoryTest {
 
     @Test
     void findByRoomIdHasResultTest() {
-        List<Closure> retrievedClosures = closureRepository.findByRoomId(room.getId());
+        List<Closure> retrievedClosures = closureRepository.findByRoomId(room.getId(), Sort.by(
+                Sort.Order.asc("startTime"),
+                Sort.Order.asc("endTime"),
+                Sort.Order.asc("id")));
         assertThat(retrievedClosures).hasSize(4);
         assertThat(retrievedClosures)
                 .usingRecursiveComparison()
-                .isEqualTo(closures);
+                .isEqualTo(List.of(closures.get(0), closures.get(3), closures.get(1), closures.get(2)));
     }
 
     @Test
     void findByRoomIdNoResultMatchRoomTest() {
-        List<Closure> retrievedClosures = closureRepository.findByRoomId(room.getId() + 1);
+        List<Closure> retrievedClosures = closureRepository.findByRoomId(room.getId() + 1, Sort.unsorted());
         assertThat(retrievedClosures).hasSize(0);
     }
 
@@ -125,6 +129,6 @@ public class ClosureRepositoryTest {
     void deleteByRoomIdAndStartAfterTest() {
         closureRepository.deleteByRoomIdAndStartAfter(room.getId(),
                 LocalDateTime.of(2026, 6, 1, 0, 0, 0, 0));
-        assertThat(closureRepository.findByRoomId(room.getId())).hasSize(2);
+        assertThat(closureRepository.findByRoomId(room.getId(), Sort.unsorted())).hasSize(2);
     }
 }

@@ -1,6 +1,7 @@
 package com.zsj.RoomBooking.repository;
 
 import com.zsj.RoomBooking.model.entity.Closure;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -11,7 +12,7 @@ import java.util.List;
 
 @Repository
 public interface ClosureRepository extends JpaRepository<Closure, Long> {
-    List<Closure> findByRoomId(Long roomId);
+    List<Closure> findByRoomId(Long roomId, Sort sort);
 
     /* get closures that overlapping with given interval */
     @Query("""

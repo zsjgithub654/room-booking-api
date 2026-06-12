@@ -25,7 +25,6 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -42,6 +41,7 @@ public class RoomServiceImpl implements RoomService {
     private ReservationRepository reservationRepository;
 
     public Page<Room> searchRooms(String name, Integer minCapacity, Integer maxCapacity, String area, Pageable pageable) {
+        Pageable queryPageable = DefaultSorts.addRoomDefaultSort(pageable);
         Specification<Room> spec = Specification.unrestricted();
         /* name contains given string */
         if (name != null && !name.isBlank()) {
@@ -61,7 +61,7 @@ public class RoomServiceImpl implements RoomService {
         /* status */
         /* TODO: only show active for now, enable admin to see all later */
         spec = spec.and(RoomSpecifications.hasStatus(RoomStatus.ROOM_STATUS_ACTIVE));
-        return roomRepository.findAll(spec, pageable);
+        return roomRepository.findAll(spec, queryPageable);
     }
 
     @Override
@@ -89,12 +89,13 @@ public class RoomServiceImpl implements RoomService {
     private List<Occupation> getOccupationsForRoom(Long roomId, LocalDateTime startTime, LocalDateTime endTime) {
         /* get closures and reservations */
         List<Closure> closures = closureRepository.findByRoomIdAndOverlapping(roomId, startTime, endTime);
-        List<Reservation> reservations = reservationRepository.findByRoomIdAndOverlappingAndActive(roomId, startTime, endTime);
+        List<Reservation> reservations = reservationRepository.findByRoomIdAndOverlappingAndActive(
+                roomId, startTime, endTime, DefaultSorts.occupationSort());
         /* combine occupations and sort by startTime */
         return Stream.concat(
                         reservations.stream(),
                         closures.stream())
-                .sorted(Comparator.comparing(Occupation::getStartTime))
+                .sorted(DefaultSorts.occupationComparator())
                 .toList();
     }
 
@@ -172,7 +173,8 @@ public class RoomServiceImpl implements RoomService {
         /* delete future closures */
         closureRepository.deleteByRoomIdAndStartAfter(id, LocalDateTime.now());
         /* close future reservations */
-        List<Reservation> reservations = reservationRepository.findByRoomIdAndStartAfterAndActive(id, LocalDateTime.now());
+        List<Reservation> reservations = reservationRepository.findByRoomIdAndStartAfterAndActive(
+                id, LocalDateTime.now(), DefaultSorts.occupationSort());
         for (Reservation reservation : reservations) {
             reservation.setStatus(ReservationStatus.RESERVATION_STATUS_CLOSED);
         }

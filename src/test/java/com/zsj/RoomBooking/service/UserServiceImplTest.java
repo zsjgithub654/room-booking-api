@@ -16,7 +16,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
@@ -27,6 +29,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /* to integrate Mockito */
@@ -189,7 +192,7 @@ public class UserServiceImplTest {
         UserStatus searchStatus = UserStatus.USER_STATUS_ACTIVE;
 
         when(userRepository.findByUsernameAndRoleAndStatus(
-                eq(searchUsername), eq(searchRole), eq(searchStatus), eq(Pageable.unpaged())))
+                eq(searchUsername), eq(searchRole), eq(searchStatus), eq(Pageable.unpaged(getUserSort()))))
                 .thenReturn(new PageImpl<>(users));
 
         List<User> result = userService.searchUsers(searchUsername, searchRole, searchStatus, Pageable.unpaged()).getContent();
@@ -197,6 +200,36 @@ public class UserServiceImplTest {
         assertThat(result)
                 .usingRecursiveComparison()
                 .isEqualTo(users);
+    }
+
+    @Test
+    void SearchUsersShouldApplyDefaultSortToPagedQueryTest() {
+        Pageable pageable = PageRequest.of(0, 20);
+        Pageable expectedPageable = PageRequest.of(0, 20, getUserSort());
+
+        when(userRepository.findByUsernameAndRoleAndStatus(
+                eq("user"), eq(Role.ROLE_USER), eq(UserStatus.USER_STATUS_ACTIVE), eq(expectedPageable)))
+                .thenReturn(new PageImpl<>(List.of(), expectedPageable, 0));
+
+        userService.searchUsers("user", Role.ROLE_USER, UserStatus.USER_STATUS_ACTIVE, pageable);
+
+        verify(userRepository).findByUsernameAndRoleAndStatus(
+                "user", Role.ROLE_USER, UserStatus.USER_STATUS_ACTIVE, expectedPageable);
+    }
+
+    @Test
+    void SearchUsersShouldApplyDefaultSortToUnpagedQueryTest() {
+        when(userRepository.findByUsernameAndRoleAndStatus(
+                eq("user"), eq(Role.ROLE_USER), eq(UserStatus.USER_STATUS_ACTIVE), eq(Pageable.unpaged(getUserSort()))))
+                .thenReturn(new PageImpl<>(List.of()));
+
+        userService.searchUsers("user", Role.ROLE_USER, UserStatus.USER_STATUS_ACTIVE, Pageable.unpaged());
+
+        verify(userRepository).findByUsernameAndRoleAndStatus(
+                "user",
+                Role.ROLE_USER,
+                UserStatus.USER_STATUS_ACTIVE,
+                Pageable.unpaged(getUserSort()));
     }
 
     @Test
@@ -212,7 +245,8 @@ public class UserServiceImplTest {
         Long searchId = 2L;
 
         when(userRepository.findByIdWithLock(eq(searchId))).thenReturn(Optional.of(user));
-        when(reservationRepository.findByUserIdAndStartAfterAndActive(eq(searchId), any(LocalDateTime.class)))
+        when(reservationRepository.findByUserIdAndStartAfterAndActive(
+                eq(searchId), any(LocalDateTime.class), eq(getOccupationSort())))
                 .thenReturn(reservations);
 
         userService.closeUserAccount(searchId);
@@ -227,5 +261,18 @@ public class UserServiceImplTest {
 
         Exception exception = assertThrows(ResourceNotFoundException.class, () -> userService.closeUserAccount(searchId));
         assertThat(exception.getMessage()).isEqualTo("User not found.");
+    }
+
+    private Sort getUserSort() {
+        return Sort.by(
+                Sort.Order.asc("id"),
+                Sort.Order.asc("username"));
+    }
+
+    private Sort getOccupationSort() {
+        return Sort.by(
+                Sort.Order.asc("startTime"),
+                Sort.Order.asc("endTime"),
+                Sort.Order.asc("id"));
     }
 }

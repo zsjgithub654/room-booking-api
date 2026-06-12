@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.data.domain.Sort;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -153,7 +154,7 @@ class ServiceWorkflowIntegrationTest {
 
         closureService.addClosure(room.getId(), startTime, endTime);
 
-        assertThat(closureRepository.findByRoomId(room.getId()))
+        assertThat(closureRepository.findByRoomId(room.getId(), Sort.unsorted()))
                 .singleElement()
                 .extracting(Closure::getStartTime, Closure::getEndTime)
                 .containsExactly(startTime, endTime);
@@ -211,7 +212,7 @@ class ServiceWorkflowIntegrationTest {
                 .extracting(Reservation::getStatus)
                 .isEqualTo(ReservationStatus.RESERVATION_STATUS_ACTIVE);
         /* future closure deleted, past closure remained */
-        assertThat(closureRepository.findByRoomId(room.getId()))
+        assertThat(closureRepository.findByRoomId(room.getId(), Sort.unsorted()))
                 .extracting(Closure::getId)
                 .containsExactly(pastClosure.getId());
     }

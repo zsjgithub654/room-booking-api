@@ -18,7 +18,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
@@ -31,6 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -91,7 +94,7 @@ public class ReservationServiceImplTest {
                         LocalDateTime.of(2026, 3, 1, 13, 0, 0, 0)));
 
         when(reservationRepository.findByUserIdAndRoomIdAndDateAndStatus(
-                eq(userId), eq(roomId), eq(date), eq(status), eq(Pageable.unpaged())))
+                eq(userId), eq(roomId), eq(date), eq(status), eq(Pageable.unpaged(getOccupationSort()))))
                 .thenReturn(new PageImpl<>(reservations));
 
         List<Reservation> result = reservationService.searchReservations(userId, roomId, date, status, Pageable.unpaged()).getContent();
@@ -99,6 +102,28 @@ public class ReservationServiceImplTest {
         assertThat(result)
                 .usingRecursiveComparison()
                 .isEqualTo(reservations);
+    }
+
+    @Test
+    void searchReservationsShouldApplyDefaultSortToPagedQueryTest() {
+        Long userId = 2L;
+        Long roomId = 3L;
+        LocalDate date = LocalDate.of(2026, 3, 1);
+        ReservationStatus status = ReservationStatus.RESERVATION_STATUS_ACTIVE;
+        Pageable pageable = PageRequest.of(0, 20);
+        Pageable expectedPageable = PageRequest.of(
+                0,
+                20,
+                getOccupationSort());
+
+        when(reservationRepository.findByUserIdAndRoomIdAndDateAndStatus(
+                eq(userId), eq(roomId), eq(date), eq(status), eq(expectedPageable)))
+                .thenReturn(new PageImpl<>(List.of(), expectedPageable, 0));
+
+        reservationService.searchReservations(userId, roomId, date, status, pageable);
+
+        verify(reservationRepository).findByUserIdAndRoomIdAndDateAndStatus(
+                userId, roomId, date, status, expectedPageable);
     }
 
     @Test
@@ -480,5 +505,12 @@ public class ReservationServiceImplTest {
         Exception exception = assertThrows(IllegalStateException.class,
                 () -> reservationService.updateReservationTime(reservationId, startTime, endTime));
         assertThat(exception.getMessage()).isEqualTo("Room is reserved in selected time.");
+    }
+
+    private Sort getOccupationSort() {
+        return Sort.by(
+                Sort.Order.asc("startTime"),
+                Sort.Order.asc("endTime"),
+                Sort.Order.asc("id"));
     }
 }

@@ -19,7 +19,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDate;
@@ -37,6 +39,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /* to integrate Mockito */
@@ -154,12 +157,26 @@ public class RoomServiceImplTest {
                 new Room("102", 4, "Building A", null, null),
                 new Room("101", 6, "Building B", null, null)
         );
-        when(roomRepository.findAll(any(Specification.class), eq(Pageable.unpaged()))).thenReturn(new PageImpl<>(rooms));
+        when(roomRepository.findAll(any(Specification.class), eq(Pageable.unpaged(getRoomSort()))))
+                .thenReturn(new PageImpl<>(rooms));
         List<Room> result = roomService.searchRooms(null, null, null, null, Pageable.unpaged()).getContent();
         assertThat(result).hasSize(3);
         assertThat(result)
                 .usingRecursiveComparison()
                 .isEqualTo(rooms);
+    }
+
+    @Test
+    void SearchRoomsShouldApplyDefaultSortToPagedQueryTest() {
+        Pageable pageable = PageRequest.of(0, 20);
+        Pageable expectedPageable = PageRequest.of(0, 20, getRoomSort());
+
+        when(roomRepository.findAll(any(Specification.class), eq(expectedPageable)))
+                .thenReturn(new PageImpl<>(List.of(), expectedPageable, 0));
+
+        roomService.searchRooms(null, null, null, null, pageable);
+
+        verify(roomRepository).findAll(any(Specification.class), eq(expectedPageable));
     }
 
     @Test
@@ -178,14 +195,16 @@ public class RoomServiceImplTest {
         LocalDate searchStartDate = LocalDate.of(2026, 3, 1);
         LocalDate searchEndDate = LocalDate.of(2026, 3, 3);
         /* mock */
-        when(roomRepository.findAll(any(Specification.class), eq(Pageable.unpaged()))).thenReturn(new PageImpl<>(List.of(room)));
+        when(roomRepository.findAll(any(Specification.class), eq(Pageable.unpaged(getRoomSort()))))
+                .thenReturn(new PageImpl<>(List.of(room)));
         when(closureRepository.findByRoomIdAndOverlapping(eq(null),
                 eq(searchStartDate.atStartOfDay()),
                 eq(searchEndDate.plusDays(1).atStartOfDay())))
                 .thenReturn(closures);
         when(reservationRepository.findByRoomIdAndOverlappingAndActive(eq(null),
                 eq(searchStartDate.atStartOfDay()),
-                eq(searchEndDate.plusDays(1).atStartOfDay())))
+                eq(searchEndDate.plusDays(1).atStartOfDay()),
+                eq(getOccupationSort())))
                 .thenReturn(reservations);
         /* verify */
         List<RoomSchedule> result = roomService.searchAvailabilities(
@@ -219,14 +238,16 @@ public class RoomServiceImplTest {
         LocalDate searchStartDate = LocalDate.of(2026, 3, 1);
         LocalDate searchEndDate = LocalDate.of(2026, 3, 1);
         /* mock */
-        when(roomRepository.findAll(any(Specification.class), eq(Pageable.unpaged()))).thenReturn(new PageImpl<>(List.of(room)));
+        when(roomRepository.findAll(any(Specification.class), eq(Pageable.unpaged(getRoomSort()))))
+                .thenReturn(new PageImpl<>(List.of(room)));
         when(closureRepository.findByRoomIdAndOverlapping(eq(null),
                 eq(searchStartDate.atStartOfDay()),
                 eq(searchEndDate.plusDays(1).atStartOfDay())))
                 .thenReturn(closures);
         when(reservationRepository.findByRoomIdAndOverlappingAndActive(eq(null),
                 eq(searchStartDate.atStartOfDay()),
-                eq(searchEndDate.plusDays(1).atStartOfDay())))
+                eq(searchEndDate.plusDays(1).atStartOfDay()),
+                eq(getOccupationSort())))
                 .thenReturn(reservations);
         /* verify */
         /* include unavailable rooms */
@@ -263,7 +284,8 @@ public class RoomServiceImplTest {
                         LocalDateTime.of(2300, 3, 1, 15, 30, 0, 0)));
 
         when(roomRepository.findByIdWithLock(eq(searchId))).thenReturn(Optional.of(room));
-        when(reservationRepository.findByRoomIdAndStartAfterAndActive(eq(searchId), any(LocalDateTime.class)))
+        when(reservationRepository.findByRoomIdAndStartAfterAndActive(
+                eq(searchId), any(LocalDateTime.class), eq(getOccupationSort())))
                 .thenReturn(reservations);
         doNothing().when(closureRepository).deleteByRoomIdAndStartAfter(eq(searchId), any(LocalDateTime.class));
 
@@ -275,6 +297,33 @@ public class RoomServiceImplTest {
                 .usingRecursiveComparison()
                 .ignoringFields("status")
                 .isEqualTo(reservations);
+        assertThat(closedReservations.get(0).getStatus()).isEqualTo(ReservationStatus.RESERVATION_STATUS_CLOSED);
+        assertThat(closedReservations.get(1).getStatus()).isEqualTo(ReservationStatus.RESERVATION_STATUS_CLOSED);
+    }
+
+    @Test
+    void DeleteRoomShouldSortClosedReservationsByTimeTest() {
+        Room room = new Room("101", 12, "Building A", null, null);
+        Long searchId = 2L;
+        Reservation earlierReservation = new Reservation(new User(), room,
+                LocalDateTime.of(2300, 3, 1, 10, 0, 0, 0),
+                LocalDateTime.of(2300, 3, 1, 10, 30, 0, 0));
+        Reservation laterReservation = new Reservation(new User(), room,
+                LocalDateTime.of(2300, 3, 1, 14, 30, 0, 0),
+                LocalDateTime.of(2300, 3, 1, 15, 30, 0, 0));
+
+        when(roomRepository.findByIdWithLock(eq(searchId))).thenReturn(Optional.of(room));
+        when(reservationRepository.findByRoomIdAndStartAfterAndActive(
+                eq(searchId), any(LocalDateTime.class), eq(getOccupationSort())))
+                .thenReturn(List.of(earlierReservation, laterReservation));
+        doNothing().when(closureRepository).deleteByRoomIdAndStartAfter(eq(searchId), any(LocalDateTime.class));
+
+        List<Reservation> closedReservations = roomService.deleteRoom(searchId);
+
+        assertThat(closedReservations)
+                .usingRecursiveComparison()
+                .ignoringFields("status")
+                .isEqualTo(List.of(earlierReservation, laterReservation));
         assertThat(closedReservations.get(0).getStatus()).isEqualTo(ReservationStatus.RESERVATION_STATUS_CLOSED);
         assertThat(closedReservations.get(1).getStatus()).isEqualTo(ReservationStatus.RESERVATION_STATUS_CLOSED);
     }
@@ -297,5 +346,18 @@ public class RoomServiceImplTest {
 
         Exception exception = assertThrows(ResourceNotFoundException.class, () -> roomService.deleteRoom(searchId));
         assertThat(exception.getMessage()).isEqualTo("Room not found.");
+    }
+
+    private Sort getRoomSort() {
+        return Sort.by(
+                Sort.Order.asc("id"),
+                Sort.Order.asc("name"));
+    }
+
+    private Sort getOccupationSort() {
+        return Sort.by(
+                Sort.Order.asc("startTime"),
+                Sort.Order.asc("endTime"),
+                Sort.Order.asc("id"));
     }
 }

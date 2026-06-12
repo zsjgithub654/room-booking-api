@@ -6,12 +6,17 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 
 import java.time.LocalDateTime;
 
 @Entity
+@Table(indexes = {
+        @Index(name = "idx_closure_room_start_time", columnList = "room_id, start_time")
+})
 public class Closure implements Occupation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

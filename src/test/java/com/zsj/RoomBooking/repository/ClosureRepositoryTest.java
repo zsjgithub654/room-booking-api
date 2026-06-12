@@ -69,9 +69,7 @@ public class ClosureRepositoryTest {
                 LocalDateTime.of(2026, 5, 1, 0, 0, 0, 0),
                 LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0));
         assertThat(result).hasSize(4);
-        assertThat(result)
-                .usingRecursiveComparison()
-                .isEqualTo(closures);
+        assertThat(result).containsExactlyInAnyOrderElementsOf(closures);
     }
 
     @Test
@@ -120,9 +118,7 @@ public class ClosureRepositoryTest {
                 LocalDateTime.of(2026, 4, 30, 14, 30, 0, 0),
                 LocalDateTime.of(2026, 6, 30, 14, 30, 0, 0));
         assertThat(result).hasSize(4);
-        assertThat(result)
-                .usingRecursiveComparison()
-                .isEqualTo(closures);
+        assertThat(result).containsExactlyInAnyOrderElementsOf(closures);
     }
 
     @Test

@@ -9,7 +9,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -22,11 +21,18 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             FROM Reservation reservation
             WHERE (:userId IS NULL OR reservation.user.id = :userId)
               AND (:roomId IS NULL OR reservation.room.id = :roomId)
-              AND (:date IS NULL OR cast(reservation.startTime as date) = :date)
+              AND (:fromTime IS NULL OR reservation.startTime >= :fromTime)
+              AND (:toTime IS NULL OR reservation.startTime < :toTime)
               AND (:status IS NULL OR reservation.status = :status)
             """)
-    Page<Reservation> findByUserIdAndRoomIdAndDateAndStatus(
-            Long userId, Long roomId, LocalDate date, ReservationStatus status, Pageable pageable);
+    Page<Reservation> findByUserIdAndRoomIdAndStartTimeAndStatus(
+            Long userId,
+            Long roomId,
+            LocalDateTime fromTime,
+            LocalDateTime toTime,
+            ReservationStatus status,
+            Pageable pageable
+    );
 
     @Query("""
                 SELECT reservation

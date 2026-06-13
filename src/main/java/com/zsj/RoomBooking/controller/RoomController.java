@@ -9,7 +9,7 @@ import com.zsj.RoomBooking.model.dto.response.DeleteRoomResponse;
 import com.zsj.RoomBooking.model.dto.response.RoomResponse;
 import com.zsj.RoomBooking.model.dto.request.SearchAvailabilityRequest;
 import com.zsj.RoomBooking.model.dto.response.RoomScheduleResponse;
-import com.zsj.RoomBooking.service.RoomSearchCriteria;
+import com.zsj.RoomBooking.model.criteria.RoomSearchCriteria;
 import com.zsj.RoomBooking.service.RoomService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;

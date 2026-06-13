@@ -1,14 +1,15 @@
 package com.zsj.RoomBooking.service;
 
 import com.zsj.RoomBooking.exception.ResourceNotFoundException;
-import com.zsj.RoomBooking.model.RoomSchedule;
 import com.zsj.RoomBooking.model.Occupation;
 import com.zsj.RoomBooking.model.ReservationStatus;
 import com.zsj.RoomBooking.model.RoomStatus;
+import com.zsj.RoomBooking.model.criteria.RoomSearchCriteria;
 import com.zsj.RoomBooking.model.entity.Closure;
 import com.zsj.RoomBooking.model.entity.Reservation;
 import com.zsj.RoomBooking.model.entity.Room;
 import com.zsj.RoomBooking.model.entity.User;
+import com.zsj.RoomBooking.model.result.RoomSchedule;
 import com.zsj.RoomBooking.repository.ClosureRepository;
 import com.zsj.RoomBooking.repository.ReservationRepository;
 import com.zsj.RoomBooking.repository.RoomRepository;

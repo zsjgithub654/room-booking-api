@@ -1,7 +1,7 @@
 package com.zsj.RoomBooking.service.impl;
 
 import com.zsj.RoomBooking.exception.ResourceNotFoundException;
-import com.zsj.RoomBooking.model.AddClosureResult;
+import com.zsj.RoomBooking.model.result.AddClosureResult;
 import com.zsj.RoomBooking.model.ReservationStatus;
 import com.zsj.RoomBooking.model.entity.Closure;
 import com.zsj.RoomBooking.model.entity.Reservation;

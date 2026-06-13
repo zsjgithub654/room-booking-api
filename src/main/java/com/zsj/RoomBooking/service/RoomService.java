@@ -1,8 +1,9 @@
 package com.zsj.RoomBooking.service;
 
-import com.zsj.RoomBooking.model.RoomSchedule;
+import com.zsj.RoomBooking.model.criteria.RoomSearchCriteria;
 import com.zsj.RoomBooking.model.entity.Reservation;
 import com.zsj.RoomBooking.model.entity.Room;
+import com.zsj.RoomBooking.model.result.RoomSchedule;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

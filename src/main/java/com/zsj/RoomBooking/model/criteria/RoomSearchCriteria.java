@@ -1,4 +1,4 @@
-package com.zsj.RoomBooking.service;
+package com.zsj.RoomBooking.model.criteria;
 
 import com.zsj.RoomBooking.model.RoomStatus;
 

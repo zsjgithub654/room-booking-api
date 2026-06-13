@@ -1,7 +1,7 @@
 package com.zsj.RoomBooking.service;
 
-import com.zsj.RoomBooking.model.AddClosureResult;
 import com.zsj.RoomBooking.model.entity.Closure;
+import com.zsj.RoomBooking.model.result.AddClosureResult;
 
 import java.time.LocalDateTime;
 import java.util.List;

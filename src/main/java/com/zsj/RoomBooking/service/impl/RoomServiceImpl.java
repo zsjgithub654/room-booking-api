@@ -1,7 +1,7 @@
 package com.zsj.RoomBooking.service.impl;
 
 import com.zsj.RoomBooking.exception.ResourceNotFoundException;
-import com.zsj.RoomBooking.model.RoomSchedule;
+import com.zsj.RoomBooking.model.result.RoomSchedule;
 import com.zsj.RoomBooking.model.Occupation;
 import com.zsj.RoomBooking.model.ReservationStatus;
 import com.zsj.RoomBooking.model.entity.Closure;
@@ -12,7 +12,7 @@ import com.zsj.RoomBooking.repository.ClosureRepository;
 import com.zsj.RoomBooking.repository.ReservationRepository;
 import com.zsj.RoomBooking.repository.RoomRepository;
 import com.zsj.RoomBooking.repository.RoomSpecifications;
-import com.zsj.RoomBooking.service.RoomSearchCriteria;
+import com.zsj.RoomBooking.model.criteria.RoomSearchCriteria;
 import com.zsj.RoomBooking.service.RoomService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;

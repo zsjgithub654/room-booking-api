@@ -4,7 +4,7 @@ import com.zsj.RoomBooking.config.SecurityConfig;
 import com.zsj.RoomBooking.mapper.AddClosureMapper;
 import com.zsj.RoomBooking.mapper.ClosureMapper;
 import com.zsj.RoomBooking.mapper.ReservationMapper;
-import com.zsj.RoomBooking.model.AddClosureResult;
+import com.zsj.RoomBooking.model.result.AddClosureResult;
 import com.zsj.RoomBooking.model.dto.request.ClosureRequest;
 import com.zsj.RoomBooking.model.dto.response.AddClosureResponse;
 import com.zsj.RoomBooking.model.dto.response.ClosureResponse;

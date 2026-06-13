@@ -1,6 +1,6 @@
 package com.zsj.RoomBooking.mapper;
 
-import com.zsj.RoomBooking.model.RoomSchedule;
+import com.zsj.RoomBooking.model.result.RoomSchedule;
 import com.zsj.RoomBooking.model.dto.response.RoomScheduleResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;

@@ -245,7 +245,7 @@ public class UserServiceImplTest {
         Long searchId = 2L;
 
         when(userRepository.findByIdWithLock(eq(searchId))).thenReturn(Optional.of(user));
-        when(reservationRepository.findByUserIdAndStartAfterAndActive(
+        when(reservationRepository.findByUserIdAndStartAfterAndScheduled(
                 eq(searchId), any(LocalDateTime.class), eq(getOccupationSort())))
                 .thenReturn(reservations);
 

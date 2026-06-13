@@ -12,6 +12,6 @@ public interface ReservationService {
     Page<Reservation> searchReservations(Long userId, Long roomId, LocalDate date, ReservationStatus status, Pageable pageable);
     Reservation getReservation(Long id);
     Reservation addReservation(Long userId, Long roomId, LocalDateTime startTime, LocalDateTime endTime);
-    void deleteReservation(Long reservationId);
+    void releaseReservation(Long reservationId);
     Reservation updateReservationTime(Long id, LocalDateTime startTime, LocalDateTime endTime);
 }

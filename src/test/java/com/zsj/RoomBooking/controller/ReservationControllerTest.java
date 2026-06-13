@@ -69,7 +69,7 @@ public class ReservationControllerTest {
         Long userId = 1L;
         Long roomId = 10L;
         LocalDate date = LocalDate.of(2026, 3, 1);
-        ReservationStatus status = ReservationStatus.RESERVATION_STATUS_ACTIVE;
+        ReservationStatus status = ReservationStatus.RESERVATION_STATUS_SCHEDULED;
         /* mock service response */
         List<Reservation> reservations = List.of(
                 new Reservation(new User(), new Room(),
@@ -295,17 +295,17 @@ public class ReservationControllerTest {
     }
 
     @Test
-    void cancelReservationTest() throws Exception {
+    void releaseReservationTest() throws Exception {
         /* request */
         Long id = 1L;
         /* mock */
-        doNothing().when(reservationService).deleteReservation(eq(id));
+        doNothing().when(reservationService).releaseReservation(eq(id));
         /* perform */
-        mockMvc.perform(patch("/reservations/{id}/cancel", id)
+        mockMvc.perform(patch("/reservations/{id}/release", id)
                         .with(csrf())
                         .with(user("admin1").roles("ADMIN")))
                 .andExpect(status().isNoContent());
-        verify(reservationService).deleteReservation(id);
+        verify(reservationService).releaseReservation(id);
     }
 
     @Test

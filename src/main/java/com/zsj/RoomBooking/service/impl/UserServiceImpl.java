@@ -96,7 +96,7 @@ public class UserServiceImpl implements UserService {
         user.setUsername(null);
         user.setPassword(null);
         /* close reservations */
-        List<Reservation> reservations = reservationRepository.findByUserIdAndStartAfterAndActive(
+        List<Reservation> reservations = reservationRepository.findByUserIdAndStartAfterAndScheduled(
                 id,
                 LocalDateTime.now(),
                 DefaultSorts.occupationSort());

@@ -39,11 +39,11 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                 SELECT reservation
                 FROM Reservation reservation
                 WHERE reservation.room.id = :roomId
-                  AND reservation.status = RESERVATION_STATUS_ACTIVE
+                  AND reservation.status = RESERVATION_STATUS_SCHEDULED
                   AND reservation.startTime < :toTime
                   AND reservation.endTime > :fromTime
             """)
-    List<Reservation> findByRoomIdAndOverlappingAndActive(
+    List<Reservation> findByRoomIdAndOverlappingAndScheduled(
             @Param("roomId") Long roomId,
             @Param("fromTime") LocalDateTime fromTime,
             @Param("toTime") LocalDateTime toTime,
@@ -54,11 +54,11 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                 SELECT COUNT(reservation) > 0
                 FROM Reservation reservation
                 WHERE reservation.room.id = :roomId
-                  AND reservation.status = RESERVATION_STATUS_ACTIVE
+                  AND reservation.status = RESERVATION_STATUS_SCHEDULED
                   AND reservation.startTime < :toTime
                   AND reservation.endTime > :fromTime
             """)
-    boolean existsByRoomIdAndOverlappingAndActive(
+    boolean existsByRoomIdAndOverlappingAndScheduled(
             @Param("roomId") Long roomId,
             @Param("fromTime") LocalDateTime fromTime,
             @Param("toTime") LocalDateTime toTime
@@ -68,12 +68,12 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                 SELECT COUNT(reservation) > 0
                 FROM Reservation reservation
                 WHERE reservation.room.id = :roomId
-                  AND reservation.status = RESERVATION_STATUS_ACTIVE
+                  AND reservation.status = RESERVATION_STATUS_SCHEDULED
                   AND reservation.id <> :reservationId
                   AND reservation.startTime < :toTime
                   AND reservation.endTime > :fromTime
             """)
-    boolean existsByRoomIdAndOverlappingAndActiveExcludingReservation(
+    boolean existsByRoomIdAndOverlappingAndScheduledExcludingReservation(
             @Param("roomId") Long roomId,
             @Param("reservationId") Long reservationId,
             @Param("fromTime") LocalDateTime fromTime,
@@ -84,10 +84,10 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                 SELECT reservation
                 FROM Reservation reservation
                 WHERE reservation.room.id = :roomId
-                  AND reservation.status = RESERVATION_STATUS_ACTIVE
+                  AND reservation.status = RESERVATION_STATUS_SCHEDULED
                   AND reservation.startTime > :fromTime
             """)
-    List<Reservation> findByRoomIdAndStartAfterAndActive(
+    List<Reservation> findByRoomIdAndStartAfterAndScheduled(
             @Param("roomId") Long roomId,
             @Param("fromTime") LocalDateTime fromTime,
             Sort sort
@@ -97,10 +97,10 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                 SELECT reservation
                 FROM Reservation reservation
                 WHERE reservation.user.id = :userId
-                  AND reservation.status = RESERVATION_STATUS_ACTIVE
+                  AND reservation.status = RESERVATION_STATUS_SCHEDULED
                   AND reservation.startTime > :fromTime
             """)
-    List<Reservation> findByUserIdAndStartAfterAndActive(
+    List<Reservation> findByUserIdAndStartAfterAndScheduled(
             @Param("userId") Long userId,
             @Param("fromTime") LocalDateTime fromTime,
             Sort sort

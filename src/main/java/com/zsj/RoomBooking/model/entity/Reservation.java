@@ -41,7 +41,7 @@ public class Reservation implements Occupation {
         this.user = user;
         this.room = room;
         setTime(startTime, endTime);
-        this.status = ReservationStatus.RESERVATION_STATUS_ACTIVE;
+        this.status = ReservationStatus.RESERVATION_STATUS_SCHEDULED;
     }
 
     /**
@@ -105,8 +105,8 @@ public class Reservation implements Occupation {
         return status;
     }
 
-    public boolean isActive() {
-        return status == ReservationStatus.RESERVATION_STATUS_ACTIVE;
+    public boolean isScheduled() {
+        return status == ReservationStatus.RESERVATION_STATUS_SCHEDULED;
     }
 
     public void setStatus(ReservationStatus status) {

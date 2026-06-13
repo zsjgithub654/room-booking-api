@@ -90,11 +90,11 @@ class ServiceWorkflowIntegrationTest {
 
         Reservation reservation = reservationService.addReservation(user.getId(), room.getId(), startTime, endTime);
 
-        assertThat(reservation.isActive()).isTrue();
+        assertThat(reservation.isScheduled()).isTrue();
         Reservation currentReservation = reservationRepository.findById(reservation.getId()).orElseThrow();
         assertThat(currentReservation.getStartTime()).isEqualTo(startTime);
         assertThat(currentReservation.getEndTime()).isEqualTo(endTime);
-        assertThat(currentReservation.isActive()).isTrue();
+        assertThat(currentReservation.isScheduled()).isTrue();
     }
 
     @Test
@@ -111,28 +111,54 @@ class ServiceWorkflowIntegrationTest {
 
         assertThat(updatedReservation.getStartTime()).isEqualTo(newStartTime);
         assertThat(updatedReservation.getEndTime()).isEqualTo(newEndTime);
-        assertThat(updatedReservation.isActive()).isTrue();
+        assertThat(updatedReservation.isScheduled()).isTrue();
         Reservation currentReservation = reservationRepository.findById(reservation.getId()).orElseThrow();
         assertThat(currentReservation.getStartTime()).isEqualTo(newStartTime);
         assertThat(currentReservation.getEndTime()).isEqualTo(newEndTime);
-        assertThat(currentReservation.isActive()).isTrue();
+        assertThat(currentReservation.isScheduled()).isTrue();
     }
 
     @Test
-    void cancelReservationTest() {
+    void releaseReservationBeforeStartTest() {
         Reservation reservation = reservationRepository.save(
                 new Reservation(user, room,
                         LocalDateTime.of(2300, 3, 1, 10, 0),
                         LocalDateTime.of(2300, 3, 1, 11, 0))
         );
 
-        reservationService.deleteReservation(reservation.getId());
+        reservationService.releaseReservation(reservation.getId());
 
         assertThat(reservationRepository.findById(reservation.getId()))
                 .isPresent()
                 .get()
                 .extracting(Reservation::getStatus)
                 .isEqualTo(ReservationStatus.RESERVATION_STATUS_CANCELED);
+    }
+
+    @Test
+    void releaseReservationDuringReservationTest() {
+        LocalDateTime beforeRelease = LocalDateTime.now();
+        LocalDateTime startTime = beforeRelease.minusMinutes(30).withSecond(0).withNano(0);
+        LocalDateTime endTime = beforeRelease.plusMinutes(30).withSecond(0).withNano(0);
+        Reservation reservation = reservationRepository.save(
+                new Reservation(user, room,
+                        startTime,
+                        endTime)
+        );
+
+        reservationService.releaseReservation(reservation.getId());
+
+        LocalDateTime afterRelease = LocalDateTime.now();
+        assertThat(reservationRepository.findById(reservation.getId()))
+                .isPresent()
+                .get()
+                .satisfies(currentReservation -> {
+                    assertThat(currentReservation.isScheduled()).isTrue();
+                    assertThat(currentReservation.getStartTime()).isEqualTo(startTime);
+                    assertThat(currentReservation.getEndTime()).isBetween(
+                            getReleasedEndTime(beforeRelease),
+                            getReleasedEndTime(afterRelease));
+                });
     }
 
     @Test
@@ -164,7 +190,7 @@ class ServiceWorkflowIntegrationTest {
         assertThat(reservationRepository.findById(unaffectedReservation.getId()))
                 .isPresent()
                 .get()
-                .matches(Reservation::isActive);
+                .matches(Reservation::isScheduled);
     }
 
     @Test
@@ -206,7 +232,7 @@ class ServiceWorkflowIntegrationTest {
         assertThat(reservationRepository.findById(pastReservation.getId()))
                 .isPresent()
                 .get()
-                .matches(Reservation::isActive);
+                .matches(Reservation::isScheduled);
         /* future closure deleted, past closure remained */
         assertThat(closureRepository.findByRoomId(room.getId(), Sort.unsorted()))
                 .extracting(Closure::getId)
@@ -249,10 +275,17 @@ class ServiceWorkflowIntegrationTest {
         assertThat(reservationRepository.findById(pastReservation.getId()))
                 .isPresent()
                 .get()
-                .matches(Reservation::isActive);
+                .matches(Reservation::isScheduled);
         assertThat(reservationRepository.findById(anotherUserReservation.getId()))
                 .isPresent()
                 .get()
-                .matches(Reservation::isActive);
+                .matches(Reservation::isScheduled);
+    }
+
+    private LocalDateTime getReleasedEndTime(LocalDateTime currentTime) {
+        if (currentTime.getSecond() == 0 && currentTime.getNano() == 0) {
+            return currentTime;
+        }
+        return currentTime.plusMinutes(1).withSecond(0).withNano(0);
     }
 }

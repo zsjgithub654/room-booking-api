@@ -1,10 +1,9 @@
 package com.zsj.RoomBooking.model;
 
 public enum ReservationStatus {
-    /* TODO: reconsider the name */
-    RESERVATION_STATUS_ACTIVE,
-    /* canceled by user */
+    RESERVATION_STATUS_SCHEDULED,
+    /* canceled by user or admin */
     RESERVATION_STATUS_CANCELED,
-    /* closed by admin or due to closure */
+    /* closed caused by closure, room deleted, or user deleted */
     RESERVATION_STATUS_CLOSED
 }

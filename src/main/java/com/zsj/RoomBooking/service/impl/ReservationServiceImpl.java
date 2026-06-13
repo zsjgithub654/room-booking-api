@@ -66,18 +66,35 @@ public class ReservationServiceImpl implements ReservationService {
         return reservationRepository.save(new Reservation(user, room, startTime, endTime));
     }
 
-    /* TODO: actually cancel */
     @Override
-    public void deleteReservation(Long reservationId) {
-        Reservation reservation = reservationRepository.findById(reservationId).orElseThrow(() -> new ResourceNotFoundException("Reservation not found."));
+    public void releaseReservation(Long reservationId) {
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Reservation not found."));
+        if (!reservation.isScheduled()) {
+            return;
+        }
+        /* passed */
+        LocalDateTime currentTime = LocalDateTime.now();
+        if (!reservation.getEndTime().isAfter(currentTime)) {
+            return;
+        }
+        /* started but not ended */
+        if (!reservation.getStartTime().isAfter(currentTime)) {
+            reservation.setTime(reservation.getStartTime(), getReleasedEndTime(currentTime));
+            return;
+        }
+        /* haven't started yet */
         reservation.setStatus(ReservationStatus.RESERVATION_STATUS_CANCELED);
     }
 
     @Override
     public Reservation updateReservationTime(Long id, LocalDateTime startTime, LocalDateTime endTime) {
         Reservation reservation = reservationRepository.findById(id)
-                .filter(Reservation::isActive)
+                .filter(Reservation::isScheduled)
                 .orElseThrow(() -> new ResourceNotFoundException("Reservation not found."));
+        if (!reservation.getStartTime().isAfter(LocalDateTime.now())) {
+            throw new IllegalStateException("Started reservation cannot be updated.");
+        }
         /* acquire lock on user and room */
         userRepository.findByIdWithLock(reservation.getUser().getId())
                 .filter(User::isActive)
@@ -114,11 +131,18 @@ public class ReservationServiceImpl implements ReservationService {
 
     private void validateNoOverlappingReservation(Long roomId, Long currentReservation, LocalDateTime startTime, LocalDateTime endTime) {
         boolean hasOverlap = currentReservation == null
-                ? reservationRepository.existsByRoomIdAndOverlappingAndActive(roomId, startTime, endTime)
-                : reservationRepository.existsByRoomIdAndOverlappingAndActiveExcludingReservation(
+                ? reservationRepository.existsByRoomIdAndOverlappingAndScheduled(roomId, startTime, endTime)
+                : reservationRepository.existsByRoomIdAndOverlappingAndScheduledExcludingReservation(
                         roomId, currentReservation, startTime, endTime);
         if (hasOverlap) {
             throw new IllegalStateException("Room is reserved in selected time.");
         }
+    }
+
+    private LocalDateTime getReleasedEndTime(LocalDateTime currentTime) {
+        if (currentTime.getSecond() == 0 && currentTime.getNano() == 0) {
+            return currentTime;
+        }
+        return currentTime.plusMinutes(1).withSecond(0).withNano(0);
     }
 }

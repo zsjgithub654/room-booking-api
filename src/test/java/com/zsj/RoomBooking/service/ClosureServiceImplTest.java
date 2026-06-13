@@ -135,7 +135,7 @@ public class ClosureServiceImplTest {
         Long roomId = 2L;
         /* mock */
         when(roomRepository.findByIdWithLock(roomId)).thenReturn(Optional.of(room));
-        when(reservationRepository.findByRoomIdAndOverlappingAndActive(roomId, startTime, endTime, getOccupationSort()))
+        when(reservationRepository.findByRoomIdAndOverlappingAndScheduled(roomId, startTime, endTime, getOccupationSort()))
                 .thenReturn(reservations);
         when(closureRepository.findByRoomIdAndOverlappingOrAdjacent(roomId, startTime, endTime))
                 .thenReturn(overlappingClosures);
@@ -165,7 +165,7 @@ public class ClosureServiceImplTest {
         Long roomId = 2L;
         /* mock */
         when(roomRepository.findByIdWithLock(roomId)).thenReturn(Optional.of(room));
-        when(reservationRepository.findByRoomIdAndOverlappingAndActive(roomId, startTime, endTime, getOccupationSort()))
+        when(reservationRepository.findByRoomIdAndOverlappingAndScheduled(roomId, startTime, endTime, getOccupationSort()))
                 .thenReturn(List.of(earlierReservation, laterReservation));
         when(closureRepository.findByRoomIdAndOverlappingOrAdjacent(roomId, startTime, endTime))
                 .thenReturn(List.of());

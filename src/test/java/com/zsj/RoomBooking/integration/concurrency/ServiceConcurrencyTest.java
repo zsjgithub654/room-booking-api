@@ -130,12 +130,12 @@ class ServiceConcurrencyTest {
     void addReservationConcurrentWithUpdateReservationOnlyOneSucceedsTest() throws Exception {
         Reservation existingReservation = reservationRepository.save(
                 new Reservation(user1, room,
-                        LocalDateTime.of(2026, 6, 1, 10, 0, 0, 0),
-                        LocalDateTime.of(2026, 6, 1, 11, 0, 0, 0))
+                        LocalDateTime.of(2300, 6, 1, 10, 0, 0, 0),
+                        LocalDateTime.of(2300, 6, 1, 11, 0, 0, 0))
         );
         /* new reservation */
-        LocalDateTime targetStartTime = LocalDateTime.of(2026, 6, 1, 12, 0, 0, 0);
-        LocalDateTime targetEndTime = LocalDateTime.of(2026, 6, 1, 13, 0, 0, 0);
+        LocalDateTime targetStartTime = LocalDateTime.of(2300, 6, 1, 12, 0, 0, 0);
+        LocalDateTime targetEndTime = LocalDateTime.of(2300, 6, 1, 13, 0, 0, 0);
 
         ConcurrentLinkedQueue<Throwable> failures = new ConcurrentLinkedQueue<>();
         runConcurrentActions(failures,
@@ -271,30 +271,30 @@ class ServiceConcurrencyTest {
 
     @Test
     /* both with @Version */
-    void updateReservationConcurrentWithDeleteReservationTest() throws Exception {
+    void updateReservationConcurrentWithReleaseReservationTest() throws Exception {
         Reservation reservation = reservationRepository.save(
                 new Reservation(user1, room,
-                        LocalDateTime.of(2026, 6, 1, 10, 0, 0, 0),
-                        LocalDateTime.of(2026, 6, 1, 11, 0, 0, 0))
+                        LocalDateTime.of(2300, 6, 1, 10, 0, 0, 0),
+                        LocalDateTime.of(2300, 6, 1, 11, 0, 0, 0))
         );
         /* new time to update */
-        LocalDateTime newStartTime = LocalDateTime.of(2026, 6, 1, 12, 0, 0, 0);
-        LocalDateTime newEndTime = LocalDateTime.of(2026, 6, 1, 13, 0, 0, 0);
+        LocalDateTime newStartTime = LocalDateTime.of(2300, 6, 1, 12, 0, 0, 0);
+        LocalDateTime newEndTime = LocalDateTime.of(2300, 6, 1, 13, 0, 0, 0);
 
         ConcurrentLinkedQueue<Throwable> failures = new ConcurrentLinkedQueue<>();
         runConcurrentActions(failures,
                 () -> reservationService.updateReservationTime(reservation.getId(),
                         newStartTime,
                         newEndTime),
-                () -> reservationService.deleteReservation(reservation.getId())
+                () -> reservationService.releaseReservation(reservation.getId())
         );
 
-        /* unless update and delete run in serial, one operation will fail */
+        /* unless update and release run in serial, one operation will fail */
         assertThat(failures).hasSizeLessThanOrEqualTo(1);
         if (!failures.isEmpty()) {
             Throwable failure = failures.peek();
             if (failure instanceof ResourceNotFoundException) {
-                /* delete read after update commit, delete simply cannot find the target, no conflict */
+                /* release read after update commit, release simply cannot find the target, no conflict */
                 assertThat(failure).hasMessage("Reservation not found.");
             } else {
                 /* write conflict on @Version, one fail with ObjectOptimisticLockingFailureException */
@@ -302,15 +302,15 @@ class ServiceConcurrencyTest {
             }
         }
 
-        /* delete, update: @Version, either transaction can win */
+        /* release, update: @Version, either transaction can win */
         Reservation currentReservation = reservationRepository.findById(reservation.getId()).orElseThrow();
         if (currentReservation.getStatus() == ReservationStatus.RESERVATION_STATUS_CANCELED) {
-            /* delete wins first, leaving the reservation canceled */
+            /* release wins first, leaving the reservation canceled */
             assertThat(currentReservation.getStartTime()).isEqualTo(reservation.getStartTime());
             assertThat(currentReservation.getEndTime()).isEqualTo(reservation.getEndTime());
         } else {
-            /* update wins first, leaving the reservation active with the new time */
-            assertThat(currentReservation.isActive()).isTrue();
+            /* update wins first, leaving the reservation scheduled with the new time */
+            assertThat(currentReservation.isScheduled()).isTrue();
             assertThat(currentReservation.getStartTime()).isEqualTo(newStartTime);
             assertThat(currentReservation.getEndTime()).isEqualTo(newEndTime);
         }

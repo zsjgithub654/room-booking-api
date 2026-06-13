@@ -79,7 +79,7 @@ public class ReservationRepositoryTest {
                 room.getId(),
                 LocalDateTime.of(2026, 6, 1, 0, 0, 0, 0),
                 LocalDateTime.of(2026, 6, 2, 0, 0, 0, 0),
-                ReservationStatus.RESERVATION_STATUS_ACTIVE,
+                ReservationStatus.RESERVATION_STATUS_SCHEDULED,
                 Pageable.unpaged()).getContent();
         assertThat(result).hasSize(1);
         assertThat(result.get(0)).isEqualTo(reservations.get(1));
@@ -92,7 +92,7 @@ public class ReservationRepositoryTest {
                 room.getId() + 1,
                 LocalDateTime.of(2026, 6, 1, 0, 0, 0, 0),
                 LocalDateTime.of(2026, 6, 2, 0, 0, 0, 0),
-                ReservationStatus.RESERVATION_STATUS_ACTIVE,
+                ReservationStatus.RESERVATION_STATUS_SCHEDULED,
                 Pageable.unpaged()).getContent();
         assertThat(result).hasSize(0);
     }
@@ -104,7 +104,7 @@ public class ReservationRepositoryTest {
                 room.getId(),
                 LocalDateTime.of(2026, 6, 1, 0, 0, 0, 0),
                 LocalDateTime.of(2026, 6, 2, 0, 0, 0, 0),
-                ReservationStatus.RESERVATION_STATUS_ACTIVE,
+                ReservationStatus.RESERVATION_STATUS_SCHEDULED,
                 Pageable.unpaged()).getContent();
         assertThat(result).hasSize(0);
     }
@@ -116,7 +116,7 @@ public class ReservationRepositoryTest {
                 room.getId(),
                 LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0),
                 LocalDateTime.of(2026, 7, 2, 0, 0, 0, 0),
-                ReservationStatus.RESERVATION_STATUS_ACTIVE,
+                ReservationStatus.RESERVATION_STATUS_SCHEDULED,
                 Pageable.unpaged()).getContent();
         assertThat(result).hasSize(0);
     }
@@ -131,7 +131,7 @@ public class ReservationRepositoryTest {
                 room.getId(),
                 LocalDateTime.of(2026, 6, 1, 0, 0, 0, 0),
                 LocalDateTime.of(2026, 6, 2, 0, 0, 0, 0),
-                ReservationStatus.RESERVATION_STATUS_ACTIVE,
+                ReservationStatus.RESERVATION_STATUS_SCHEDULED,
                 Pageable.unpaged()).getContent();
         assertThat(result).hasSize(0);
     }
@@ -154,7 +154,7 @@ public class ReservationRepositoryTest {
                 room.getId(),
                 null,
                 null,
-                ReservationStatus.RESERVATION_STATUS_ACTIVE,
+                ReservationStatus.RESERVATION_STATUS_SCHEDULED,
                 PageRequest.of(0, 2, Sort.by("startTime")));
 
         assertThat(result.getTotalElements()).isEqualTo(4);
@@ -166,10 +166,10 @@ public class ReservationRepositoryTest {
                         LocalDateTime.of(2026, 4, 30, 14, 30, 0, 0));
     }
 
-    /* getTimeByRoomIdAndOverlappingIntervalAndActive */
+    /* getTimeByRoomIdAndOverlappingIntervalAndScheduled */
     @Test
-    void findByRoomIdAndOverlappingAndActiveHasResultTest() {
-        List<Reservation> result = reservationRepository.findByRoomIdAndOverlappingAndActive(room.getId(),
+    void findByRoomIdAndOverlappingAndScheduledHasResultTest() {
+        List<Reservation> result = reservationRepository.findByRoomIdAndOverlappingAndScheduled(room.getId(),
                 LocalDateTime.of(2026, 5, 1, 0, 0, 0, 0),
                 LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0),
                 getOccupationSort());
@@ -180,8 +180,8 @@ public class ReservationRepositoryTest {
     }
 
     @Test
-    void findByRoomIdAndOverlappingAndActiveNoResultMatchRoomTest() {
-        List<Reservation> result = reservationRepository.findByRoomIdAndOverlappingAndActive(room.getId() + 1,
+    void findByRoomIdAndOverlappingAndScheduledNoResultMatchRoomTest() {
+        List<Reservation> result = reservationRepository.findByRoomIdAndOverlappingAndScheduled(room.getId() + 1,
                 LocalDateTime.of(2026, 5, 1, 0, 0, 0, 0),
                 LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0),
                 Sort.unsorted());
@@ -189,8 +189,8 @@ public class ReservationRepositoryTest {
     }
 
     @Test
-    void findByRoomIdAndOverlappingAndActiveNoResultMatchTimeTest() {
-        List<Reservation> result = reservationRepository.findByRoomIdAndOverlappingAndActive(room.getId(),
+    void findByRoomIdAndOverlappingAndScheduledNoResultMatchTimeTest() {
+        List<Reservation> result = reservationRepository.findByRoomIdAndOverlappingAndScheduled(room.getId(),
                 LocalDateTime.of(2026, 8, 1, 0, 0, 0, 0),
                 LocalDateTime.of(2026, 9, 1, 0, 0, 0, 0),
                 Sort.unsorted());
@@ -198,11 +198,11 @@ public class ReservationRepositoryTest {
     }
 
     @Test
-    void findByRoomIdAndOverlappingAndActiveNoResultMatchStatusTest() {
+    void findByRoomIdAndOverlappingAndScheduledNoResultMatchStatusTest() {
         reservations.forEach(reservation -> reservation.setStatus(ReservationStatus.RESERVATION_STATUS_CANCELED));
         reservationRepository.saveAll(reservations);
 
-        List<Reservation> result = reservationRepository.findByRoomIdAndOverlappingAndActive(room.getId(),
+        List<Reservation> result = reservationRepository.findByRoomIdAndOverlappingAndScheduled(room.getId(),
                 LocalDateTime.of(2026, 5, 1, 0, 0, 0, 0),
                 LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0),
                 Sort.unsorted());
@@ -210,44 +210,44 @@ public class ReservationRepositoryTest {
     }
 
     @Test
-    void existsByRoomIdAndOverlappingAndActiveExistsTest() {
-        assertThat(reservationRepository.existsByRoomIdAndOverlappingAndActive(room.getId(),
+    void existsByRoomIdAndOverlappingAndScheduledExistsTest() {
+        assertThat(reservationRepository.existsByRoomIdAndOverlappingAndScheduled(room.getId(),
                 LocalDateTime.of(2026, 5, 1, 0, 0, 0, 0),
                 LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0))
         ).isTrue();
     }
 
     @Test
-    void existsByRoomIdAndOverlappingAndActiveNoResultMatchRoomTest() {
-        assertThat(reservationRepository.existsByRoomIdAndOverlappingAndActive(room.getId() + 1,
+    void existsByRoomIdAndOverlappingAndScheduledNoResultMatchRoomTest() {
+        assertThat(reservationRepository.existsByRoomIdAndOverlappingAndScheduled(room.getId() + 1,
                 LocalDateTime.of(2026, 5, 1, 0, 0, 0, 0),
                 LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0))
         ).isFalse();
     }
 
     @Test
-    void existsByRoomIdAndOverlappingAndActiveNoResultMatchTimeTest() {
-        assertThat(reservationRepository.existsByRoomIdAndOverlappingAndActive(room.getId(),
+    void existsByRoomIdAndOverlappingAndScheduledNoResultMatchTimeTest() {
+        assertThat(reservationRepository.existsByRoomIdAndOverlappingAndScheduled(room.getId(),
                 LocalDateTime.of(2026, 8, 1, 0, 0, 0, 0),
                 LocalDateTime.of(2026, 9, 1, 0, 0, 0, 0))
         ).isFalse();
     }
 
     @Test
-    void existsByRoomIdAndOverlappingAndActiveNoResultMatchStatusTest() {
+    void existsByRoomIdAndOverlappingAndScheduledNoResultMatchStatusTest() {
         reservations.forEach(reservation -> reservation.setStatus(ReservationStatus.RESERVATION_STATUS_CANCELED));
         reservationRepository.saveAll(reservations);
 
-        assertThat(reservationRepository.existsByRoomIdAndOverlappingAndActive(room.getId(),
+        assertThat(reservationRepository.existsByRoomIdAndOverlappingAndScheduled(room.getId(),
                 LocalDateTime.of(2026, 5, 1, 0, 0, 0, 0),
                 LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0))
         ).isFalse();
     }
 
-    /* findByRoomIdAndStartAfterAndActive */
+    /* findByRoomIdAndStartAfterAndScheduled */
     @Test
-    void findByRoomIdAndStartAfterAndActiveHasResultTest() {
-        List<Reservation> reservations = reservationRepository.findByRoomIdAndStartAfterAndActive(room.getId(),
+    void findByRoomIdAndStartAfterAndScheduledHasResultTest() {
+        List<Reservation> reservations = reservationRepository.findByRoomIdAndStartAfterAndScheduled(room.getId(),
                 LocalDateTime.of(2026, 5, 1, 0, 0, 0, 0),
                 getOccupationSort());
         assertThat(reservations).hasSize(2);
@@ -255,35 +255,35 @@ public class ReservationRepositoryTest {
     }
 
     @Test
-    void findByRoomIdAndStartAfterAndActiveNoResultMatchRoomTest() {
-        List<Reservation> reservations = reservationRepository.findByRoomIdAndStartAfterAndActive(room.getId() + 1,
+    void findByRoomIdAndStartAfterAndScheduledNoResultMatchRoomTest() {
+        List<Reservation> reservations = reservationRepository.findByRoomIdAndStartAfterAndScheduled(room.getId() + 1,
                 LocalDateTime.of(2026, 5, 1, 0, 0, 0, 0),
                 Sort.unsorted());
         assertThat(reservations).hasSize(0);
     }
 
     @Test
-    void findByRoomIdAndStartAfterAndActiveNoResultMatchTimeTest() {
-        List<Reservation> reservations = reservationRepository.findByRoomIdAndStartAfterAndActive(room.getId(),
+    void findByRoomIdAndStartAfterAndScheduledNoResultMatchTimeTest() {
+        List<Reservation> reservations = reservationRepository.findByRoomIdAndStartAfterAndScheduled(room.getId(),
                 LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0),
                 Sort.unsorted());
         assertThat(reservations).hasSize(0);
     }
 
     @Test
-    void findByRoomIdAndStartAfterAndActiveNoResultMatchStatusTest() {
+    void findByRoomIdAndStartAfterAndScheduledNoResultMatchStatusTest() {
         reservations.forEach(reservation -> reservation.setStatus(ReservationStatus.RESERVATION_STATUS_CANCELED));
         reservationRepository.saveAll(reservations);
-        List<Reservation> queryResult = reservationRepository.findByRoomIdAndStartAfterAndActive(room.getId(),
+        List<Reservation> queryResult = reservationRepository.findByRoomIdAndStartAfterAndScheduled(room.getId(),
                 LocalDateTime.of(2026, 5, 1, 0, 0, 0, 0),
                 Sort.unsorted());
         assertThat(queryResult).hasSize(0);
     }
 
-    /* findByUserIdAndStartAfterAndActive */
+    /* findByUserIdAndStartAfterAndScheduled */
     @Test
-    void findByUserIdAndStartAfterAndActiveHasResultTest() {
-        List<Reservation> reservations = reservationRepository.findByUserIdAndStartAfterAndActive(user.getId(),
+    void findByUserIdAndStartAfterAndScheduledHasResultTest() {
+        List<Reservation> reservations = reservationRepository.findByUserIdAndStartAfterAndScheduled(user.getId(),
                 LocalDateTime.of(2026, 5, 1, 0, 0, 0, 0),
                 getOccupationSort());
         assertThat(reservations).hasSize(2);
@@ -291,27 +291,27 @@ public class ReservationRepositoryTest {
     }
 
     @Test
-    void findByUserIdAndStartAfterAndActiveNoResultMatchRoomTest() {
-        List<Reservation> queryResult = reservationRepository.findByUserIdAndStartAfterAndActive(user.getId() + 1,
+    void findByUserIdAndStartAfterAndScheduledNoResultMatchRoomTest() {
+        List<Reservation> queryResult = reservationRepository.findByUserIdAndStartAfterAndScheduled(user.getId() + 1,
                 LocalDateTime.of(2026, 5, 1, 0, 0, 0, 0),
                 Sort.unsorted());
         assertThat(queryResult).hasSize(0);
     }
 
     @Test
-    void findByUserIdAndStartAfterAndActiveNoResultMatchTimeTest() {
-        List<Reservation> queryResult = reservationRepository.findByUserIdAndStartAfterAndActive(user.getId(),
+    void findByUserIdAndStartAfterAndScheduledNoResultMatchTimeTest() {
+        List<Reservation> queryResult = reservationRepository.findByUserIdAndStartAfterAndScheduled(user.getId(),
                 LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0),
                 Sort.unsorted());
         assertThat(queryResult).hasSize(0);
     }
 
     @Test
-    void findByUserIdAndStartAfterAndActiveNoResultMatchStatusTest() {
+    void findByUserIdAndStartAfterAndScheduledNoResultMatchStatusTest() {
         reservations.forEach(reservation -> reservation.setStatus(ReservationStatus.RESERVATION_STATUS_CANCELED));
         reservationRepository.saveAll(reservations);
 
-        List<Reservation> queryResult = reservationRepository.findByUserIdAndStartAfterAndActive(user.getId(),
+        List<Reservation> queryResult = reservationRepository.findByUserIdAndStartAfterAndScheduled(user.getId(),
                 LocalDateTime.of(2026, 5, 1, 0, 0, 0, 0),
                 Sort.unsorted());
         assertThat(queryResult).hasSize(0);

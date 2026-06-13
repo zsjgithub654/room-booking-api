@@ -85,10 +85,10 @@ public class ReservationController {
         return reservationMapper.toResponse(service.updateReservationTime(id, request.startTime(), request.endTime()));
     }
 
-    @PatchMapping("/reservations/{id}/cancel")
+    @PatchMapping("/reservations/{id}/release")
     @PreAuthorize("hasRole('ADMIN') or @reservationAuthorizationService.isOwner(#id, authentication.principal.id)")
-    public ResponseEntity<Void> deleteReservation(@PathVariable @Positive Long id) {
-        service.deleteReservation(id);
+    public ResponseEntity<Void> releaseReservation(@PathVariable @Positive Long id) {
+        service.releaseReservation(id);
         return ResponseEntity.noContent().build();
     }
 

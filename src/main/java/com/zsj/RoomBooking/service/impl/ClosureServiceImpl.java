@@ -47,7 +47,7 @@ public class ClosureServiceImpl implements ClosureService {
                 .filter(Room::isActive)
                 .orElseThrow(() -> new ResourceNotFoundException("Room not found."));
         /* close reservations during closure */
-        List<Reservation> reservations = reservationRepository.findByRoomIdAndOverlappingAndActive(
+        List<Reservation> reservations = reservationRepository.findByRoomIdAndOverlappingAndScheduled(
                 roomId, startTime, endTime, DefaultSorts.occupationSort());
         for (Reservation reservation : reservations) {
             reservation.setStatus(ReservationStatus.RESERVATION_STATUS_CLOSED);

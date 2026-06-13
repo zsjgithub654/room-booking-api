@@ -82,7 +82,7 @@ public class ReservationServiceImplTest {
         Long userId = 2L;
         Long roomId = 3L;
         LocalDate date = LocalDate.of(2026, 3, 1);
-        ReservationStatus status = ReservationStatus.RESERVATION_STATUS_ACTIVE;
+        ReservationStatus status = ReservationStatus.RESERVATION_STATUS_SCHEDULED;
         User user = new User("user1", "");
         Room room = new Room("101", 12, "Building A", null, null);
         List<Reservation> reservations = List.of(
@@ -111,7 +111,7 @@ public class ReservationServiceImplTest {
         Long userId = 2L;
         Long roomId = 3L;
         LocalDate date = LocalDate.of(2026, 3, 1);
-        ReservationStatus status = ReservationStatus.RESERVATION_STATUS_ACTIVE;
+        ReservationStatus status = ReservationStatus.RESERVATION_STATUS_SCHEDULED;
         Pageable pageable = PageRequest.of(0, 20);
         Pageable expectedPageable = PageRequest.of(
                 0,
@@ -150,7 +150,7 @@ public class ReservationServiceImplTest {
         when(userRepository.findByIdWithLock(eq(userId))).thenReturn(Optional.of(user));
         when(roomRepository.findByIdWithLock(eq(roomId))).thenReturn(Optional.of(room));
         when(closureRepository.existsByRoomIdAndOverlapping(eq(roomId), eq(startTime), eq(endTime))).thenReturn(false);
-        when(reservationRepository.existsByRoomIdAndOverlappingAndActive(eq(roomId), eq(startTime), eq(endTime)))
+        when(reservationRepository.existsByRoomIdAndOverlappingAndScheduled(eq(roomId), eq(startTime), eq(endTime)))
                 .thenReturn(false);
         when(reservationRepository.save(any(Reservation.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -163,7 +163,7 @@ public class ReservationServiceImplTest {
                 .isEqualTo(room);
         assertThat(result.getStartTime()).isEqualTo(startTime);
         assertThat(result.getEndTime()).isEqualTo(endTime);
-        assertThat(result.getStatus()).isEqualTo(ReservationStatus.RESERVATION_STATUS_ACTIVE);
+        assertThat(result.getStatus()).isEqualTo(ReservationStatus.RESERVATION_STATUS_SCHEDULED);
     }
 
     @Test
@@ -197,7 +197,7 @@ public class ReservationServiceImplTest {
         when(userRepository.findByIdWithLock(eq(userId))).thenReturn(Optional.of(user));
         when(roomRepository.findByIdWithLock(eq(roomId))).thenReturn(Optional.of(room));
         when(closureRepository.existsByRoomIdAndOverlapping(eq(roomId), eq(startTime), eq(endTime))).thenReturn(false);
-        when(reservationRepository.existsByRoomIdAndOverlappingAndActive(eq(roomId), eq(startTime), eq(endTime)))
+        when(reservationRepository.existsByRoomIdAndOverlappingAndScheduled(eq(roomId), eq(startTime), eq(endTime)))
                 .thenReturn(false);
         when(reservationRepository.save(any(Reservation.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -269,7 +269,7 @@ public class ReservationServiceImplTest {
         when(roomRepository.findByIdWithLock(eq(roomId))).thenReturn(Optional.of(room));
         when(closureRepository.existsByRoomIdAndOverlapping(eq(roomId), eq(startTime), eq(endTime)))
                 .thenReturn(false);
-        when(reservationRepository.existsByRoomIdAndOverlappingAndActive(eq(roomId), eq(startTime), eq(endTime)))
+        when(reservationRepository.existsByRoomIdAndOverlappingAndScheduled(eq(roomId), eq(startTime), eq(endTime)))
                 .thenReturn(true);
 
         Exception exception = assertThrows(IllegalStateException.class,
@@ -278,26 +278,92 @@ public class ReservationServiceImplTest {
     }
 
     @Test
-    void deleteReservationSucceedTest() {
+    void releaseReservationBeforeStartTest() {
         Long reservationId = 2L;
         Reservation reservation = new Reservation(new User("user1", ""),
                 new Room("101", 12, "Building A", null, null),
-                LocalDateTime.of(2026, 3, 1, 10, 0, 0, 0),
-                LocalDateTime.of(2026, 3, 1, 11, 0, 0, 0));
+                LocalDateTime.of(2300, 3, 1, 10, 0, 0, 0),
+                LocalDateTime.of(2300, 3, 1, 11, 0, 0, 0));
 
         when(reservationRepository.findById(eq(reservationId))).thenReturn(Optional.of(reservation));
 
-        reservationService.deleteReservation(reservationId);
+        reservationService.releaseReservation(reservationId);
         assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.RESERVATION_STATUS_CANCELED);
     }
 
     @Test
-    void deleteReservationNotFoundTest() {
+    void releaseReservationDuringReservationTest() {
+        Long reservationId = 2L;
+        LocalDateTime beforeRelease = LocalDateTime.now();
+        LocalDateTime startTime = beforeRelease.minusMinutes(1).withSecond(0).withNano(0);
+        Reservation reservation = new Reservation(new User("user1", ""),
+                new Room("101", 12, "Building A", null, null),
+                startTime,
+                beforeRelease.plusMinutes(29));
+
+        when(reservationRepository.findById(eq(reservationId))).thenReturn(Optional.of(reservation));
+
+        reservationService.releaseReservation(reservationId);
+
+        LocalDateTime afterRelease = LocalDateTime.now();
+        assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.RESERVATION_STATUS_SCHEDULED);
+        assertThat(reservation.getStartTime()).isEqualTo(startTime);
+        assertThat(reservation.getEndTime()).isBetween(
+                getReleasedEndTime(beforeRelease),
+                getReleasedEndTime(afterRelease));
+    }
+
+    @Test
+    void releaseReservationEndedTest() {
+        Long reservationId = 2L;
+        Reservation reservation = new Reservation(new User("user1", ""),
+                new Room("101", 12, "Building A", null, null),
+                LocalDateTime.now().minusMinutes(30),
+                LocalDateTime.now().minusMinutes(1));
+
+        when(reservationRepository.findById(eq(reservationId))).thenReturn(Optional.of(reservation));
+
+        reservationService.releaseReservation(reservationId);
+        assertThat(reservation.isScheduled()).isTrue();
+    }
+
+    @Test
+    void releaseReservationCanceledTest() {
+        Long reservationId = 2L;
+        Reservation reservation = new Reservation(new User("user1", ""),
+                new Room("101", 12, "Building A", null, null),
+                LocalDateTime.of(2300, 3, 1, 10, 0, 0, 0),
+                LocalDateTime.of(2300, 3, 1, 11, 0, 0, 0));
+        reservation.setStatus(ReservationStatus.RESERVATION_STATUS_CANCELED);
+
+        when(reservationRepository.findById(eq(reservationId))).thenReturn(Optional.of(reservation));
+
+        reservationService.releaseReservation(reservationId);
+        assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.RESERVATION_STATUS_CANCELED);
+    }
+
+    @Test
+    void releaseReservationClosedTest() {
+        Long reservationId = 2L;
+        Reservation reservation = new Reservation(new User("user1", ""),
+                new Room("101", 12, "Building A", null, null),
+                LocalDateTime.of(2300, 3, 1, 10, 0, 0, 0),
+                LocalDateTime.of(2300, 3, 1, 11, 0, 0, 0));
+        reservation.setStatus(ReservationStatus.RESERVATION_STATUS_CLOSED);
+
+        when(reservationRepository.findById(eq(reservationId))).thenReturn(Optional.of(reservation));
+
+        reservationService.releaseReservation(reservationId);
+        assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.RESERVATION_STATUS_CLOSED);
+    }
+
+    @Test
+    void releaseReservationNotFoundTest() {
         Long reservationId = 2L;
         when(reservationRepository.findById(eq(reservationId))).thenReturn(Optional.empty());
 
         Exception exception = assertThrows(ResourceNotFoundException.class,
-                () -> reservationService.deleteReservation(reservationId));
+                () -> reservationService.releaseReservation(reservationId));
         assertThat(exception.getMessage()).isEqualTo("Reservation not found.");
     }
 
@@ -305,14 +371,14 @@ public class ReservationServiceImplTest {
     void updateReservationTimeSucceedTest() {
         Long reservationId = 2L;
         Long roomId = 3L;
-        LocalDateTime startTime = LocalDateTime.of(2026, 3, 1, 10, 30, 0, 0);
-        LocalDateTime endTime = LocalDateTime.of(2026, 3, 1, 11, 30, 0, 0);
+        LocalDateTime startTime = LocalDateTime.of(2300, 3, 1, 10, 30, 0, 0);
+        LocalDateTime endTime = LocalDateTime.of(2300, 3, 1, 11, 30, 0, 0);
         User user = new User("user1", "");
         Room room = new Room("101", 12, "Building A", null, null);
         ReflectionTestUtils.setField(room, "id", roomId);
         Reservation reservation = new Reservation(user, room,
-                LocalDateTime.of(2026, 3, 1, 10, 0, 0, 0),
-                LocalDateTime.of(2026, 3, 1, 11, 0, 0, 0));
+                LocalDateTime.of(2300, 3, 1, 10, 0, 0, 0),
+                LocalDateTime.of(2300, 3, 1, 11, 0, 0, 0));
         ReflectionTestUtils.setField(reservation, "id", reservationId);
 
         when(reservationRepository.findById(eq(reservationId))).thenReturn(Optional.of(reservation));
@@ -320,7 +386,7 @@ public class ReservationServiceImplTest {
         when(roomRepository.findByIdWithLock(eq(room.getId()))).thenReturn(Optional.of(room));
         when(closureRepository.existsByRoomIdAndOverlapping(eq(room.getId()), eq(startTime), eq(endTime)))
                 .thenReturn(false);
-        when(reservationRepository.existsByRoomIdAndOverlappingAndActiveExcludingReservation(
+        when(reservationRepository.existsByRoomIdAndOverlappingAndScheduledExcludingReservation(
                 eq(room.getId()),
                 eq(reservationId),
                 eq(startTime),
@@ -330,21 +396,40 @@ public class ReservationServiceImplTest {
         Reservation result = reservationService.updateReservationTime(reservationId, startTime, endTime);
         assertThat(result.getStartTime()).isEqualTo(startTime);
         assertThat(result.getEndTime()).isEqualTo(endTime);
-        assertThat(result.getStatus()).isEqualTo(ReservationStatus.RESERVATION_STATUS_ACTIVE);
+        assertThat(result.getStatus()).isEqualTo(ReservationStatus.RESERVATION_STATUS_SCHEDULED);
+    }
+
+    @Test
+    void updateReservationStartedTest() {
+        Long reservationId = 2L;
+        Reservation reservation = new Reservation(new User("user1", ""),
+                new Room("101", 12, "Building A", null, null),
+                LocalDateTime.now().minusMinutes(1),
+                LocalDateTime.now().plusMinutes(29));
+        ReflectionTestUtils.setField(reservation, "id", reservationId);
+
+        when(reservationRepository.findById(eq(reservationId))).thenReturn(Optional.of(reservation));
+
+        Exception exception = assertThrows(IllegalStateException.class,
+                () -> reservationService.updateReservationTime(
+                        reservationId,
+                        LocalDateTime.of(2300, 3, 1, 12, 0, 0, 0),
+                        LocalDateTime.of(2300, 3, 1, 13, 0, 0, 0)));
+        assertThat(exception.getMessage()).isEqualTo("Started reservation cannot be updated.");
     }
 
     @Test
     void updateReservationOutsideRoomHoursTest() {
         Long reservationId = 2L;
         Long roomId = 3L;
-        LocalDateTime startTime = LocalDateTime.of(2026, 3, 1, 18, 0, 0, 0);
-        LocalDateTime endTime = LocalDateTime.of(2026, 3, 1, 19, 0, 0, 0);
+        LocalDateTime startTime = LocalDateTime.of(2300, 3, 1, 18, 0, 0, 0);
+        LocalDateTime endTime = LocalDateTime.of(2300, 3, 1, 19, 0, 0, 0);
         User user = new User("user1", "");
         Room room = new Room("101", 12, "Building A", LocalTime.of(9, 0), LocalTime.of(17, 0));
         ReflectionTestUtils.setField(room, "id", roomId);
         Reservation reservation = new Reservation(user, room,
-                LocalDateTime.of(2026, 3, 1, 10, 0, 0, 0),
-                LocalDateTime.of(2026, 3, 1, 11, 0, 0, 0));
+                LocalDateTime.of(2300, 3, 1, 10, 0, 0, 0),
+                LocalDateTime.of(2300, 3, 1, 11, 0, 0, 0));
         ReflectionTestUtils.setField(reservation, "id", reservationId);
 
         when(reservationRepository.findById(eq(reservationId))).thenReturn(Optional.of(reservation));
@@ -359,8 +444,8 @@ public class ReservationServiceImplTest {
     @Test
     void updateReservationReservationNotFoundTest() {
         Long reservationId = 2L;
-        LocalDateTime startTime = LocalDateTime.of(2026, 3, 1, 12, 0, 0, 0);
-        LocalDateTime endTime = LocalDateTime.of(2026, 3, 1, 13, 0, 0, 0);
+        LocalDateTime startTime = LocalDateTime.of(2300, 3, 1, 12, 0, 0, 0);
+        LocalDateTime endTime = LocalDateTime.of(2300, 3, 1, 13, 0, 0, 0);
 
         when(reservationRepository.findById(eq(reservationId))).thenReturn(Optional.empty());
 
@@ -373,14 +458,14 @@ public class ReservationServiceImplTest {
     void updateReservationUserNotFoundTest() {
         Long reservationId = 2L;
         Long roomId = 3L;
-        LocalDateTime startTime = LocalDateTime.of(2026, 3, 1, 12, 0, 0, 0);
-        LocalDateTime endTime = LocalDateTime.of(2026, 3, 1, 13, 0, 0, 0);
+        LocalDateTime startTime = LocalDateTime.of(2300, 3, 1, 12, 0, 0, 0);
+        LocalDateTime endTime = LocalDateTime.of(2300, 3, 1, 13, 0, 0, 0);
         User user = new User("user1", "");
         Room room = new Room("101", 12, "Building A", null, null);
         ReflectionTestUtils.setField(room, "id", roomId);
         Reservation reservation = new Reservation(user, room,
-                LocalDateTime.of(2026, 3, 1, 10, 0, 0, 0),
-                LocalDateTime.of(2026, 3, 1, 11, 0, 0, 0));
+                LocalDateTime.of(2300, 3, 1, 10, 0, 0, 0),
+                LocalDateTime.of(2300, 3, 1, 11, 0, 0, 0));
         ReflectionTestUtils.setField(reservation, "id", reservationId);
 
         when(reservationRepository.findById(eq(reservationId))).thenReturn(Optional.of(reservation));
@@ -395,15 +480,15 @@ public class ReservationServiceImplTest {
     void updateReservationInactiveUserTest() {
         Long reservationId = 2L;
         Long roomId = 3L;
-        LocalDateTime startTime = LocalDateTime.of(2026, 3, 1, 12, 0, 0, 0);
-        LocalDateTime endTime = LocalDateTime.of(2026, 3, 1, 13, 0, 0, 0);
+        LocalDateTime startTime = LocalDateTime.of(2300, 3, 1, 12, 0, 0, 0);
+        LocalDateTime endTime = LocalDateTime.of(2300, 3, 1, 13, 0, 0, 0);
         User user = new User("user1", "");
         user.setStatus(UserStatus.USER_STATUS_CLOSED);
         Room room = new Room("101", 12, "Building A", null, null);
         ReflectionTestUtils.setField(room, "id", roomId);
         Reservation reservation = new Reservation(user, room,
-                LocalDateTime.of(2026, 3, 1, 10, 0, 0, 0),
-                LocalDateTime.of(2026, 3, 1, 11, 0, 0, 0));
+                LocalDateTime.of(2300, 3, 1, 10, 0, 0, 0),
+                LocalDateTime.of(2300, 3, 1, 11, 0, 0, 0));
         ReflectionTestUtils.setField(reservation, "id", reservationId);
 
         when(reservationRepository.findById(eq(reservationId))).thenReturn(Optional.of(reservation));
@@ -418,14 +503,14 @@ public class ReservationServiceImplTest {
     void updateReservationRoomNotFoundTest() {
         Long reservationId = 2L;
         Long roomId = 3L;
-        LocalDateTime startTime = LocalDateTime.of(2026, 3, 1, 12, 0, 0, 0);
-        LocalDateTime endTime = LocalDateTime.of(2026, 3, 1, 13, 0, 0, 0);
+        LocalDateTime startTime = LocalDateTime.of(2300, 3, 1, 12, 0, 0, 0);
+        LocalDateTime endTime = LocalDateTime.of(2300, 3, 1, 13, 0, 0, 0);
         User user = new User("user1", "");
         Room room = new Room("101", 12, "Building A", null, null);
         ReflectionTestUtils.setField(room, "id", roomId);
         Reservation reservation = new Reservation(user, room,
-                LocalDateTime.of(2026, 3, 1, 10, 0, 0, 0),
-                LocalDateTime.of(2026, 3, 1, 11, 0, 0, 0));
+                LocalDateTime.of(2300, 3, 1, 10, 0, 0, 0),
+                LocalDateTime.of(2300, 3, 1, 11, 0, 0, 0));
         ReflectionTestUtils.setField(reservation, "id", reservationId);
 
         when(reservationRepository.findById(eq(reservationId))).thenReturn(Optional.of(reservation));
@@ -441,15 +526,15 @@ public class ReservationServiceImplTest {
     void updateReservationInactiveRoomTest() {
         Long reservationId = 2L;
         Long roomId = 3L;
-        LocalDateTime startTime = LocalDateTime.of(2026, 3, 1, 12, 0, 0, 0);
-        LocalDateTime endTime = LocalDateTime.of(2026, 3, 1, 13, 0, 0, 0);
+        LocalDateTime startTime = LocalDateTime.of(2300, 3, 1, 12, 0, 0, 0);
+        LocalDateTime endTime = LocalDateTime.of(2300, 3, 1, 13, 0, 0, 0);
         User user = new User("user1", "");
         Room room = new Room("101", 12, "Building A", null, null);
         room.setStatus(RoomStatus.ROOM_STATUS_DELETED);
         ReflectionTestUtils.setField(room, "id", roomId);
         Reservation reservation = new Reservation(user, room,
-                LocalDateTime.of(2026, 3, 1, 10, 0, 0, 0),
-                LocalDateTime.of(2026, 3, 1, 11, 0, 0, 0));
+                LocalDateTime.of(2300, 3, 1, 10, 0, 0, 0),
+                LocalDateTime.of(2300, 3, 1, 11, 0, 0, 0));
         ReflectionTestUtils.setField(reservation, "id", reservationId);
 
         when(reservationRepository.findById(eq(reservationId))).thenReturn(Optional.of(reservation));
@@ -465,14 +550,14 @@ public class ReservationServiceImplTest {
     void updateReservationConflictWithClosureTest() {
         Long reservationId = 2L;
         Long roomId = 3L;
-        LocalDateTime startTime = LocalDateTime.of(2026, 3, 1, 12, 0, 0, 0);
-        LocalDateTime endTime = LocalDateTime.of(2026, 3, 1, 13, 0, 0, 0);
+        LocalDateTime startTime = LocalDateTime.of(2300, 3, 1, 12, 0, 0, 0);
+        LocalDateTime endTime = LocalDateTime.of(2300, 3, 1, 13, 0, 0, 0);
         User user = new User("user1", "");
         Room room = new Room("101", 12, "Building A", null, null);
         ReflectionTestUtils.setField(room, "id", roomId);
         Reservation reservation = new Reservation(user, room,
-                LocalDateTime.of(2026, 3, 1, 10, 0, 0, 0),
-                LocalDateTime.of(2026, 3, 1, 11, 0, 0, 0));
+                LocalDateTime.of(2300, 3, 1, 10, 0, 0, 0),
+                LocalDateTime.of(2300, 3, 1, 11, 0, 0, 0));
         ReflectionTestUtils.setField(reservation, "id", reservationId);
 
         when(reservationRepository.findById(eq(reservationId))).thenReturn(Optional.of(reservation));
@@ -490,14 +575,14 @@ public class ReservationServiceImplTest {
     void updateReservationConflictWithReservationTest() {
         Long reservationId = 2L;
         Long roomId = 3L;
-        LocalDateTime startTime = LocalDateTime.of(2026, 3, 1, 12, 0, 0, 0);
-        LocalDateTime endTime = LocalDateTime.of(2026, 3, 1, 13, 0, 0, 0);
+        LocalDateTime startTime = LocalDateTime.of(2300, 3, 1, 12, 0, 0, 0);
+        LocalDateTime endTime = LocalDateTime.of(2300, 3, 1, 13, 0, 0, 0);
         User user = new User("user1", "");
         Room room = new Room("101", 12, "Building A", null, null);
         ReflectionTestUtils.setField(room, "id", roomId);
         Reservation reservation = new Reservation(user, room,
-                LocalDateTime.of(2026, 3, 1, 10, 0, 0, 0),
-                LocalDateTime.of(2026, 3, 1, 11, 0, 0, 0));
+                LocalDateTime.of(2300, 3, 1, 10, 0, 0, 0),
+                LocalDateTime.of(2300, 3, 1, 11, 0, 0, 0));
         ReflectionTestUtils.setField(reservation, "id", reservationId);
 
         when(reservationRepository.findById(eq(reservationId))).thenReturn(Optional.of(reservation));
@@ -505,7 +590,7 @@ public class ReservationServiceImplTest {
         when(roomRepository.findByIdWithLock(eq(room.getId()))).thenReturn(Optional.of(room));
         when(closureRepository.existsByRoomIdAndOverlapping(eq(room.getId()), eq(startTime), eq(endTime)))
                 .thenReturn(false);
-        when(reservationRepository.existsByRoomIdAndOverlappingAndActiveExcludingReservation(
+        when(reservationRepository.existsByRoomIdAndOverlappingAndScheduledExcludingReservation(
                 eq(room.getId()),
                 eq(reservationId),
                 eq(startTime),
@@ -522,5 +607,12 @@ public class ReservationServiceImplTest {
                 Sort.Order.asc("startTime"),
                 Sort.Order.asc("endTime"),
                 Sort.Order.asc("id"));
+    }
+
+    private LocalDateTime getReleasedEndTime(LocalDateTime currentTime) {
+        if (currentTime.getSecond() == 0 && currentTime.getNano() == 0) {
+            return currentTime;
+        }
+        return currentTime.plusMinutes(1).withSecond(0).withNano(0);
     }
 }

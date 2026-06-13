@@ -204,7 +204,7 @@ public class RoomServiceImplTest {
                 eq(searchStartDate.atStartOfDay()),
                 eq(searchEndDate.plusDays(1).atStartOfDay())))
                 .thenReturn(closures);
-        when(reservationRepository.findByRoomIdAndOverlappingAndActive(eq(null),
+        when(reservationRepository.findByRoomIdAndOverlappingAndScheduled(eq(null),
                 eq(searchStartDate.atStartOfDay()),
                 eq(searchEndDate.plusDays(1).atStartOfDay()),
                 eq(getOccupationSort())))
@@ -247,7 +247,7 @@ public class RoomServiceImplTest {
                 eq(searchStartDate.atStartOfDay()),
                 eq(searchEndDate.plusDays(1).atStartOfDay())))
                 .thenReturn(closures);
-        when(reservationRepository.findByRoomIdAndOverlappingAndActive(eq(null),
+        when(reservationRepository.findByRoomIdAndOverlappingAndScheduled(eq(null),
                 eq(searchStartDate.atStartOfDay()),
                 eq(searchEndDate.plusDays(1).atStartOfDay()),
                 eq(getOccupationSort())))
@@ -287,7 +287,7 @@ public class RoomServiceImplTest {
                         LocalDateTime.of(2300, 3, 1, 15, 30, 0, 0)));
 
         when(roomRepository.findByIdWithLock(eq(searchId))).thenReturn(Optional.of(room));
-        when(reservationRepository.findByRoomIdAndStartAfterAndActive(
+        when(reservationRepository.findByRoomIdAndStartAfterAndScheduled(
                 eq(searchId), any(LocalDateTime.class), eq(getOccupationSort())))
                 .thenReturn(reservations);
         doNothing().when(closureRepository).deleteByRoomIdAndStartAfter(eq(searchId), any(LocalDateTime.class));
@@ -316,7 +316,7 @@ public class RoomServiceImplTest {
                 LocalDateTime.of(2300, 3, 1, 15, 30, 0, 0));
 
         when(roomRepository.findByIdWithLock(eq(searchId))).thenReturn(Optional.of(room));
-        when(reservationRepository.findByRoomIdAndStartAfterAndActive(
+        when(reservationRepository.findByRoomIdAndStartAfterAndScheduled(
                 eq(searchId), any(LocalDateTime.class), eq(getOccupationSort())))
                 .thenReturn(List.of(earlierReservation, laterReservation));
         doNothing().when(closureRepository).deleteByRoomIdAndStartAfter(eq(searchId), any(LocalDateTime.class));

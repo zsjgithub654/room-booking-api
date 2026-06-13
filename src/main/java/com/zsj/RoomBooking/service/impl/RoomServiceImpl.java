@@ -93,7 +93,7 @@ public class RoomServiceImpl implements RoomService {
     private List<Occupation> getOccupationsForRoom(Long roomId, LocalDateTime startTime, LocalDateTime endTime) {
         /* get closures and reservations */
         List<Closure> closures = closureRepository.findByRoomIdAndOverlapping(roomId, startTime, endTime);
-        List<Reservation> reservations = reservationRepository.findByRoomIdAndOverlappingAndActive(
+        List<Reservation> reservations = reservationRepository.findByRoomIdAndOverlappingAndScheduled(
                 roomId, startTime, endTime, DefaultSorts.occupationSort());
         /* combine occupations and sort by startTime */
         return Stream.concat(
@@ -176,7 +176,7 @@ public class RoomServiceImpl implements RoomService {
         /* delete future closures */
         closureRepository.deleteByRoomIdAndStartAfter(id, LocalDateTime.now());
         /* close future reservations */
-        List<Reservation> reservations = reservationRepository.findByRoomIdAndStartAfterAndActive(
+        List<Reservation> reservations = reservationRepository.findByRoomIdAndStartAfterAndScheduled(
                 id, LocalDateTime.now(), DefaultSorts.occupationSort());
         for (Reservation reservation : reservations) {
             reservation.setStatus(ReservationStatus.RESERVATION_STATUS_CLOSED);

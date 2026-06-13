@@ -90,12 +90,11 @@ class ServiceWorkflowIntegrationTest {
 
         Reservation reservation = reservationService.addReservation(user.getId(), room.getId(), startTime, endTime);
 
-        assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.RESERVATION_STATUS_ACTIVE);
-        assertThat(reservationRepository.findById(reservation.getId()))
-                .isPresent()
-                .get()
-                .extracting(Reservation::getStartTime, Reservation::getEndTime, Reservation::getStatus)
-                .containsExactly(startTime, endTime, ReservationStatus.RESERVATION_STATUS_ACTIVE);
+        assertThat(reservation.isActive()).isTrue();
+        Reservation currentReservation = reservationRepository.findById(reservation.getId()).orElseThrow();
+        assertThat(currentReservation.getStartTime()).isEqualTo(startTime);
+        assertThat(currentReservation.getEndTime()).isEqualTo(endTime);
+        assertThat(currentReservation.isActive()).isTrue();
     }
 
     @Test
@@ -110,14 +109,13 @@ class ServiceWorkflowIntegrationTest {
 
         Reservation updatedReservation = reservationService.updateReservationTime(reservation.getId(), newStartTime, newEndTime);
 
-        assertThat(updatedReservation)
-                .extracting(Reservation::getStartTime, Reservation::getEndTime, Reservation::getStatus)
-                .containsExactly(newStartTime, newEndTime, ReservationStatus.RESERVATION_STATUS_ACTIVE);
-        assertThat(reservationRepository.findById(reservation.getId()))
-                .isPresent()
-                .get()
-                .extracting(Reservation::getStartTime, Reservation::getEndTime, Reservation::getStatus)
-                .containsExactly(newStartTime, newEndTime, ReservationStatus.RESERVATION_STATUS_ACTIVE);
+        assertThat(updatedReservation.getStartTime()).isEqualTo(newStartTime);
+        assertThat(updatedReservation.getEndTime()).isEqualTo(newEndTime);
+        assertThat(updatedReservation.isActive()).isTrue();
+        Reservation currentReservation = reservationRepository.findById(reservation.getId()).orElseThrow();
+        assertThat(currentReservation.getStartTime()).isEqualTo(newStartTime);
+        assertThat(currentReservation.getEndTime()).isEqualTo(newEndTime);
+        assertThat(currentReservation.isActive()).isTrue();
     }
 
     @Test
@@ -166,8 +164,7 @@ class ServiceWorkflowIntegrationTest {
         assertThat(reservationRepository.findById(unaffectedReservation.getId()))
                 .isPresent()
                 .get()
-                .extracting(Reservation::getStatus)
-                .isEqualTo(ReservationStatus.RESERVATION_STATUS_ACTIVE);
+                .matches(Reservation::isActive);
     }
 
     @Test
@@ -209,8 +206,7 @@ class ServiceWorkflowIntegrationTest {
         assertThat(reservationRepository.findById(pastReservation.getId()))
                 .isPresent()
                 .get()
-                .extracting(Reservation::getStatus)
-                .isEqualTo(ReservationStatus.RESERVATION_STATUS_ACTIVE);
+                .matches(Reservation::isActive);
         /* future closure deleted, past closure remained */
         assertThat(closureRepository.findByRoomId(room.getId(), Sort.unsorted()))
                 .extracting(Closure::getId)
@@ -253,12 +249,10 @@ class ServiceWorkflowIntegrationTest {
         assertThat(reservationRepository.findById(pastReservation.getId()))
                 .isPresent()
                 .get()
-                .extracting(Reservation::getStatus)
-                .isEqualTo(ReservationStatus.RESERVATION_STATUS_ACTIVE);
+                .matches(Reservation::isActive);
         assertThat(reservationRepository.findById(anotherUserReservation.getId()))
                 .isPresent()
                 .get()
-                .extracting(Reservation::getStatus)
-                .isEqualTo(ReservationStatus.RESERVATION_STATUS_ACTIVE);
+                .matches(Reservation::isActive);
     }
 }

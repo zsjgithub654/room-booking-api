@@ -3,7 +3,6 @@ package com.zsj.RoomBooking.service.impl;
 import com.zsj.RoomBooking.exception.ResourceNotFoundException;
 import com.zsj.RoomBooking.model.AddClosureResult;
 import com.zsj.RoomBooking.model.ReservationStatus;
-import com.zsj.RoomBooking.model.RoomStatus;
 import com.zsj.RoomBooking.model.entity.Closure;
 import com.zsj.RoomBooking.model.entity.Reservation;
 import com.zsj.RoomBooking.model.entity.Room;
@@ -45,9 +44,8 @@ public class ClosureServiceImpl implements ClosureService {
     @Override
     public AddClosureResult addClosure(Long roomId, LocalDateTime startTime, LocalDateTime endTime) {
         /* check room and acquire lock */
-        /* TODO: consider add isActive() */
         Room room = roomRepository.findByIdWithLock(roomId)
-                .filter(foundRoom -> foundRoom.getStatus() == RoomStatus.ROOM_STATUS_ACTIVE)
+                .filter(Room::isActive)
                 .orElseThrow(() -> new ResourceNotFoundException("Room not found."));
         /* close reservations during closure */
         List<Reservation> reservations = reservationRepository.findByRoomIdAndOverlappingAndActive(

@@ -51,7 +51,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public User updateUsername(Long id, String username) {
         User user = userRepository.findById(id)
-                .filter(foundUser -> foundUser.getStatus() == UserStatus.USER_STATUS_ACTIVE)
+                .filter(User::isActive)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found."));
         user.setUsername(username);
         return user;
@@ -60,7 +60,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public User updatePassword(Long id, String password) {
         User user = userRepository.findById(id)
-                .filter(foundUser -> foundUser.getStatus() == UserStatus.USER_STATUS_ACTIVE)
+                .filter(User::isActive)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found."));
         user.setPassword(passwordEncoder.encode(password));
         return user;
@@ -69,7 +69,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public User addAdminRole(Long id) {
         User user = userRepository.findById(id)
-                .filter(foundUser -> foundUser.getStatus() == UserStatus.USER_STATUS_ACTIVE)
+                .filter(User::isActive)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found."));
         user.addAdminRole();
         return user;
@@ -78,7 +78,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public User removeAdminRole(Long id) {
         User user = userRepository.findById(id)
-                .filter(foundUser -> foundUser.getStatus() == UserStatus.USER_STATUS_ACTIVE)
+                .filter(User::isActive)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found."));
         user.removeAdminRole();
         return user;
@@ -88,7 +88,7 @@ public class UserServiceImpl implements UserService {
     public void closeUserAccount(Long id) {
         /* verify and acquire lock on user */
         User user = userRepository.findByIdWithLock(id).orElseThrow(() -> new ResourceNotFoundException("User not found."));
-        if (user.getStatus() == UserStatus.USER_STATUS_CLOSED) {
+        if (!user.isActive()) {
             return;
         }
         /* delete user info, but keep the record as FK of history reservations */

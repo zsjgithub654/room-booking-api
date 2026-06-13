@@ -2,8 +2,6 @@ package com.zsj.RoomBooking.service.impl;
 
 import com.zsj.RoomBooking.exception.ResourceNotFoundException;
 import com.zsj.RoomBooking.model.ReservationStatus;
-import com.zsj.RoomBooking.model.RoomStatus;
-import com.zsj.RoomBooking.model.UserStatus;
 import com.zsj.RoomBooking.model.entity.Reservation;
 import com.zsj.RoomBooking.model.entity.Room;
 import com.zsj.RoomBooking.model.entity.User;
@@ -55,10 +53,10 @@ public class ReservationServiceImpl implements ReservationService {
     public Reservation addReservation(Long userId, Long roomId, LocalDateTime startTime, LocalDateTime endTime) {
         /* verify and acquire lock on user and room, keep order of acquiring locks consistent across transactions */
         User user = userRepository.findByIdWithLock(userId)
-                .filter(foundUser -> foundUser.getStatus() == UserStatus.USER_STATUS_ACTIVE)
+                .filter(User::isActive)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found."));
         Room room = roomRepository.findByIdWithLock(roomId)
-                .filter(foundRoom -> foundRoom.getStatus() == RoomStatus.ROOM_STATUS_ACTIVE)
+                .filter(Room::isActive)
                 .orElseThrow(() -> new ResourceNotFoundException("Room not found."));
         /* check availability */
         validateReservationWithinOpenHours(room, startTime, endTime);
@@ -78,14 +76,14 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     public Reservation updateReservationTime(Long id, LocalDateTime startTime, LocalDateTime endTime) {
         Reservation reservation = reservationRepository.findById(id)
-                .filter(foundReservation -> foundReservation.getStatus() == ReservationStatus.RESERVATION_STATUS_ACTIVE)
+                .filter(Reservation::isActive)
                 .orElseThrow(() -> new ResourceNotFoundException("Reservation not found."));
         /* acquire lock on user and room */
         userRepository.findByIdWithLock(reservation.getUser().getId())
-                .filter(foundUser -> foundUser.getStatus() == UserStatus.USER_STATUS_ACTIVE)
+                .filter(User::isActive)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found."));
         Room room = roomRepository.findByIdWithLock(reservation.getRoom().getId())
-                .filter(foundRoom -> foundRoom.getStatus() == RoomStatus.ROOM_STATUS_ACTIVE)
+                .filter(Room::isActive)
                 .orElseThrow(() -> new ResourceNotFoundException("Room not found."));
         /* check availability */
         validateReservationWithinOpenHours(room, startTime, endTime);

@@ -166,7 +166,7 @@ public class RoomServiceImpl implements RoomService {
         /* verify and acquire lock on room */
         Room room = roomRepository.findByIdWithLock(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Room not found."));
-        if (room.getStatus() == RoomStatus.ROOM_STATUS_DELETED) {
+        if (!room.isActive()) {
             return Collections.emptyList();
         }
         room.setStatus(RoomStatus.ROOM_STATUS_DELETED);
@@ -184,7 +184,7 @@ public class RoomServiceImpl implements RoomService {
     @Override
     public Room updateRoom(Long id, String name, Integer capacity, String area, LocalTime openTime, LocalTime closeTime) {
         Room room = roomRepository.findById(id)
-                .filter(foundRoom -> foundRoom.getStatus() == RoomStatus.ROOM_STATUS_ACTIVE)
+                .filter(Room::isActive)
                 .orElseThrow(() -> new ResourceNotFoundException("Room not found."));
         room.setName(name);
         room.setCapacity(capacity);

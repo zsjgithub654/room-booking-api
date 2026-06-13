@@ -84,6 +84,10 @@ public class User {
         return status;
     }
 
+    public boolean isActive() {
+        return status == UserStatus.USER_STATUS_ACTIVE;
+    }
+
     public void setPassword(String password) {
         this.password = password;
     }

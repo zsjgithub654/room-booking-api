@@ -24,7 +24,7 @@ public class RoomBookingUserDetailsService implements UserDetailsService {
                 user.getUsername(),
                 user.getPassword(),
                 user.getRoles(),
-                user.getStatus() == com.zsj.RoomBooking.model.UserStatus.USER_STATUS_ACTIVE
+                user.isActive()
         );
     }
 }

@@ -105,6 +105,10 @@ public class Reservation implements Occupation {
         return status;
     }
 
+    public boolean isActive() {
+        return status == ReservationStatus.RESERVATION_STATUS_ACTIVE;
+    }
+
     public void setStatus(ReservationStatus status) {
         this.status = status;
     }

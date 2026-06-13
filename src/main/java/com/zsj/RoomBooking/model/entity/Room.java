@@ -62,6 +62,10 @@ public class Room {
         return status;
     }
 
+    public boolean isActive() {
+        return status == RoomStatus.ROOM_STATUS_ACTIVE;
+    }
+
     public LocalTime getCloseTime() {
         return closeTime;
     }

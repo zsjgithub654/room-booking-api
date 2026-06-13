@@ -310,7 +310,7 @@ class ServiceConcurrencyTest {
             assertThat(currentReservation.getEndTime()).isEqualTo(reservation.getEndTime());
         } else {
             /* update wins first, leaving the reservation active with the new time */
-            assertThat(currentReservation.getStatus()).isEqualTo(ReservationStatus.RESERVATION_STATUS_ACTIVE);
+            assertThat(currentReservation.isActive()).isTrue();
             assertThat(currentReservation.getStartTime()).isEqualTo(newStartTime);
             assertThat(currentReservation.getEndTime()).isEqualTo(newEndTime);
         }

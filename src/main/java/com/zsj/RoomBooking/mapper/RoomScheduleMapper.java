@@ -15,7 +15,7 @@ public class RoomScheduleMapper {
 
     public RoomScheduleResponse toResponse(RoomSchedule roomSchedule) {
         return new RoomScheduleResponse(
-                roomMapper.toResponse(roomSchedule.getRoom()),
-                roomSchedule.getOccupations().stream().map(occupationMapper::toResponse).toList());
+                roomMapper.toResponse(roomSchedule.room()),
+                roomSchedule.occupations().stream().map(occupationMapper::toResponse).toList());
     }
 }

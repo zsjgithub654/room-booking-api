@@ -9,7 +9,6 @@ import com.zsj.RoomBooking.model.entity.Closure;
 import com.zsj.RoomBooking.model.entity.Reservation;
 import com.zsj.RoomBooking.model.entity.Room;
 import com.zsj.RoomBooking.model.entity.User;
-import com.zsj.RoomBooking.service.RoomSearchCriteria;
 import com.zsj.RoomBooking.repository.ClosureRepository;
 import com.zsj.RoomBooking.repository.ReservationRepository;
 import com.zsj.RoomBooking.repository.RoomRepository;
@@ -216,11 +215,11 @@ public class RoomServiceImplTest {
         List<Occupation> expectedOccupations = new ArrayList<>();
         expectedOccupations.addAll(reservations);
         expectedOccupations.addAll(closures);
-        assertThat(result.get(0).getRoom())
+        assertThat(result.get(0).room())
                 .usingRecursiveComparison()
                 .isEqualTo(room);
-        assertThat(result.get(0).getOccupations()).hasSize(reservations.size() + closures.size());
-        assertThat(result.get(0).getOccupations())
+        assertThat(result.get(0).occupations()).hasSize(reservations.size() + closures.size());
+        assertThat(result.get(0).occupations())
                 .usingRecursiveComparison()
                 .isEqualTo(expectedOccupations);
     }
@@ -257,10 +256,10 @@ public class RoomServiceImplTest {
         List<RoomSchedule> result = roomService.searchAvailabilities(
                 null, null, null, null, searchStartDate, searchEndDate, true);
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).getRoom())
+        assertThat(result.get(0).room())
                 .usingRecursiveComparison()
                 .isEqualTo(room);
-        assertThat(result.get(0).getOccupations())
+        assertThat(result.get(0).occupations())
                 .usingRecursiveComparison()
                 .isEqualTo(List.of(
                         reservations.get(0),

@@ -4,5 +4,8 @@ import com.zsj.RoomBooking.model.OccupationType;
 
 import java.time.LocalDateTime;
 
-public record OccupationResponse(OccupationType type, Long id, LocalDateTime startTime, LocalDateTime endTime) {
+public record OccupationResponse(OccupationType type,
+                                 Long id,
+                                 LocalDateTime startTime,
+                                 LocalDateTime endTime) {
 }

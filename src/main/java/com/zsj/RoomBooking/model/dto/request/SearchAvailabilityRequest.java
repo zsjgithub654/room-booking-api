@@ -19,7 +19,8 @@ import java.time.LocalDate;
 @TimeInterval(fromField = "startDate", toField = "endDate", allowEqual = true,
         message = "start date must be before or equal to end date.")
 public record SearchAvailabilityRequest(@Size(max = 50) String name,
-                                        @Positive Integer minCapacity, @Positive Integer maxCapacity, /* use wrapper to accept null */
+                                        @Positive Integer minCapacity,
+                                        @Positive Integer maxCapacity, /* use wrapper to accept null */
                                         @Size(max = 50) String area,
                                         @NotNull @FutureOrPresent LocalDate startDate,
                                         @NotNull @FutureOrPresent LocalDate endDate,

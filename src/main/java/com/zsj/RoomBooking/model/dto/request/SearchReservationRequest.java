@@ -5,5 +5,8 @@ import jakarta.validation.constraints.Positive;
 
 import java.time.LocalDate;
 
-public record SearchReservationRequest(@Positive Long userId, @Positive Long roomId, LocalDate date, ReservationStatus status) {
+public record SearchReservationRequest(@Positive Long userId,
+                                       @Positive Long roomId,
+                                       LocalDate date,
+                                       ReservationStatus status) {
 }

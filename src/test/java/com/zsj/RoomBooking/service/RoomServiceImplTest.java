@@ -9,6 +9,7 @@ import com.zsj.RoomBooking.model.entity.Closure;
 import com.zsj.RoomBooking.model.entity.Reservation;
 import com.zsj.RoomBooking.model.entity.Room;
 import com.zsj.RoomBooking.model.entity.User;
+import com.zsj.RoomBooking.service.RoomSearchCriteria;
 import com.zsj.RoomBooking.repository.ClosureRepository;
 import com.zsj.RoomBooking.repository.ReservationRepository;
 import com.zsj.RoomBooking.repository.RoomRepository;
@@ -152,6 +153,7 @@ public class RoomServiceImplTest {
 
     @Test
     void SearchRoomsTest() {
+        RoomSearchCriteria criteria = new RoomSearchCriteria(null, null, null, null, null);
         List<Room> rooms = List.of(
                 new Room("101", 12, "Building A", null, null),
                 new Room("102", 4, "Building A", null, null),
@@ -159,7 +161,7 @@ public class RoomServiceImplTest {
         );
         when(roomRepository.findAll(any(Specification.class), eq(Pageable.unpaged(getRoomSort()))))
                 .thenReturn(new PageImpl<>(rooms));
-        List<Room> result = roomService.searchRooms(null, null, null, null, Pageable.unpaged()).getContent();
+        List<Room> result = roomService.searchRooms(criteria, Pageable.unpaged()).getContent();
         assertThat(result).hasSize(3);
         assertThat(result)
                 .usingRecursiveComparison()
@@ -168,13 +170,14 @@ public class RoomServiceImplTest {
 
     @Test
     void SearchRoomsShouldApplyDefaultSortToPagedQueryTest() {
+        RoomSearchCriteria criteria = new RoomSearchCriteria(null, null, null, null, null);
         Pageable pageable = PageRequest.of(0, 20);
         Pageable expectedPageable = PageRequest.of(0, 20, getRoomSort());
 
         when(roomRepository.findAll(any(Specification.class), eq(expectedPageable)))
                 .thenReturn(new PageImpl<>(List.of(), expectedPageable, 0));
 
-        roomService.searchRooms(null, null, null, null, pageable);
+        roomService.searchRooms(criteria, pageable);
 
         verify(roomRepository).findAll(any(Specification.class), eq(expectedPageable));
     }

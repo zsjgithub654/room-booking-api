@@ -12,6 +12,7 @@ import com.zsj.RoomBooking.repository.ClosureRepository;
 import com.zsj.RoomBooking.repository.ReservationRepository;
 import com.zsj.RoomBooking.repository.RoomRepository;
 import com.zsj.RoomBooking.repository.RoomSpecifications;
+import com.zsj.RoomBooking.service.RoomSearchCriteria;
 import com.zsj.RoomBooking.service.RoomService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -40,27 +41,28 @@ public class RoomServiceImpl implements RoomService {
     @Autowired
     private ReservationRepository reservationRepository;
 
-    public Page<Room> searchRooms(String name, Integer minCapacity, Integer maxCapacity, String area, Pageable pageable) {
+    public Page<Room> searchRooms(RoomSearchCriteria criteria, Pageable pageable) {
         Pageable queryPageable = DefaultSorts.addRoomDefaultSort(pageable);
         Specification<Room> spec = Specification.unrestricted();
         /* name contains given string */
-        if (name != null && !name.isBlank()) {
-            spec = spec.and(RoomSpecifications.nameContains(name));
+        if (criteria.name() != null && !criteria.name().isBlank()) {
+            spec = spec.and(RoomSpecifications.nameContains(criteria.name()));
         }
         /* capacity in given range */
-        if (minCapacity != null) {
-            spec = spec.and(RoomSpecifications.minCapacity(minCapacity));
+        if (criteria.minCapacity() != null) {
+            spec = spec.and(RoomSpecifications.minCapacity(criteria.minCapacity()));
         }
-        if (maxCapacity != null) {
-            spec = spec.and(RoomSpecifications.maxCapacity(maxCapacity));
+        if (criteria.maxCapacity() != null) {
+            spec = spec.and(RoomSpecifications.maxCapacity(criteria.maxCapacity()));
         }
         /* area */
-        if (area != null) {
-            spec = spec.and(RoomSpecifications.inArea(area));
+        if (criteria.area() != null) {
+            spec = spec.and(RoomSpecifications.inArea(criteria.area()));
         }
         /* status */
-        /* TODO: only show active for now, enable admin to see all later */
-        spec = spec.and(RoomSpecifications.hasStatus(RoomStatus.ROOM_STATUS_ACTIVE));
+        if (criteria.status() != null) {
+            spec = spec.and(RoomSpecifications.hasStatus(criteria.status()));
+        }
         return roomRepository.findAll(spec, queryPageable);
     }
 
@@ -69,7 +71,9 @@ public class RoomServiceImpl implements RoomService {
     public List<RoomSchedule> searchAvailabilities(String name, Integer minCapacity, Integer maxCapacity, String area,
                                                    LocalDate startDate, LocalDate endDate, Boolean includeUnavailable) {
         /* filter rooms */
-        List<Room> rooms = searchRooms(name, minCapacity, maxCapacity, area, Pageable.unpaged()).getContent();
+        List<Room> rooms = searchRooms(
+                new RoomSearchCriteria(name, minCapacity, maxCapacity, area, RoomStatus.ROOM_STATUS_ACTIVE),
+                Pageable.unpaged()).getContent();
         boolean shouldIncludeUnavailable = Boolean.TRUE.equals(includeUnavailable);
         LocalDateTime startTime = startDate.atStartOfDay();
         LocalDateTime endTime = endDate.plusDays(1).atStartOfDay();

@@ -11,7 +11,7 @@ import java.time.LocalTime;
 import java.util.List;
 
 public interface RoomService {
-    Page<Room> searchRooms(String name, Integer minCapacity, Integer maxCapacity, String area, Pageable pageable);
+    Page<Room> searchRooms(RoomSearchCriteria criteria, Pageable pageable);
     List<RoomSchedule> searchAvailabilities(String name, Integer minCapacity, Integer maxCapacity, String area,
                                             LocalDate startDate, LocalDate endDate, Boolean includeUnavailable);
     Room getRoom(Long id);

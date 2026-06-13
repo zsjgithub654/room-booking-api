@@ -6,6 +6,7 @@ import com.zsj.RoomBooking.mapper.ReservationMapper;
 import com.zsj.RoomBooking.mapper.RoomMapper;
 import com.zsj.RoomBooking.mapper.RoomScheduleMapper;
 import com.zsj.RoomBooking.model.RoomSchedule;
+import com.zsj.RoomBooking.model.RoomStatus;
 import com.zsj.RoomBooking.model.dto.request.RoomRequest;
 import com.zsj.RoomBooking.model.dto.request.SearchAvailabilityRequest;
 import com.zsj.RoomBooking.model.dto.request.SearchRoomRequest;
@@ -16,6 +17,7 @@ import com.zsj.RoomBooking.model.entity.Closure;
 import com.zsj.RoomBooking.model.entity.Reservation;
 import com.zsj.RoomBooking.model.entity.Room;
 import com.zsj.RoomBooking.model.entity.User;
+import com.zsj.RoomBooking.service.RoomSearchCriteria;
 import com.zsj.RoomBooking.service.RoomService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,7 +74,14 @@ public class RoomControllerTest {
         /* request */
         SearchRoomRequest request = new SearchRoomRequest(null,
                 2, 20,
-                null);
+                null,
+                RoomStatus.ROOM_STATUS_DELETED);
+        RoomSearchCriteria criteria = new RoomSearchCriteria(
+                request.name(),
+                request.minCapacity(),
+                request.maxCapacity(),
+                request.area(),
+                request.status());
         /* mock service result */
         List<Room> rooms = List.of(
                 new Room("101", 12, "Building-A", null, null),
@@ -80,10 +89,7 @@ public class RoomControllerTest {
                 new Room("101", 6, "Building-B", null, null)
         );
         when(roomService.searchRooms(
-                eq(request.name()),
-                eq(request.minCapacity()),
-                eq(request.maxCapacity()),
-                eq(request.area()),
+                eq(criteria),
                 eq(PageRequest.of(0, 20))
         )).thenReturn(new PageImpl<>(rooms, PageRequest.of(0, 20), rooms.size()));
         /* perform */
@@ -91,6 +97,7 @@ public class RoomControllerTest {
                         .with(user("admin1").roles("ADMIN"))
                         .param("minCapacity", request.minCapacity().toString())
                         .param("maxCapacity", request.maxCapacity().toString())
+                        .param("status", request.status().toString())
                         .param("page", "0")
                         .param("size", "20"))
                 .andExpect(status().isOk())
@@ -102,7 +109,7 @@ public class RoomControllerTest {
                 .getResponse()
                 .getContentAsString();
         /* verify params passed to service */
-        verify(roomService).searchRooms(request.name(), request.minCapacity(), request.maxCapacity(), request.area(), PageRequest.of(0, 20));
+        verify(roomService).searchRooms(criteria, PageRequest.of(0, 20));
         TypeReference<List<RoomResponse>> typeReference = new TypeReference<List<RoomResponse>>() {
         };
         String contentString = objectMapper.readTree(responseString).get("content").toString();

@@ -9,6 +9,7 @@ import com.zsj.RoomBooking.model.dto.response.DeleteRoomResponse;
 import com.zsj.RoomBooking.model.dto.response.RoomResponse;
 import com.zsj.RoomBooking.model.dto.request.SearchAvailabilityRequest;
 import com.zsj.RoomBooking.model.dto.response.RoomScheduleResponse;
+import com.zsj.RoomBooking.service.RoomSearchCriteria;
 import com.zsj.RoomBooking.service.RoomService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
@@ -51,9 +52,12 @@ public class RoomController {
     @PreAuthorize("hasRole('ADMIN')")
     public Page<RoomResponse> searchRooms(@Valid @ModelAttribute SearchRoomRequest request, Pageable pageable) {
         return roomService.searchRooms(
-                request.name(),
-                request.minCapacity(), request.maxCapacity(),
-                request.area(),
+                new RoomSearchCriteria(
+                        request.name(),
+                        request.minCapacity(),
+                        request.maxCapacity(),
+                        request.area(),
+                        request.status()),
                 pageable
         ).map(roomMapper::toResponse);
     }

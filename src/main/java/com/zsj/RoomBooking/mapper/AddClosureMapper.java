@@ -15,8 +15,8 @@ public class AddClosureMapper {
 
     public AddClosureResponse toResponse(AddClosureResult addClosureResult) {
         return new AddClosureResponse(
-                closureMapper.toResponse(addClosureResult.getClosure()),
-                addClosureResult.getCanceledReservations().stream().map(reservationMapper::toResponse).toList()
+                closureMapper.toResponse(addClosureResult.closure()),
+                addClosureResult.closedReservations().stream().map(reservationMapper::toResponse).toList()
         );
     }
 }

@@ -143,10 +143,10 @@ public class ClosureServiceImplTest {
         doNothing().when(closureRepository).deleteAll(eq(overlappingClosures));
         /* verify */
         AddClosureResult result = closureService.addClosure(roomId, startTime, endTime);
-        assertThat(result.getClosure().getStartTime()).isEqualTo(startTime);
-        assertThat(result.getClosure().getEndTime()).isEqualTo(LocalDateTime.of(2026, 3, 1, 17, 0, 0, 0));
-        assertThat(result.getCanceledReservations()).hasSize(reservations.size());
-        assertThat(result.getCanceledReservations())
+        assertThat(result.closure().getStartTime()).isEqualTo(startTime);
+        assertThat(result.closure().getEndTime()).isEqualTo(LocalDateTime.of(2026, 3, 1, 17, 0, 0, 0));
+        assertThat(result.closedReservations()).hasSize(reservations.size());
+        assertThat(result.closedReservations())
                 .usingRecursiveComparison()
                 .isEqualTo(reservations);
     }
@@ -174,7 +174,7 @@ public class ClosureServiceImplTest {
 
         AddClosureResult result = closureService.addClosure(roomId, startTime, endTime);
 
-        assertThat(result.getCanceledReservations())
+        assertThat(result.closedReservations())
                 .usingRecursiveComparison()
                 .isEqualTo(List.of(earlierReservation, laterReservation));
     }

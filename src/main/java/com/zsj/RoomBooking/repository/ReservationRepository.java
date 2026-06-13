@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -26,11 +27,11 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
               AND (:status IS NULL OR reservation.status = :status)
             """)
     Page<Reservation> findByUserIdAndRoomIdAndStartTimeAndStatus(
-            Long userId,
-            Long roomId,
-            LocalDateTime fromTime,
-            LocalDateTime toTime,
-            ReservationStatus status,
+            @Param("userId") Long userId,
+            @Param("roomId") Long roomId,
+            @Param("fromTime") LocalDateTime fromTime,
+            @Param("toTime") LocalDateTime toTime,
+            @Param("status") ReservationStatus status,
             Pageable pageable
     );
 
@@ -42,7 +43,12 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                   AND reservation.startTime < :toTime
                   AND reservation.endTime > :fromTime
             """)
-    List<Reservation> findByRoomIdAndOverlappingAndActive(Long roomId, LocalDateTime fromTime, LocalDateTime toTime, Sort sort);
+    List<Reservation> findByRoomIdAndOverlappingAndActive(
+            @Param("roomId") Long roomId,
+            @Param("fromTime") LocalDateTime fromTime,
+            @Param("toTime") LocalDateTime toTime,
+            Sort sort
+    );
 
     @Query("""
                 SELECT COUNT(reservation) > 0
@@ -52,7 +58,11 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                   AND reservation.startTime < :toTime
                   AND reservation.endTime > :fromTime
             """)
-    boolean existsByRoomIdAndOverlappingAndActive(Long roomId, LocalDateTime fromTime, LocalDateTime toTime);
+    boolean existsByRoomIdAndOverlappingAndActive(
+            @Param("roomId") Long roomId,
+            @Param("fromTime") LocalDateTime fromTime,
+            @Param("toTime") LocalDateTime toTime
+    );
 
     @Query("""
                 SELECT COUNT(reservation) > 0
@@ -64,10 +74,10 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                   AND reservation.endTime > :fromTime
             """)
     boolean existsByRoomIdAndOverlappingAndActiveExcludingReservation(
-            Long roomId,
-            Long reservationId,
-            LocalDateTime fromTime,
-            LocalDateTime toTime
+            @Param("roomId") Long roomId,
+            @Param("reservationId") Long reservationId,
+            @Param("fromTime") LocalDateTime fromTime,
+            @Param("toTime") LocalDateTime toTime
     );
 
     @Query("""
@@ -77,7 +87,11 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                   AND reservation.status = RESERVATION_STATUS_ACTIVE
                   AND reservation.startTime > :fromTime
             """)
-    List<Reservation> findByRoomIdAndStartAfterAndActive(Long roomId, LocalDateTime fromTime, Sort sort);
+    List<Reservation> findByRoomIdAndStartAfterAndActive(
+            @Param("roomId") Long roomId,
+            @Param("fromTime") LocalDateTime fromTime,
+            Sort sort
+    );
 
     @Query("""
                 SELECT reservation
@@ -86,5 +100,9 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                   AND reservation.status = RESERVATION_STATUS_ACTIVE
                   AND reservation.startTime > :fromTime
             """)
-    List<Reservation> findByUserIdAndStartAfterAndActive(Long userId, LocalDateTime fromTime, Sort sort);
+    List<Reservation> findByUserIdAndStartAfterAndActive(
+            @Param("userId") Long userId,
+            @Param("fromTime") LocalDateTime fromTime,
+            Sort sort
+    );
 }

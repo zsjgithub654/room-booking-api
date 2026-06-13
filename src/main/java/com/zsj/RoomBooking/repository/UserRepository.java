@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
@@ -23,11 +24,15 @@ public interface UserRepository extends JpaRepository<User, Long> {
             AND (:role IS NULL OR :role MEMBER OF user.roles)
             AND (:status IS NULL OR :status = user.status)
             """)
-    Page<User> findByUsernameAndRoleAndStatus(String username, Role role, UserStatus status, Pageable pageable);
+    Page<User> findByUsernameAndRoleAndStatus(
+            @Param("username") String username,
+            @Param("role") Role role,
+            @Param("status") UserStatus status,
+            Pageable pageable
+    );
 
-    /* TODO: make query parameter binding explicit with @Param across the repositories */
     @Lock(PESSIMISTIC_WRITE)
     @Query("SELECT user FROM User user WHERE user.id = :id")
-    Optional<User> findByIdWithLock(Long id);
+    Optional<User> findByIdWithLock(@Param("id") Long id);
 
 }

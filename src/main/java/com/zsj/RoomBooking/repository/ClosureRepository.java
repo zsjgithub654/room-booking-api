@@ -5,6 +5,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -22,9 +23,9 @@ public interface ClosureRepository extends JpaRepository<Closure, Long> {
                   AND closure.endTime > :fromTime
             """)
     List<Closure> findByRoomIdAndOverlapping(
-            Long roomId,
-            LocalDateTime fromTime,
-            LocalDateTime toTime
+            @Param("roomId") Long roomId,
+            @Param("fromTime") LocalDateTime fromTime,
+            @Param("toTime") LocalDateTime toTime
     );
 
     @Query("""
@@ -34,9 +35,9 @@ public interface ClosureRepository extends JpaRepository<Closure, Long> {
                   AND closure.endTime > :fromTime
             """)
     boolean existsByRoomIdAndOverlapping(
-            Long roomId,
-            LocalDateTime fromTime,
-            LocalDateTime toTime
+            @Param("roomId") Long roomId,
+            @Param("fromTime") LocalDateTime fromTime,
+            @Param("toTime") LocalDateTime toTime
     );
 
     /* get closures that overlapping or adjacent with given interval */
@@ -47,9 +48,9 @@ public interface ClosureRepository extends JpaRepository<Closure, Long> {
                   AND closure.endTime >= :fromTime
             """)
     List<Closure> findByRoomIdAndOverlappingOrAdjacent(
-            Long roomId,
-            LocalDateTime fromTime,
-            LocalDateTime toTime
+            @Param("roomId") Long roomId,
+            @Param("fromTime") LocalDateTime fromTime,
+            @Param("toTime") LocalDateTime toTime
     );
 
     @Modifying
@@ -58,5 +59,8 @@ public interface ClosureRepository extends JpaRepository<Closure, Long> {
                 WHERE closure.room.id = :roomId
                   AND closure.startTime > :fromTime
             """)
-    void deleteByRoomIdAndStartAfter(Long roomId, LocalDateTime fromTime);
+    void deleteByRoomIdAndStartAfter(
+            @Param("roomId") Long roomId,
+            @Param("fromTime") LocalDateTime fromTime
+    );
 }

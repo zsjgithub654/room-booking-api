@@ -166,7 +166,6 @@ public class RoomServiceImpl implements RoomService {
 
     @Override
     public List<Reservation> deleteRoom(Long id) {
-        /* TODO: admin required */
         /* verify and acquire lock on room */
         Room room = roomRepository.findByIdWithLock(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Room not found."));

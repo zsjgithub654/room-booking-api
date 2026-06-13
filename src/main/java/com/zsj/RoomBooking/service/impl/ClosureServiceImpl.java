@@ -40,7 +40,6 @@ public class ClosureServiceImpl implements ClosureService {
         return closureRepository.findByRoomId(roomId, DefaultSorts.occupationSort());
     }
 
-    /* TODO: constraints on time */
     @Override
     public AddClosureResult addClosure(Long roomId, LocalDateTime startTime, LocalDateTime endTime) {
         /* check room and acquire lock */

@@ -29,7 +29,6 @@ public class User {
     @Version
     private Long version;
 
-    /* TODO: length limit */
     @Column(unique = true)
     private String username;
     private String password;

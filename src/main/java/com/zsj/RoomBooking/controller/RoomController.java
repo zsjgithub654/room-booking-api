@@ -62,7 +62,6 @@ public class RoomController {
         ).map(roomMapper::toResponse);
     }
 
-    /* TODO: add constraint on search time range length, or page the result */
     @GetMapping("/availabilities")
     public List<RoomScheduleResponse> searchAvailabilities(@Valid @ModelAttribute SearchAvailabilityRequest request) {
         return roomService.searchAvailabilities(
@@ -81,7 +80,6 @@ public class RoomController {
         return roomMapper.toResponse(roomService.getRoom(roomId));
     }
 
-    /* TODO: Non-null type argument is expected for ResponseEntity */
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<RoomResponse> addRoom(@Valid @RequestBody RoomRequest request) {

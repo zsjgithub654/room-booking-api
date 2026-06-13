@@ -102,10 +102,13 @@ public class ReservationServiceImpl implements ReservationService {
         Room room = roomRepository.findByIdWithLock(reservation.getRoom().getId())
                 .filter(Room::isActive)
                 .orElseThrow(() -> new ResourceNotFoundException("Room not found."));
-        /* check availability */
-        validateReservationWithinOpenHours(room, startTime, endTime);
-        validateNoOverlappingClosure(room.getId(), startTime, endTime);
-        validateNoOverlappingReservation(room.getId(), reservation.getId(), startTime, endTime);
+        /* check availability if not within original range */
+        if (!(!startTime.isBefore(reservation.getStartTime())
+                && !endTime.isAfter(reservation.getEndTime()))) {
+            validateReservationWithinOpenHours(room, startTime, endTime);
+            validateNoOverlappingClosure(room.getId(), startTime, endTime);
+            validateNoOverlappingReservation(room.getId(), reservation.getId(), startTime, endTime);
+        }
         /* update reservation */
         reservation.setTime(startTime, endTime);
         return reservation;

@@ -33,6 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -397,6 +398,34 @@ public class ReservationServiceImplTest {
         assertThat(result.getStartTime()).isEqualTo(startTime);
         assertThat(result.getEndTime()).isEqualTo(endTime);
         assertThat(result.getStatus()).isEqualTo(ReservationStatus.RESERVATION_STATUS_SCHEDULED);
+    }
+
+    @Test
+    void updateReservationTimeWithinOriginalRangeTest() {
+        Long reservationId = 2L;
+        Long roomId = 3L;
+        LocalDateTime startTime = LocalDateTime.of(2300, 3, 1, 10, 15, 0, 0);
+        LocalDateTime endTime = LocalDateTime.of(2300, 3, 1, 10, 45, 0, 0);
+        User user = new User("user1", "");
+        Room room = new Room("101", 12, "Building A", LocalTime.of(12, 0), LocalTime.of(17, 0));
+        ReflectionTestUtils.setField(room, "id", roomId);
+        ReflectionTestUtils.setField(user, "id", 4L);
+        Reservation reservation = new Reservation(user, room,
+                LocalDateTime.of(2300, 3, 1, 10, 0, 0, 0),
+                LocalDateTime.of(2300, 3, 1, 11, 0, 0, 0));
+        ReflectionTestUtils.setField(reservation, "id", reservationId);
+
+        when(reservationRepository.findById(eq(reservationId))).thenReturn(Optional.of(reservation));
+        when(userRepository.findByIdWithLock(eq(user.getId()))).thenReturn(Optional.of(user));
+        when(roomRepository.findByIdWithLock(eq(roomId))).thenReturn(Optional.of(room));
+
+        Reservation result = reservationService.updateReservationTime(reservationId, startTime, endTime);
+
+        assertThat(result.getStartTime()).isEqualTo(startTime);
+        assertThat(result.getEndTime()).isEqualTo(endTime);
+        verify(closureRepository, never()).existsByRoomIdAndOverlapping(any(), any(), any());
+        verify(reservationRepository, never()).existsByRoomIdAndOverlappingAndScheduledExcludingReservation(
+                any(), any(), any(), any());
     }
 
     @Test

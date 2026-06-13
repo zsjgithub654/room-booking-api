@@ -36,6 +36,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -57,16 +58,6 @@ public class UserControllerTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private UsernamePasswordAuthenticationToken getAuthentication(Long userId, String username) {
-        CustomUserDetails customUserDetails = new CustomUserDetails(userId, username, "password", Set.of(Role.ROLE_USER), true);
-        return new UsernamePasswordAuthenticationToken(customUserDetails, null, customUserDetails.getAuthorities());
-    }
-
-    private UsernamePasswordAuthenticationToken getAdminAuthentication(Long userId, String username) {
-        CustomUserDetails customUserDetails = new CustomUserDetails(userId, username, "password", Set.of(Role.ROLE_ADMIN), true);
-        return new UsernamePasswordAuthenticationToken(customUserDetails, null, customUserDetails.getAuthorities());
-    }
-
     @Test
     void getUserTest() throws Exception {
         Long id = 1L;
@@ -77,7 +68,7 @@ public class UserControllerTest {
         when(userService.getUser(id)).thenReturn(new User(username, ""));
 
         mockMvc.perform(get("/users/{id}", id)
-                        .with(authentication(getAdminAuthentication(1L, "admin1"))))
+                        .with(user("admin1").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value(username))
                 .andExpect(jsonPath("$.password").doesNotExist())
@@ -113,7 +104,7 @@ public class UserControllerTest {
                 .thenReturn(new PageImpl<>(java.util.List.of(user), PageRequest.of(0, 20), 1));
 
         String responseString = mockMvc.perform(get("/users")
-                        .with(authentication(getAdminAuthentication(1L, "admin1")))
+                        .with(user("admin1").roles("ADMIN"))
                         .param("username", "user")
                         .param("page", "0")
                         .param("size", "20"))
@@ -140,7 +131,7 @@ public class UserControllerTest {
     @Test
     void getUserShouldRejectNonPositiveId() throws Exception {
         mockMvc.perform(get("/users/{id}", 0)
-                        .with(authentication(getAdminAuthentication(1L, "admin1"))))
+                        .with(user("admin1").roles("ADMIN")))
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(userService);
@@ -214,7 +205,7 @@ public class UserControllerTest {
 
         mockMvc.perform(delete("/users/{id}", id)
                         .with(csrf())
-                        .with(authentication(getAdminAuthentication(1L, "admin1"))))
+                        .with(user("admin1").roles("ADMIN")))
                 .andExpect(status().isNoContent());
 
         verify(userService).closeUserAccount(id);
@@ -245,7 +236,7 @@ public class UserControllerTest {
 
         mockMvc.perform(patch("/users/{id}/username", id)
                         .with(csrf())
-                        .with(authentication(getAdminAuthentication(1L, "admin1")))
+                        .with(user("admin1").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(new UpdateUsernameRequest(usernameNew))))
                 .andExpect(status().isOk())
@@ -280,7 +271,7 @@ public class UserControllerTest {
 
         mockMvc.perform(patch("/users/{id}/username", id)
                         .with(csrf())
-                        .with(authentication(getAdminAuthentication(1L, "admin1")))
+                        .with(user("admin1").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(new UpdateUsernameRequest("   "))))
                 .andExpect(status().isBadRequest());
@@ -294,7 +285,7 @@ public class UserControllerTest {
 
         mockMvc.perform(patch("/users/{id}/username", id)
                         .with(csrf())
-                        .with(authentication(getAdminAuthentication(1L, "admin1")))
+                        .with(user("admin1").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(new UpdateUsernameRequest("this_username_is_too_long"))))
                 .andExpect(status().isBadRequest());
@@ -312,7 +303,7 @@ public class UserControllerTest {
 
         mockMvc.perform(patch("/users/{id}/password", id)
                         .with(csrf())
-                        .with(authentication(getAdminAuthentication(1L, "admin1")))
+                        .with(user("admin1").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(new UpdatePasswordRequest(password))))
                 .andExpect(status().isOk())
@@ -332,7 +323,7 @@ public class UserControllerTest {
 
         mockMvc.perform(patch("/users/{id}/roles/admin", id)
                         .with(csrf())
-                        .with(authentication(getAdminAuthentication(1L, "admin1"))))
+                        .with(user("admin1").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("user1"))
                 .andExpect(jsonPath("$.roles", hasItem(Role.ROLE_ADMIN.name())));
@@ -359,7 +350,7 @@ public class UserControllerTest {
 
         mockMvc.perform(delete("/users/{id}/roles/admin", id)
                         .with(csrf())
-                        .with(authentication(getAdminAuthentication(1L, "admin1"))))
+                        .with(user("admin1").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("user1"))
                 .andExpect(jsonPath("$.roles", hasItem(Role.ROLE_USER.name())));
@@ -404,11 +395,18 @@ public class UserControllerTest {
 
         mockMvc.perform(patch("/users/{id}/password", id)
                         .with(csrf())
-                        .with(authentication(getAdminAuthentication(1L, "admin1")))
+                        .with(user("admin1").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(new UpdatePasswordRequest("   "))))
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(userService);
     }
+
+    private UsernamePasswordAuthenticationToken getAuthentication(Long userId, String username) {
+        CustomUserDetails customUserDetails = new CustomUserDetails(userId, username, "password", Set.of(Role.ROLE_USER), true);
+        return new UsernamePasswordAuthenticationToken(customUserDetails, null, customUserDetails.getAuthorities());
+    }
+
+
 }

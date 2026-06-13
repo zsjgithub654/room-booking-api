@@ -41,6 +41,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -62,16 +63,6 @@ public class ReservationControllerTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private UsernamePasswordAuthenticationToken getAuthentication(Long userId, String username) {
-        CustomUserDetails customUserDetails = new CustomUserDetails(userId, username, "password", Set.of(Role.ROLE_USER), true);
-        return new UsernamePasswordAuthenticationToken(customUserDetails, null, customUserDetails.getAuthorities());
-    }
-
-    private UsernamePasswordAuthenticationToken getAdminAuthentication(Long userId, String username) {
-        CustomUserDetails customUserDetails = new CustomUserDetails(userId, username, "password", Set.of(Role.ROLE_ADMIN), true);
-        return new UsernamePasswordAuthenticationToken(customUserDetails, null, customUserDetails.getAuthorities());
-    }
-
     @Test
     void searchReservationsTest() throws Exception {
         /* request */
@@ -91,7 +82,7 @@ public class ReservationControllerTest {
                 .thenReturn(new PageImpl<>(reservations, PageRequest.of(0, 20), reservations.size()));
 
         String responseString = mockMvc.perform(get("/reservations")
-                        .with(authentication(getAdminAuthentication(1L, "admin1")))
+                        .with(user("admin1").roles("ADMIN"))
                         .param("userId", userId.toString())
                         .param("roomId", roomId.toString())
                         .param("date", date.toString())
@@ -131,7 +122,7 @@ public class ReservationControllerTest {
     @Test
     void searchReservationsShouldRejectNonPositiveRoomId() throws Exception {
         mockMvc.perform(get("/reservations")
-                        .with(authentication(getAdminAuthentication(1L, "admin1")))
+                        .with(user("admin1").roles("ADMIN"))
                         .param("roomId", "0"))
                 .andExpect(status().isBadRequest());
 
@@ -149,7 +140,7 @@ public class ReservationControllerTest {
         when(reservationService.getReservation(id)).thenReturn(reservation);
         /* perform */
         String responseString = mockMvc.perform(get("/reservations/{id}", id)
-                        .with(authentication(getAdminAuthentication(1L, "admin1"))))
+                        .with(user("admin1").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andReturn()
                 .getResponse()
@@ -166,7 +157,7 @@ public class ReservationControllerTest {
     @Test
     void getReservationShouldRejectNonPositiveId() throws Exception {
         mockMvc.perform(get("/reservations/{id}", 0)
-                        .with(authentication(getAdminAuthentication(1L, "admin1"))))
+                        .with(user("admin1").roles("ADMIN")))
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(reservationService);
@@ -213,7 +204,6 @@ public class ReservationControllerTest {
 
     @Test
     void addReservationTest() throws Exception {
-        Long adminId = 1L;
         Long userId = 10L;
         Long roomId = 11L;
         LocalDateTime startTime = LocalDateTime.of(2300, 3, 1, 10, 30, 0, 0);
@@ -224,7 +214,7 @@ public class ReservationControllerTest {
 
         String responseString = mockMvc.perform(post("/users/{id}/reservations", userId)
                         .with(csrf())
-                        .with(authentication(getAdminAuthentication(adminId, "admin1")))
+                        .with(user("admin1").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(this.objectMapper
                                 .writeValueAsString(new ReservationRequest(roomId, startTime, endTime))))
@@ -313,7 +303,7 @@ public class ReservationControllerTest {
         /* perform */
         mockMvc.perform(patch("/reservations/{id}/cancel", id)
                         .with(csrf())
-                        .with(authentication(getAdminAuthentication(1L, "admin1"))))
+                        .with(user("admin1").roles("ADMIN")))
                 .andExpect(status().isNoContent());
         verify(reservationService).deleteReservation(id);
     }
@@ -330,7 +320,7 @@ public class ReservationControllerTest {
         /* perform */
         String responseString = mockMvc.perform(patch("/reservations/{id}", id)
                         .with(csrf())
-                        .with(authentication(getAdminAuthentication(1L, "admin1")))
+                        .with(user("admin1").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(new UpdateReservationRequest(startTime, endTime))))
                 .andExpect(status().isOk())
@@ -354,11 +344,16 @@ public class ReservationControllerTest {
 
         mockMvc.perform(patch("/reservations/{id}", id)
                         .with(csrf())
-                        .with(authentication(getAdminAuthentication(1L, "admin1")))
+                        .with(user("admin1").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(new UpdateReservationRequest(startTime, endTime))))
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(reservationService);
+    }
+
+    private UsernamePasswordAuthenticationToken getAuthentication(Long userId, String username) {
+        CustomUserDetails customUserDetails = new CustomUserDetails(userId, username, "password", Set.of(Role.ROLE_USER), true);
+        return new UsernamePasswordAuthenticationToken(customUserDetails, null, customUserDetails.getAuthorities());
     }
 }

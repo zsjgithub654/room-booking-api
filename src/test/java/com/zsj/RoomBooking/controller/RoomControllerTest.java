@@ -5,7 +5,6 @@ import com.zsj.RoomBooking.mapper.OccupationMapper;
 import com.zsj.RoomBooking.mapper.ReservationMapper;
 import com.zsj.RoomBooking.mapper.RoomMapper;
 import com.zsj.RoomBooking.mapper.RoomScheduleMapper;
-import com.zsj.RoomBooking.model.Role;
 import com.zsj.RoomBooking.model.RoomSchedule;
 import com.zsj.RoomBooking.model.dto.request.RoomRequest;
 import com.zsj.RoomBooking.model.dto.request.SearchAvailabilityRequest;
@@ -17,7 +16,6 @@ import com.zsj.RoomBooking.model.entity.Closure;
 import com.zsj.RoomBooking.model.entity.Reservation;
 import com.zsj.RoomBooking.model.entity.Room;
 import com.zsj.RoomBooking.model.entity.User;
-import com.zsj.RoomBooking.security.CustomUserDetails;
 import com.zsj.RoomBooking.service.RoomService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +25,6 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.core.type.TypeReference;
@@ -44,8 +41,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -70,11 +67,6 @@ public class RoomControllerTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private UsernamePasswordAuthenticationToken getAdminAuthentication(Long userId, String username) {
-        CustomUserDetails customUserDetails = new CustomUserDetails(userId, username, "password", java.util.Set.of(Role.ROLE_ADMIN), true);
-        return new UsernamePasswordAuthenticationToken(customUserDetails, null, customUserDetails.getAuthorities());
-    }
-
     @Test
     void searchRoomsTest() throws Exception {
         /* request */
@@ -96,7 +88,7 @@ public class RoomControllerTest {
         )).thenReturn(new PageImpl<>(rooms, PageRequest.of(0, 20), rooms.size()));
         /* perform */
         String responseString = mockMvc.perform(get("/rooms")
-                        .with(authentication(getAdminAuthentication(1L, "admin1")))
+                        .with(user("admin1").roles("ADMIN"))
                         .param("minCapacity", request.minCapacity().toString())
                         .param("maxCapacity", request.maxCapacity().toString())
                         .param("page", "0")
@@ -123,7 +115,7 @@ public class RoomControllerTest {
     @Test
     void searchRoomsShouldRejectInvalidCapacityRange() throws Exception {
         mockMvc.perform(get("/rooms")
-                        .with(authentication(getAdminAuthentication(1L, "admin1")))
+                        .with(user("admin1").roles("ADMIN"))
                         .param("minCapacity", "20")
                         .param("maxCapacity", "2"))
                 .andExpect(status().isBadRequest());
@@ -254,7 +246,7 @@ public class RoomControllerTest {
         when(roomService.getRoom(id)).thenReturn(room);
         /* perform and verify */
         String responseString = mockMvc.perform(get("/rooms/{id}", id)
-                        .with(authentication(getAdminAuthentication(1L, "admin1"))))
+                        .with(user("admin1").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andReturn()
                 .getResponse()
@@ -268,7 +260,7 @@ public class RoomControllerTest {
     @Test
     void getRoomShouldRejectNonPositiveId() throws Exception {
         mockMvc.perform(get("/rooms/{id}", 0)
-                        .with(authentication(getAdminAuthentication(1L, "admin1"))))
+                        .with(user("admin1").roles("ADMIN")))
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(roomService);
@@ -284,7 +276,7 @@ public class RoomControllerTest {
 
         String responseString = mockMvc.perform(post("/rooms")
                         .with(csrf())
-                        .with(authentication(getAdminAuthentication(1L, "admin1")))
+                        .with(user("admin1").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(new RoomRequest(
                                 room.getName(),
@@ -311,7 +303,7 @@ public class RoomControllerTest {
 
         String responseString = mockMvc.perform(post("/rooms")
                         .with(csrf())
-                        .with(authentication(getAdminAuthentication(1L, "admin1")))
+                        .with(user("admin1").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(new RoomRequest(
                                 room.getName(),
@@ -337,7 +329,7 @@ public class RoomControllerTest {
 
         mockMvc.perform(post("/rooms")
                         .with(csrf())
-                        .with(authentication(getAdminAuthentication(1L, "admin1")))
+                        .with(user("admin1").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
@@ -353,7 +345,7 @@ public class RoomControllerTest {
 
         mockMvc.perform(post("/rooms")
                         .with(csrf())
-                        .with(authentication(getAdminAuthentication(1L, "admin1")))
+                        .with(user("admin1").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
@@ -369,7 +361,7 @@ public class RoomControllerTest {
 
         mockMvc.perform(post("/rooms")
                         .with(csrf())
-                        .with(authentication(getAdminAuthentication(1L, "admin1")))
+                        .with(user("admin1").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
@@ -385,7 +377,7 @@ public class RoomControllerTest {
 
         mockMvc.perform(post("/rooms")
                         .with(csrf())
-                        .with(authentication(getAdminAuthentication(1L, "admin1")))
+                        .with(user("admin1").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
@@ -401,7 +393,7 @@ public class RoomControllerTest {
 
         mockMvc.perform(post("/rooms")
                         .with(csrf())
-                        .with(authentication(getAdminAuthentication(1L, "admin1")))
+                        .with(user("admin1").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
@@ -426,7 +418,7 @@ public class RoomControllerTest {
         /* perform */
         String responseString = mockMvc.perform(delete("/rooms/{id}", roomId)
                         .with(csrf())
-                        .with(authentication(getAdminAuthentication(1L, "admin1"))))
+                        .with(user("admin1").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andReturn()
                 .getResponse()
@@ -458,7 +450,7 @@ public class RoomControllerTest {
 
         String responseString = mockMvc.perform(put("/rooms/{id}", id)
                         .with(csrf())
-                        .with(authentication(getAdminAuthentication(1L, "admin1")))
+                        .with(user("admin1").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(new RoomRequest(
                                 room.getName(),
@@ -490,7 +482,7 @@ public class RoomControllerTest {
 
         String responseString = mockMvc.perform(put("/rooms/{id}", id)
                         .with(csrf())
-                        .with(authentication(getAdminAuthentication(1L, "admin1")))
+                        .with(user("admin1").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(new RoomRequest(
                                 room.getName(),

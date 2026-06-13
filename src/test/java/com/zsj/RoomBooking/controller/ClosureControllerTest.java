@@ -5,7 +5,6 @@ import com.zsj.RoomBooking.mapper.AddClosureMapper;
 import com.zsj.RoomBooking.mapper.ClosureMapper;
 import com.zsj.RoomBooking.mapper.ReservationMapper;
 import com.zsj.RoomBooking.model.AddClosureResult;
-import com.zsj.RoomBooking.model.Role;
 import com.zsj.RoomBooking.model.dto.request.ClosureRequest;
 import com.zsj.RoomBooking.model.dto.response.AddClosureResponse;
 import com.zsj.RoomBooking.model.dto.response.ClosureResponse;
@@ -13,7 +12,6 @@ import com.zsj.RoomBooking.model.entity.Closure;
 import com.zsj.RoomBooking.model.entity.Reservation;
 import com.zsj.RoomBooking.model.entity.Room;
 import com.zsj.RoomBooking.model.entity.User;
-import com.zsj.RoomBooking.security.CustomUserDetails;
 import com.zsj.RoomBooking.service.ClosureService;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -22,7 +20,6 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.core.type.TypeReference;
@@ -37,8 +34,8 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -61,12 +58,6 @@ public class ClosureControllerTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    /* TODO: consider extract to a common util class */
-    private UsernamePasswordAuthenticationToken getAdminAuthentication(Long userId, String username) {
-        CustomUserDetails customUserDetails = new CustomUserDetails(userId, username, "password", java.util.Set.of(Role.ROLE_ADMIN), true);
-        return new UsernamePasswordAuthenticationToken(customUserDetails, null, customUserDetails.getAuthorities());
-    }
-
     @Test
     void getClosureTest() throws Exception {
         /* request */
@@ -78,7 +69,7 @@ public class ClosureControllerTest {
         when(closureService.getClosure(eq(closureId))).thenReturn(closure);
         /* perform */
         String responseString = mockMvc.perform(get("/closures/{closureId}", closureId)
-                        .with(authentication(getAdminAuthentication(1L, "admin1"))))
+                        .with(user("admin1").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andReturn()
                 .getResponse()
@@ -95,7 +86,7 @@ public class ClosureControllerTest {
     @Test
     void getClosureShouldRejectNonPositiveId() throws Exception {
         mockMvc.perform(get("/closures/{closureId}", 0)
-                        .with(authentication(getAdminAuthentication(1L, "admin1"))))
+                        .with(user("admin1").roles("ADMIN")))
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(closureService);
@@ -118,7 +109,7 @@ public class ClosureControllerTest {
         mockMvc.perform(delete("/closures/{closureId}", closureId)
                         /* add a csrf token for write request to pass Spring security csrf protection */
                         .with(csrf())
-                        .with(authentication(getAdminAuthentication(1L, "admin1"))))
+                        .with(user("admin1").roles("ADMIN")))
                 /* deleted status code 204 */
                 .andExpect(status().isNoContent());
         verify(closureService).deleteClosure(closureId);
@@ -135,7 +126,7 @@ public class ClosureControllerTest {
         when(closureService.getClosuresOfRoom(eq(roomId))).thenReturn(closures);
         /* perform, to compare LocalDateTime, parse response to dto object */
         String responseString = mockMvc.perform(get("/rooms/{roomId}/closures", roomId)
-                        .with(authentication(getAdminAuthentication(1L, "admin1"))))
+                        .with(user("admin1").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andReturn()
                 .getResponse()
@@ -154,7 +145,7 @@ public class ClosureControllerTest {
     @Test
     void getClosuresOfRoomShouldRejectNonPositiveRoomId() throws Exception {
         mockMvc.perform(get("/rooms/{roomId}/closures", 0)
-                        .with(authentication(getAdminAuthentication(1L, "admin1"))))
+                        .with(user("admin1").roles("ADMIN")))
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(closureService);
@@ -182,7 +173,7 @@ public class ClosureControllerTest {
         /* perform, need to parse response to dto object to compare LocalDateTime */
         String responseString = mockMvc.perform(post("/rooms/{roomId}/closures", roomId)
                         .with(csrf())
-                        .with(authentication(getAdminAuthentication(1L, "admin1")))
+                        .with(user("admin1").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(new ClosureRequest(startTime, endTime))))
                 .andExpect(status().isCreated())
@@ -210,7 +201,7 @@ public class ClosureControllerTest {
 
         mockMvc.perform(post("/rooms/{roomId}/closures", roomId)
                         .with(csrf())
-                        .with(authentication(getAdminAuthentication(1L, "admin1")))
+                        .with(user("admin1").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(new ClosureRequest(startTime, endTime))))
                 .andExpect(status().isBadRequest());
@@ -225,7 +216,7 @@ public class ClosureControllerTest {
 
         mockMvc.perform(post("/rooms/{roomId}/closures", 0)
                         .with(csrf())
-                        .with(authentication(getAdminAuthentication(1L, "admin1")))
+                        .with(user("admin1").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(new ClosureRequest(startTime, endTime))))
                 .andExpect(status().isBadRequest());
@@ -241,7 +232,7 @@ public class ClosureControllerTest {
 
         mockMvc.perform(post("/rooms/{roomId}/closures", roomId)
                         .with(csrf())
-                        .with(authentication(getAdminAuthentication(1L, "admin1")))
+                        .with(user("admin1").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(new ClosureRequest(startTime, endTime))))
                 .andExpect(status().isBadRequest());

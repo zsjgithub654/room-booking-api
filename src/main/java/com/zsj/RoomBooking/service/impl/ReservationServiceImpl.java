@@ -22,6 +22,14 @@ import java.time.LocalDateTime;
 @Transactional
 @Service
 public class ReservationServiceImpl implements ReservationService {
+    private static final String RESERVATION_NOT_FOUND = "Reservation not found.";
+    private static final String USER_NOT_FOUND = "User not found.";
+    private static final String ROOM_NOT_FOUND = "Room not found.";
+    private static final String STARTED_RESERVATION_CANNOT_BE_UPDATED = "Started reservation cannot be updated.";
+    private static final String ROOM_NOT_IN_OPEN_HOURS = "Room not in open hours.";
+    private static final String ROOM_IN_CLOSURE = "Room is in closure during selected time.";
+    private static final String ROOM_RESERVED = "Room is reserved in selected time.";
+
     @Autowired
     private ReservationRepository reservationRepository;
 
@@ -46,7 +54,7 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     public Reservation getReservation(Long id) {
-        return reservationRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Reservation not found."));
+        return reservationRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException(RESERVATION_NOT_FOUND));
     }
 
     @Override
@@ -54,10 +62,10 @@ public class ReservationServiceImpl implements ReservationService {
         /* verify and acquire lock on user and room, keep order of acquiring locks consistent across transactions */
         User user = userRepository.findByIdWithLock(userId)
                 .filter(User::isActive)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found."));
+                .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND));
         Room room = roomRepository.findByIdWithLock(roomId)
                 .filter(Room::isActive)
-                .orElseThrow(() -> new ResourceNotFoundException("Room not found."));
+                .orElseThrow(() -> new ResourceNotFoundException(ROOM_NOT_FOUND));
         /* check availability */
         validateReservationWithinOpenHours(room, startTime, endTime);
         validateNoOverlappingClosure(room.getId(), startTime, endTime);
@@ -69,7 +77,7 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     public void releaseReservation(Long reservationId) {
         Reservation reservation = reservationRepository.findById(reservationId)
-                .orElseThrow(() -> new ResourceNotFoundException("Reservation not found."));
+                .orElseThrow(() -> new ResourceNotFoundException(RESERVATION_NOT_FOUND));
         if (!reservation.isScheduled()) {
             return;
         }
@@ -91,20 +99,20 @@ public class ReservationServiceImpl implements ReservationService {
     public Reservation updateReservationTime(Long id, LocalDateTime startTime, LocalDateTime endTime) {
         Reservation reservation = reservationRepository.findById(id)
                 .filter(Reservation::isScheduled)
-                .orElseThrow(() -> new ResourceNotFoundException("Reservation not found."));
+                .orElseThrow(() -> new ResourceNotFoundException(RESERVATION_NOT_FOUND));
         if (!reservation.getStartTime().isAfter(LocalDateTime.now())) {
-            throw new IllegalStateException("Started reservation cannot be updated.");
+            throw new IllegalStateException(STARTED_RESERVATION_CANNOT_BE_UPDATED);
         }
         /* acquire lock on user and room */
         userRepository.findByIdWithLock(reservation.getUser().getId())
                 .filter(User::isActive)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found."));
+                .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND));
         Room room = roomRepository.findByIdWithLock(reservation.getRoom().getId())
                 .filter(Room::isActive)
-                .orElseThrow(() -> new ResourceNotFoundException("Room not found."));
+                .orElseThrow(() -> new ResourceNotFoundException(ROOM_NOT_FOUND));
         /* check availability if not within original range */
-        if (!(!startTime.isBefore(reservation.getStartTime())
-                && !endTime.isAfter(reservation.getEndTime()))) {
+        if (startTime.isBefore(reservation.getStartTime())
+                || endTime.isAfter(reservation.getEndTime())) {
             validateReservationWithinOpenHours(room, startTime, endTime);
             validateNoOverlappingClosure(room.getId(), startTime, endTime);
             validateNoOverlappingReservation(room.getId(), reservation.getId(), startTime, endTime);
@@ -122,13 +130,13 @@ public class ReservationServiceImpl implements ReservationService {
         if (!startTime.toLocalDate().equals(endTime.toLocalDate())
                 || startTime.toLocalTime().isBefore(room.getOpenTime())
                 || endTime.toLocalTime().isAfter(room.getCloseTime())) {
-            throw new IllegalStateException("Room is not in open hours during selected time.");
+            throw new IllegalStateException(ROOM_NOT_IN_OPEN_HOURS);
         }
     }
 
     private void validateNoOverlappingClosure(Long roomId, LocalDateTime startTime, LocalDateTime endTime) {
         if (closureRepository.existsByRoomIdAndOverlapping(roomId, startTime, endTime)) {
-            throw new IllegalStateException("Room is in closure during selected time.");
+            throw new IllegalStateException(ROOM_IN_CLOSURE);
         }
     }
 
@@ -138,7 +146,7 @@ public class ReservationServiceImpl implements ReservationService {
                 : reservationRepository.existsByRoomIdAndOverlappingAndScheduledExcludingReservation(
                         roomId, currentReservation, startTime, endTime);
         if (hasOverlap) {
-            throw new IllegalStateException("Room is reserved in selected time.");
+            throw new IllegalStateException(ROOM_RESERVED);
         }
     }
 

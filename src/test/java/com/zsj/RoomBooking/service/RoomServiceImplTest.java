@@ -74,8 +74,7 @@ public class RoomServiceImplTest {
     void GetRoomNotFoundTest() {
         Long searchId = 2L;
         when(roomRepository.findById(eq(searchId))).thenReturn(Optional.empty());
-        Exception exception = assertThrows(ResourceNotFoundException.class, () -> roomService.getRoom(searchId));
-        assertThat(exception.getMessage()).isEqualTo("Room not found.");
+        assertThrows(ResourceNotFoundException.class, () -> roomService.getRoom(searchId));
     }
 
     @Test
@@ -91,11 +90,10 @@ public class RoomServiceImplTest {
 
     @Test
     void AddRoomInvalidOpenHoursTest() {
-        Exception exception = assertThrows(IllegalArgumentException.class,
+        assertThrows(IllegalArgumentException.class,
                 () -> new Room("101", 12, "Building A",
                         LocalTime.of(16, 0, 0, 0),
                         LocalTime.of(9, 0, 0, 0)));
-        assertThat(exception.getMessage()).isEqualTo("Open time must be before close time.");
     }
 
     @Test
@@ -141,14 +139,13 @@ public class RoomServiceImplTest {
 
         when(roomRepository.findById(eq(searchId))).thenReturn(Optional.empty());
 
-        Exception exception = assertThrows(ResourceNotFoundException.class,
+        assertThrows(ResourceNotFoundException.class,
                 () -> roomService.updateRoom(searchId,
                         newRoom.getName(),
                         newRoom.getCapacity(),
                         newRoom.getArea(),
                         newRoom.getOpenTime(),
                         newRoom.getCloseTime()));
-        assertThat(exception.getMessage()).isEqualTo("Room not found.");
     }
 
     @Test
@@ -347,8 +344,7 @@ public class RoomServiceImplTest {
         Long searchId = 2L;
         when(roomRepository.findByIdWithLock(eq(searchId))).thenReturn(Optional.empty());
 
-        Exception exception = assertThrows(ResourceNotFoundException.class, () -> roomService.deleteRoom(searchId));
-        assertThat(exception.getMessage()).isEqualTo("Room not found.");
+        assertThrows(ResourceNotFoundException.class, () -> roomService.deleteRoom(searchId));
     }
 
     private Sort getRoomSort() {

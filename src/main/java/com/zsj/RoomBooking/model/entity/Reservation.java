@@ -20,6 +20,9 @@ import java.time.LocalDateTime;
         @Index(name = "idx_reservation_user_status_start_time", columnList = "user_id, status, start_time")
 })
 public class Reservation implements Occupation {
+    private static final String START_AND_END_TIME_MUST_NOT_BE_NULL = "Start time and end time must not be null.";
+    private static final String START_TIME_MUST_BE_BEFORE_END_TIME = "Start time must be before end time.";
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -92,10 +95,10 @@ public class Reservation implements Occupation {
 
     public void setTime(LocalDateTime startTime, LocalDateTime endTime) {
         if (startTime == null || endTime == null) {
-            throw new IllegalArgumentException("Start time and end time must not be null.");
+            throw new IllegalArgumentException(START_AND_END_TIME_MUST_NOT_BE_NULL);
         }
         if (!startTime.isBefore(endTime)) {
-            throw new IllegalArgumentException("Start time must be before end time.");
+            throw new IllegalArgumentException(START_TIME_MUST_BE_BEFORE_END_TIME);
         }
         this.startTime = startTime;
         this.endTime = endTime;

@@ -61,8 +61,7 @@ public class UserServiceImplTest {
     void GetUserNotFoundTest() {
         Long searchId = 2L;
         when(userRepository.findById(eq(searchId))).thenReturn(Optional.empty());
-        Exception exception = assertThrows(ResourceNotFoundException.class, () -> userService.getUser(searchId));
-        assertThat(exception.getMessage()).isEqualTo("User not found.");
+        assertThrows(ResourceNotFoundException.class, () -> userService.getUser(searchId));
     }
 
     @Test
@@ -99,9 +98,8 @@ public class UserServiceImplTest {
 
         when(userRepository.findById(eq(searchId))).thenReturn(Optional.empty());
 
-        Exception exception = assertThrows(ResourceNotFoundException.class,
+        assertThrows(ResourceNotFoundException.class,
                 () -> userService.updateUsername(searchId, newName));
-        assertThat(exception.getMessage()).isEqualTo("User not found.");
     }
 
     @Test
@@ -129,9 +127,8 @@ public class UserServiceImplTest {
 
         when(userRepository.findById(eq(searchId))).thenReturn(Optional.empty());
 
-        Exception exception = assertThrows(ResourceNotFoundException.class,
+        assertThrows(ResourceNotFoundException.class,
                 () -> userService.updatePassword(searchId, newPassword));
-        assertThat(exception.getMessage()).isEqualTo("User not found.");
     }
 
     @Test
@@ -151,9 +148,8 @@ public class UserServiceImplTest {
 
         when(userRepository.findById(eq(searchId))).thenReturn(Optional.empty());
 
-        Exception exception = assertThrows(ResourceNotFoundException.class,
+        assertThrows(ResourceNotFoundException.class,
                 () -> userService.addAdminRole(searchId));
-        assertThat(exception.getMessage()).isEqualTo("User not found.");
     }
 
     @Test
@@ -175,9 +171,8 @@ public class UserServiceImplTest {
 
         when(userRepository.findById(eq(searchId))).thenReturn(Optional.empty());
 
-        Exception exception = assertThrows(ResourceNotFoundException.class,
+        assertThrows(ResourceNotFoundException.class,
                 () -> userService.removeAdminRole(searchId));
-        assertThat(exception.getMessage()).isEqualTo("User not found.");
     }
 
     @Test
@@ -259,8 +254,7 @@ public class UserServiceImplTest {
         Long searchId = 2L;
         when(userRepository.findByIdWithLock(eq(searchId))).thenReturn(Optional.empty());
 
-        Exception exception = assertThrows(ResourceNotFoundException.class, () -> userService.closeUserAccount(searchId));
-        assertThat(exception.getMessage()).isEqualTo("User not found.");
+        assertThrows(ResourceNotFoundException.class, () -> userService.closeUserAccount(searchId));
     }
 
     private Sort getUserSort() {

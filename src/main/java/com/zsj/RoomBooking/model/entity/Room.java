@@ -12,6 +12,9 @@ import java.time.LocalTime;
 @Entity
 public class Room {
     private static final LocalTime OPEN_ALL_DAY_OPEN_TIME = LocalTime.MIN;
+    private static final String PROVIDE_BOTH_OPEN_TIME_AND_CLOSE_TIME_OR_NEITHER =
+            "Provide both open time and close time or neither.";
+    private static final String OPEN_TIME_MUST_BE_BEFORE_CLOSE_TIME = "Open time must be before close time.";
     /* Use second precision sentinel instead of LocalTime.MAX because precision loses on persistence. */
     private static final LocalTime OPEN_ALL_DAY_CLOSE_TIME = LocalTime.of(23, 59, 59);
 
@@ -90,10 +93,10 @@ public class Room {
             return;
         }
         if (openTime == null || closeTime == null) {
-            throw new IllegalArgumentException("Open time and close time must both be provided or both be omitted.");
+            throw new IllegalArgumentException(PROVIDE_BOTH_OPEN_TIME_AND_CLOSE_TIME_OR_NEITHER);
         }
         if (!openTime.isBefore(closeTime)) {
-            throw new IllegalArgumentException("Open time must be before close time.");
+            throw new IllegalArgumentException(OPEN_TIME_MUST_BE_BEFORE_CLOSE_TIME);
         }
         this.openTime = openTime;
         this.closeTime = closeTime;

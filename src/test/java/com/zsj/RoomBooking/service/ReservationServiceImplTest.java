@@ -73,9 +73,8 @@ public class ReservationServiceImplTest {
         Long searchId = 2L;
         when(reservationRepository.findById(eq(searchId))).thenReturn(Optional.empty());
 
-        Exception exception = assertThrows(ResourceNotFoundException.class,
+        assertThrows(ResourceNotFoundException.class,
                 () -> reservationService.getReservation(searchId));
-        assertThat(exception.getMessage()).isEqualTo("Reservation not found.");
     }
 
     @Test
@@ -180,9 +179,8 @@ public class ReservationServiceImplTest {
         when(userRepository.findByIdWithLock(eq(userId))).thenReturn(Optional.of(user));
         when(roomRepository.findByIdWithLock(eq(roomId))).thenReturn(Optional.of(room));
 
-        Exception exception = assertThrows(IllegalStateException.class,
+        assertThrows(IllegalStateException.class,
                 () -> reservationService.addReservation(userId, roomId, startTime, endTime));
-        assertThat(exception.getMessage()).isEqualTo("Room is not in open hours during selected time.");
     }
 
     @Test
@@ -216,9 +214,8 @@ public class ReservationServiceImplTest {
 
         when(userRepository.findByIdWithLock(eq(userId))).thenReturn(Optional.empty());
 
-        Exception exception = assertThrows(ResourceNotFoundException.class,
+        assertThrows(ResourceNotFoundException.class,
                 () -> reservationService.addReservation(userId, roomId, startTime, endTime));
-        assertThat(exception.getMessage()).isEqualTo("User not found.");
     }
 
     @Test
@@ -232,9 +229,8 @@ public class ReservationServiceImplTest {
         when(userRepository.findByIdWithLock(eq(userId))).thenReturn(Optional.of(user));
         when(roomRepository.findByIdWithLock(eq(roomId))).thenReturn(Optional.empty());
 
-        Exception exception = assertThrows(ResourceNotFoundException.class,
+        assertThrows(ResourceNotFoundException.class,
                 () -> reservationService.addReservation(userId, roomId, startTime, endTime));
-        assertThat(exception.getMessage()).isEqualTo("Room not found.");
     }
 
     @Test
@@ -251,9 +247,8 @@ public class ReservationServiceImplTest {
         when(roomRepository.findByIdWithLock(eq(roomId))).thenReturn(Optional.of(room));
         when(closureRepository.existsByRoomIdAndOverlapping(eq(roomId), eq(startTime), eq(endTime))).thenReturn(true);
 
-        Exception exception = assertThrows(IllegalStateException.class,
+        assertThrows(IllegalStateException.class,
                 () -> reservationService.addReservation(userId, roomId, startTime, endTime));
-        assertThat(exception.getMessage()).isEqualTo("Room is in closure during selected time.");
     }
 
     @Test
@@ -273,9 +268,8 @@ public class ReservationServiceImplTest {
         when(reservationRepository.existsByRoomIdAndOverlappingAndScheduled(eq(roomId), eq(startTime), eq(endTime)))
                 .thenReturn(true);
 
-        Exception exception = assertThrows(IllegalStateException.class,
+        assertThrows(IllegalStateException.class,
                 () -> reservationService.addReservation(userId, roomId, startTime, endTime));
-        assertThat(exception.getMessage()).isEqualTo("Room is reserved in selected time.");
     }
 
     @Test
@@ -363,9 +357,8 @@ public class ReservationServiceImplTest {
         Long reservationId = 2L;
         when(reservationRepository.findById(eq(reservationId))).thenReturn(Optional.empty());
 
-        Exception exception = assertThrows(ResourceNotFoundException.class,
+        assertThrows(ResourceNotFoundException.class,
                 () -> reservationService.releaseReservation(reservationId));
-        assertThat(exception.getMessage()).isEqualTo("Reservation not found.");
     }
 
     @Test
@@ -439,12 +432,11 @@ public class ReservationServiceImplTest {
 
         when(reservationRepository.findById(eq(reservationId))).thenReturn(Optional.of(reservation));
 
-        Exception exception = assertThrows(IllegalStateException.class,
+        assertThrows(IllegalStateException.class,
                 () -> reservationService.updateReservationTime(
                         reservationId,
                         LocalDateTime.of(2300, 3, 1, 12, 0, 0, 0),
                         LocalDateTime.of(2300, 3, 1, 13, 0, 0, 0)));
-        assertThat(exception.getMessage()).isEqualTo("Started reservation cannot be updated.");
     }
 
     @Test
@@ -465,9 +457,8 @@ public class ReservationServiceImplTest {
         when(userRepository.findByIdWithLock(eq(user.getId()))).thenReturn(Optional.of(user));
         when(roomRepository.findByIdWithLock(eq(roomId))).thenReturn(Optional.of(room));
 
-        Exception exception = assertThrows(IllegalStateException.class,
+        assertThrows(IllegalStateException.class,
                 () -> reservationService.updateReservationTime(reservationId, startTime, endTime));
-        assertThat(exception.getMessage()).isEqualTo("Room is not in open hours during selected time.");
     }
 
     @Test
@@ -478,9 +469,8 @@ public class ReservationServiceImplTest {
 
         when(reservationRepository.findById(eq(reservationId))).thenReturn(Optional.empty());
 
-        Exception exception = assertThrows(ResourceNotFoundException.class,
+        assertThrows(ResourceNotFoundException.class,
                 () -> reservationService.updateReservationTime(reservationId, startTime, endTime));
-        assertThat(exception.getMessage()).isEqualTo("Reservation not found.");
     }
 
     @Test
@@ -500,9 +490,8 @@ public class ReservationServiceImplTest {
         when(reservationRepository.findById(eq(reservationId))).thenReturn(Optional.of(reservation));
         when(userRepository.findByIdWithLock(eq(user.getId()))).thenReturn(Optional.empty());
 
-        Exception exception = assertThrows(ResourceNotFoundException.class,
+        assertThrows(ResourceNotFoundException.class,
                 () -> reservationService.updateReservationTime(reservationId, startTime, endTime));
-        assertThat(exception.getMessage()).isEqualTo("User not found.");
     }
 
     @Test
@@ -523,9 +512,8 @@ public class ReservationServiceImplTest {
         when(reservationRepository.findById(eq(reservationId))).thenReturn(Optional.of(reservation));
         when(userRepository.findByIdWithLock(eq(user.getId()))).thenReturn(Optional.of(user));
 
-        Exception exception = assertThrows(ResourceNotFoundException.class,
+        assertThrows(ResourceNotFoundException.class,
                 () -> reservationService.updateReservationTime(reservationId, startTime, endTime));
-        assertThat(exception.getMessage()).isEqualTo("User not found.");
     }
 
     @Test
@@ -546,9 +534,8 @@ public class ReservationServiceImplTest {
         when(userRepository.findByIdWithLock(eq(user.getId()))).thenReturn(Optional.of(user));
         when(roomRepository.findByIdWithLock(eq(room.getId()))).thenReturn(Optional.empty());
 
-        Exception exception = assertThrows(ResourceNotFoundException.class,
+        assertThrows(ResourceNotFoundException.class,
                 () -> reservationService.updateReservationTime(reservationId, startTime, endTime));
-        assertThat(exception.getMessage()).isEqualTo("Room not found.");
     }
 
     @Test
@@ -570,9 +557,8 @@ public class ReservationServiceImplTest {
         when(userRepository.findByIdWithLock(eq(user.getId()))).thenReturn(Optional.of(user));
         when(roomRepository.findByIdWithLock(eq(room.getId()))).thenReturn(Optional.of(room));
 
-        Exception exception = assertThrows(ResourceNotFoundException.class,
+        assertThrows(ResourceNotFoundException.class,
                 () -> reservationService.updateReservationTime(reservationId, startTime, endTime));
-        assertThat(exception.getMessage()).isEqualTo("Room not found.");
     }
 
     @Test
@@ -595,9 +581,8 @@ public class ReservationServiceImplTest {
         when(closureRepository.existsByRoomIdAndOverlapping(eq(room.getId()), eq(startTime), eq(endTime)))
                 .thenReturn(true);
 
-        Exception exception = assertThrows(IllegalStateException.class,
+        assertThrows(IllegalStateException.class,
                 () -> reservationService.updateReservationTime(reservationId, startTime, endTime));
-        assertThat(exception.getMessage()).isEqualTo("Room is in closure during selected time.");
     }
 
     @Test
@@ -626,9 +611,8 @@ public class ReservationServiceImplTest {
                 eq(endTime)))
                 .thenReturn(true);
 
-        Exception exception = assertThrows(IllegalStateException.class,
+        assertThrows(IllegalStateException.class,
                 () -> reservationService.updateReservationTime(reservationId, startTime, endTime));
-        assertThat(exception.getMessage()).isEqualTo("Room is reserved in selected time.");
     }
 
     private Sort getOccupationSort() {

@@ -32,6 +32,8 @@ import java.util.stream.Stream;
 @Service
 @Transactional
 public class RoomServiceImpl implements RoomService {
+    private static final String ROOM_NOT_FOUND = "Room not found.";
+
     @Autowired
     private RoomRepository roomRepository;
 
@@ -154,8 +156,7 @@ public class RoomServiceImpl implements RoomService {
 
     @Override
     public Room getRoom(Long id) {
-        /* TODO: extract to constant */
-        return roomRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Room not found."));
+        return roomRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException(ROOM_NOT_FOUND));
     }
 
     @Override
@@ -167,7 +168,7 @@ public class RoomServiceImpl implements RoomService {
     public List<Reservation> deleteRoom(Long id) {
         /* verify and acquire lock on room */
         Room room = roomRepository.findByIdWithLock(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Room not found."));
+                .orElseThrow(() -> new ResourceNotFoundException(ROOM_NOT_FOUND));
         if (!room.isActive()) {
             return Collections.emptyList();
         }
@@ -187,7 +188,7 @@ public class RoomServiceImpl implements RoomService {
     public Room updateRoom(Long id, String name, Integer capacity, String area, LocalTime openTime, LocalTime closeTime) {
         Room room = roomRepository.findById(id)
                 .filter(Room::isActive)
-                .orElseThrow(() -> new ResourceNotFoundException("Room not found."));
+                .orElseThrow(() -> new ResourceNotFoundException(ROOM_NOT_FOUND));
         room.setName(name);
         room.setCapacity(capacity);
         room.setArea(area);

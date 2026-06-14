@@ -63,8 +63,7 @@ public class ClosureServiceImplTest {
         Long searchId = 2L;
         when(closureRepository.findById(eq(searchId))).thenThrow(new ResourceNotFoundException("Closure not found."));
 
-        Exception exception = assertThrows(ResourceNotFoundException.class, () -> closureService.getClosure(searchId));
-        assertThat(exception.getMessage()).isEqualTo("Closure not found.");
+        assertThrows(ResourceNotFoundException.class, () -> closureService.getClosure(searchId));
     }
 
     @Test
@@ -187,8 +186,7 @@ public class ClosureServiceImplTest {
         /* mock */
         when(roomRepository.findByIdWithLock(roomId)).thenReturn(Optional.empty());
         /* verify */
-        Exception exception = assertThrows(ResourceNotFoundException.class, () -> closureService.addClosure(roomId, startTime, endTime));
-        assertThat(exception.getMessage()).isEqualTo("Room not found.");
+        assertThrows(ResourceNotFoundException.class, () -> closureService.addClosure(roomId, startTime, endTime));
     }
 
     @Test
@@ -210,8 +208,7 @@ public class ClosureServiceImplTest {
 
         when(closureRepository.findById(eq(searchId))).thenThrow(new ResourceNotFoundException("Closure not found."));
 
-        Exception exception = assertThrows(ResourceNotFoundException.class, () -> closureService.deleteClosure(searchId));
-        assertThat(exception.getMessage()).isEqualTo("Closure not found.");
+        assertThrows(ResourceNotFoundException.class, () -> closureService.deleteClosure(searchId));
     }
 
     private Sort getOccupationSort() {

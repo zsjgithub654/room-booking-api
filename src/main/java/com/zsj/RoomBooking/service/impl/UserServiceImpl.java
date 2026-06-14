@@ -22,6 +22,8 @@ import java.util.List;
 @Transactional
 @Service
 public class UserServiceImpl implements UserService {
+    private static final String USER_NOT_FOUND = "User not found.";
+
     @Autowired
     private UserRepository userRepository;
 
@@ -39,7 +41,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User getUser(Long id) {
-        return userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found."));
+        return userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND));
     }
 
     @Override
@@ -52,7 +54,7 @@ public class UserServiceImpl implements UserService {
     public User updateUsername(Long id, String username) {
         User user = userRepository.findById(id)
                 .filter(User::isActive)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found."));
+                .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND));
         user.setUsername(username);
         return user;
     }
@@ -61,7 +63,7 @@ public class UserServiceImpl implements UserService {
     public User updatePassword(Long id, String password) {
         User user = userRepository.findById(id)
                 .filter(User::isActive)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found."));
+                .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND));
         user.setPassword(passwordEncoder.encode(password));
         return user;
     }
@@ -70,7 +72,7 @@ public class UserServiceImpl implements UserService {
     public User addAdminRole(Long id) {
         User user = userRepository.findById(id)
                 .filter(User::isActive)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found."));
+                .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND));
         user.addAdminRole();
         return user;
     }
@@ -79,7 +81,7 @@ public class UserServiceImpl implements UserService {
     public User removeAdminRole(Long id) {
         User user = userRepository.findById(id)
                 .filter(User::isActive)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found."));
+                .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND));
         user.removeAdminRole();
         return user;
     }
@@ -87,7 +89,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void closeUserAccount(Long id) {
         /* verify and acquire lock on user */
-        User user = userRepository.findByIdWithLock(id).orElseThrow(() -> new ResourceNotFoundException("User not found."));
+        User user = userRepository.findByIdWithLock(id).orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND));
         if (!user.isActive()) {
             return;
         }

@@ -21,6 +21,9 @@ import java.util.List;
 @Transactional
 @Service
 public class ClosureServiceImpl implements ClosureService {
+    private static final String CLOSURE_NOT_FOUND = "Closure not found.";
+    private static final String ROOM_NOT_FOUND = "Room not found.";
+
     @Autowired
     ClosureRepository closureRepository;
 
@@ -32,7 +35,7 @@ public class ClosureServiceImpl implements ClosureService {
 
     @Override
     public Closure getClosure(Long id) {
-        return closureRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Closure not found."));
+        return closureRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException(CLOSURE_NOT_FOUND));
     }
 
     @Override
@@ -45,7 +48,7 @@ public class ClosureServiceImpl implements ClosureService {
         /* check room and acquire lock */
         Room room = roomRepository.findByIdWithLock(roomId)
                 .filter(Room::isActive)
-                .orElseThrow(() -> new ResourceNotFoundException("Room not found."));
+                .orElseThrow(() -> new ResourceNotFoundException(ROOM_NOT_FOUND));
         /* close reservations during closure */
         List<Reservation> reservations = reservationRepository.findByRoomIdAndOverlappingAndScheduled(
                 roomId, startTime, endTime, DefaultSorts.occupationSort());
@@ -70,7 +73,7 @@ public class ClosureServiceImpl implements ClosureService {
 
     @Override
     public void deleteClosure(Long closureId) {
-        Closure closure = closureRepository.findById(closureId).orElseThrow(() -> new ResourceNotFoundException("Closure not found."));
+        Closure closure = closureRepository.findById(closureId).orElseThrow(() -> new ResourceNotFoundException(CLOSURE_NOT_FOUND));
         closureRepository.delete(closure);
     }
 }

@@ -339,7 +339,8 @@ public class RoomControllerTest {
                         .with(user("admin1").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("open time must be before close time."));
 
         verifyNoInteractions(roomService);
     }

@@ -38,14 +38,26 @@ public class ReservationController {
 
     @GetMapping("/reservations")
     @PreAuthorize("hasRole('ADMIN')")
-    public Page<ReservationResponse> searchReservations(@Valid @ModelAttribute SearchReservationRequest request, Pageable pageable) {
-        return service.searchReservations(request.userId(), request.roomId(), request.date(), request.status(), pageable)
+    public Page<ReservationResponse> searchReservations(@Valid @ModelAttribute SearchReservationRequest request,
+                                                        Pageable pageable) {
+        return service.searchReservations(
+                        request.userId(),
+                        request.roomId(),
+                        request.date(),
+                        request.status(),
+                        pageable)
                 .map(reservationMapper::toResponse);
     }
 
     @GetMapping("/users/me/reservations")
     public List<ReservationResponse> getCurrentUserReservations(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
-        return service.searchReservations(customUserDetails.getId(), null, null, null, Pageable.unpaged()).stream()
+        return service.searchReservations(
+                        customUserDetails.getId(),
+                        null,
+                        null,
+                        null,
+                        Pageable.unpaged())
+                .stream()
                 .map(reservationMapper::toResponse)
                 .toList();
     }
@@ -62,27 +74,37 @@ public class ReservationController {
         return new ResponseEntity<>(
                 reservationMapper.toResponse(
                         service.addReservation(
-                                customUserDetails.getId(), request.roomId(), request.startTime(), request.endTime())),
-                HttpStatus.CREATED
-        );
+                                customUserDetails.getId(),
+                                request.roomId(),
+                                request.startTime(),
+                                request.endTime())),
+                HttpStatus.CREATED);
     }
 
     @PostMapping("/users/{id}/reservations")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ReservationResponse> addReservation(
-            @PathVariable @Positive Long id, @Valid @RequestBody ReservationRequest request) {
+    public ResponseEntity<ReservationResponse> addReservation(@PathVariable @Positive Long id,
+                                                              @Valid @RequestBody ReservationRequest request) {
         return new ResponseEntity<>(
                 reservationMapper.toResponse(
-                        service.addReservation(id, request.roomId(), request.startTime(), request.endTime())),
-                HttpStatus.CREATED
-        );
+                        service.addReservation(
+                                id,
+                                request.roomId(),
+                                request.startTime(),
+                                request.endTime())),
+                HttpStatus.CREATED);
     }
 
     /* Only startTime and endTime are allowed to update */
     @PatchMapping(path = "/reservations/{id}")
     @PreAuthorize("hasRole('ADMIN') or @reservationAuthorizationService.isOwner(#id, authentication.principal.id)")
-    public ReservationResponse updateReservationTime(@PathVariable @Positive Long id, @Valid @RequestBody UpdateReservationRequest request) {
-        return reservationMapper.toResponse(service.updateReservationTime(id, request.startTime(), request.endTime()));
+    public ReservationResponse updateReservationTime(@PathVariable @Positive Long id,
+                                                     @Valid @RequestBody UpdateReservationRequest request) {
+        return reservationMapper.toResponse(
+                service.updateReservationTime(
+                        id,
+                        request.startTime(),
+                        request.endTime()));
     }
 
     @PatchMapping("/reservations/{id}/release")
@@ -91,5 +113,4 @@ public class ReservationController {
         service.releaseReservation(id);
         return ResponseEntity.noContent().build();
     }
-
 }

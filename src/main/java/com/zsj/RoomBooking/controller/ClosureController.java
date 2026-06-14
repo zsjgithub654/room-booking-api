@@ -48,15 +48,21 @@ public class ClosureController {
 
     @GetMapping("/rooms/{roomId}/closures")
     public List<ClosureResponse> getClosuresOfRoom(@PathVariable @Positive Long roomId) {
-        return closureService.getClosuresOfRoom(roomId).stream().map(closureMapper::toResponse).toList();
+        return closureService.getClosuresOfRoom(roomId)
+                .stream()
+                .map(closureMapper::toResponse)
+                .toList();
     }
 
     @PostMapping("/rooms/{roomId}/closures")
-    public ResponseEntity<AddClosureResponse> addClosure(@PathVariable @Positive Long roomId, @Valid @RequestBody ClosureRequest request) {
+    public ResponseEntity<AddClosureResponse> addClosure(@PathVariable @Positive Long roomId,
+                                                         @Valid @RequestBody ClosureRequest request) {
         return new ResponseEntity<>(
                 addClosureMapper.toResponse(
-                        closureService.addClosure(roomId, request.startTime(), request.endTime())),
-                HttpStatus.CREATED
-        );
+                        closureService.addClosure(
+                                roomId,
+                                request.startTime(),
+                                request.endTime())),
+                HttpStatus.CREATED);
     }
 }

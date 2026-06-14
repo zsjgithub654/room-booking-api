@@ -52,34 +52,48 @@ public class UserController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public Page<UserResponse> searchUser(@Valid @ModelAttribute SearchUserRequest request, Pageable pageable) {
-        return service.searchUsers(request.username(), request.role(), request.status(), pageable)
+    public Page<UserResponse> searchUser(@Valid @ModelAttribute SearchUserRequest request,
+                                         Pageable pageable) {
+        return service.searchUsers(
+                        request.username(),
+                        request.role(),
+                        request.status(),
+                        pageable)
                 .map(userMapper::toResponse);
     }
 
     @PostMapping
     public ResponseEntity<UserResponse> addUser(@Valid @RequestBody UserRequest userRequest) {
         return new ResponseEntity<>(
-                userMapper.toResponse(service.addUser(userMapper.toEntity(userRequest))),
-                HttpStatus.CREATED
-        );
+                userMapper.toResponse(
+                        service.addUser(userMapper.toEntity(userRequest))),
+                HttpStatus.CREATED);
     }
 
     @PatchMapping("/{id}/username")
     @PreAuthorize("hasRole('ADMIN')")
-    public UserResponse updateUsername(@PathVariable @Positive Long id, @Valid @RequestBody UpdateUsernameRequest request) {
+    public UserResponse updateUsername(@PathVariable @Positive Long id,
+                                       @Valid @RequestBody UpdateUsernameRequest request) {
         return userMapper.toResponse(service.updateUsername(id, request.username()));
     }
 
     @PatchMapping("/me/username")
-    public UserResponse updateCurrentUsername(@AuthenticationPrincipal CustomUserDetails customUserDetails, @Valid @RequestBody UpdateUsernameRequest request) {
+    public UserResponse updateCurrentUsername(@AuthenticationPrincipal CustomUserDetails customUserDetails,
+                                              @Valid @RequestBody UpdateUsernameRequest request) {
         return userMapper.toResponse(service.updateUsername(customUserDetails.getId(), request.username()));
     }
 
     @PatchMapping("/{id}/password")
     @PreAuthorize("hasRole('ADMIN')")
-    public UserResponse updatePassword(@PathVariable @Positive Long id, @Valid @RequestBody UpdatePasswordRequest request) {
+    public UserResponse updatePassword(@PathVariable @Positive Long id,
+                                       @Valid @RequestBody UpdatePasswordRequest request) {
         return userMapper.toResponse(service.updatePassword(id, request.password()));
+    }
+
+    @PatchMapping("/me/password")
+    public UserResponse updateCurrentPassword(@AuthenticationPrincipal CustomUserDetails customUserDetails,
+                                              @Valid @RequestBody UpdatePasswordRequest request) {
+        return userMapper.toResponse(service.updatePassword(customUserDetails.getId(), request.password()));
     }
 
     @PatchMapping("/{id}/roles/admin")
@@ -92,11 +106,6 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN')")
     public UserResponse removeAdminRole(@PathVariable @Positive Long id) {
         return userMapper.toResponse(service.removeAdminRole(id));
-    }
-
-    @PatchMapping("/me/password")
-    public UserResponse updateCurrentPassword(@AuthenticationPrincipal CustomUserDetails customUserDetails, @Valid @RequestBody UpdatePasswordRequest request) {
-        return userMapper.toResponse(service.updatePassword(customUserDetails.getId(), request.password()));
     }
 
     @DeleteMapping("/{id}")

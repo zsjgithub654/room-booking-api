@@ -50,7 +50,8 @@ public class RoomController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public Page<RoomResponse> searchRooms(@Valid @ModelAttribute SearchRoomRequest request, Pageable pageable) {
+    public Page<RoomResponse> searchRooms(@Valid @ModelAttribute SearchRoomRequest request,
+                                          Pageable pageable) {
         return roomService.searchRooms(
                 new RoomSearchCriteria(
                         request.name(),
@@ -82,8 +83,9 @@ public class RoomController {
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<RoomResponse> addRoom(@Valid @RequestBody RoomRequest request) {
-        return new ResponseEntity<>(roomMapper.toResponse(
-                roomService.addRoom(roomMapper.toEntity(request))),
+        return new ResponseEntity<>(
+                roomMapper.toResponse(
+                        roomService.addRoom(roomMapper.toEntity(request))),
                 HttpStatus.CREATED
         );
     }
@@ -93,20 +95,23 @@ public class RoomController {
     public DeleteRoomResponse deleteRoom(@PathVariable @Positive Long roomId) {
         return new DeleteRoomResponse(
                 roomId,
-                roomService.deleteRoom(roomId).stream().map(reservationMapper::toResponse).toList()
-        );
+                roomService.deleteRoom(roomId)
+                        .stream()
+                        .map(reservationMapper::toResponse)
+                        .toList());
     }
 
     @PutMapping("/{roomId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public RoomResponse updateRoom(@PathVariable @Positive Long roomId, @Valid @RequestBody RoomRequest request) {
+    public RoomResponse updateRoom(@PathVariable @Positive Long roomId,
+                                   @Valid @RequestBody RoomRequest request) {
         return roomMapper.toResponse(
-                roomService.updateRoom(roomId,
+                roomService.updateRoom(
+                        roomId,
                         request.name(),
                         request.capacity(),
                         request.area(),
                         request.openTime(),
-                        request.closeTime())
-        );
+                        request.closeTime()));
     }
 }

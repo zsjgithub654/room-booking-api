@@ -82,7 +82,7 @@ public class RoomServiceImpl implements RoomService {
         /* calculate availability */
         List<RoomSchedule> availabilities = new ArrayList<>();
         for (Room room : rooms) {
-            List<Occupation> occupations = getOccupationsForRoom(room.getId(), fromTime, toTime);
+            List<Occupation> occupations = getOccupationsOfRoom(room.getId(), fromTime, toTime);
             /* skip rooms if no gap between occupations during the given range */
             if (!shouldIncludeUnavailable && !isRoomAvailableDuringDays(room, fromDate, toDate, occupations)) {
                 continue;
@@ -92,7 +92,7 @@ public class RoomServiceImpl implements RoomService {
         return availabilities;
     }
 
-    private List<Occupation> getOccupationsForRoom(Long roomId, LocalDateTime fromTime, LocalDateTime toTime) {
+    private List<Occupation> getOccupationsOfRoom(Long roomId, LocalDateTime fromTime, LocalDateTime toTime) {
         /* get closures and reservations */
         List<Closure> closures = closureRepository.findByRoomIdAndOverlapping(roomId, fromTime, toTime);
         List<Reservation> reservations = reservationRepository.findByRoomIdAndOverlappingAndScheduled(

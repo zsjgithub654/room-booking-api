@@ -47,24 +47,6 @@ public class Reservation implements Occupation {
         this.status = ReservationStatus.RESERVATION_STATUS_SCHEDULED;
     }
 
-    /**
-     * modify reservation time
-     * @param startTime new start time.
-     * @param endTime new end time.
-     * @return if successfully modified.
-     */
-    public boolean modifyTime(LocalDateTime startTime, LocalDateTime endTime) {
-        return true;
-    }
-
-    /**
-     * cancel reservation
-     * @return if successfully canceled
-     */
-    public boolean cancel() {
-        return true;
-    }
-
     /* required by JPA */
     public Reservation() {}
 

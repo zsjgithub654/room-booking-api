@@ -170,15 +170,15 @@ public class RoomControllerTest {
                 request.name(),
                 request.minCapacity(), request.maxCapacity(),
                 request.area(),
-                request.startDate(), request.endDate(),
+                request.fromDate(), request.toDate(),
                 request.includeUnavailable())
         ).thenReturn(roomSchedules);
         /* perform */
         String responseString = mockMvc.perform(get("/rooms/availabilities")
                         .param("minCapacity", request.minCapacity().toString())
                         .param("maxCapacity", request.maxCapacity().toString())
-                        .param("startDate", request.startDate().toString())
-                        .param("endDate", request.endDate().toString())
+                        .param("fromDate", request.fromDate().toString())
+                        .param("toDate", request.toDate().toString())
                         .param("includeUnavailable", request.includeUnavailable().toString()))
                 .andExpect(status().isOk())
                 .andReturn()
@@ -197,8 +197,8 @@ public class RoomControllerTest {
     @Test
     void searchAvailabilitiesShouldRejectInvalidTimeRangeTest() throws Exception {
         mockMvc.perform(get("/rooms/availabilities")
-                        .param("startDate", LocalDate.of(2300, 3, 2).toString())
-                        .param("endDate", LocalDate.of(2300, 3, 1).toString()))
+                        .param("fromDate", LocalDate.of(2300, 3, 2).toString())
+                        .param("toDate", LocalDate.of(2300, 3, 1).toString()))
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(roomService);
@@ -214,32 +214,32 @@ public class RoomControllerTest {
 
     @Test
     void searchAvailabilitiesShouldValidateTimeRangeLengthTest() throws Exception {
-        LocalDate startDate = LocalDate.of(2300, 3, 1);
-        LocalDate validEndDate = LocalDate.of(2300, 3, 7);
+        LocalDate fromDate = LocalDate.of(2300, 3, 1);
+        LocalDate validToDate = LocalDate.of(2300, 3, 7);
 
         when(roomService.searchAvailabilities(
                 null,
                 null, null,
                 null,
-                startDate, validEndDate,
+                fromDate, validToDate,
                 null))
                 .thenReturn(List.of());
 
         mockMvc.perform(get("/rooms/availabilities")
-                        .param("startDate", startDate.toString())
-                        .param("endDate", validEndDate.toString()))
+                        .param("fromDate", fromDate.toString())
+                        .param("toDate", validToDate.toString()))
                 .andExpect(status().isOk());
 
         verify(roomService).searchAvailabilities(
                 null,
                 null, null,
                 null,
-                startDate, validEndDate,
+                fromDate, validToDate,
                 null);
 
         mockMvc.perform(get("/rooms/availabilities")
-                        .param("startDate", startDate.toString())
-                        .param("endDate", LocalDate.of(2300, 3, 8).toString()))
+                        .param("fromDate", fromDate.toString())
+                        .param("toDate", LocalDate.of(2300, 3, 8).toString()))
                 .andExpect(status().isBadRequest());
     }
 

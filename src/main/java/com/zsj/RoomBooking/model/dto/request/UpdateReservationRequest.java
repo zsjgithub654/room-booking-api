@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDateTime;
 
-@TimeInterval(fromField = "startTime", toField = "endTime")
+@TimeInterval(startField = "startTime", endField = "endTime")
 public record UpdateReservationRequest(@NotNull @Future @MinutePrecision LocalDateTime startTime,
                                        @NotNull @Future @MinutePrecision LocalDateTime endTime) {
 }

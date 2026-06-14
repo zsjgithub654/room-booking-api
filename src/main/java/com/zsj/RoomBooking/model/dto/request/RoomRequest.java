@@ -9,8 +9,8 @@ import jakarta.validation.constraints.Size;
 import java.time.LocalTime;
 
 @TimeInterval(
-        fromField = "openTime",
-        toField = "closeTime",
+        startField = "openTime",
+        endField = "closeTime",
         message = "{room.open-hours.time-interval}"
 )
 public record RoomRequest(

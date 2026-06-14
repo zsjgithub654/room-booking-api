@@ -11,7 +11,7 @@ import java.lang.annotation.Target;
 
 /**
  * A custom validation annotation for time intervals.
- * Time interval should have both lower and upper bounds, bounds should be ordered, equality is not allowed by default.
+ * Time interval should have both start and end bounds, bounds should be ordered, equality is not allowed by default.
  * Both bounds are null is allowed, not null should be validated by @NotNull if needed.
  * Example use case: time periods.
  */
@@ -31,10 +31,10 @@ public @interface TimeInterval {
     Class<? extends Payload>[] payload() default {};
 
     /* the fields to validate */
-    String fromField();
+    String startField();
 
-    String toField();
+    String endField();
 
-    /* whether equality between from and to is allowed */
+    /* whether equality between start and end is allowed */
     boolean allowEqual() default false;
 }

@@ -8,7 +8,7 @@ import jakarta.validation.constraints.Positive;
 
 import java.time.LocalDateTime;
 
-@TimeInterval(fromField = "startTime", toField = "endTime")
+@TimeInterval(startField = "startTime", endField = "endTime")
 public record ReservationRequest(@NotNull @Positive Long roomId,
                                  @NotNull @Future @MinutePrecision LocalDateTime startTime,
                                  @NotNull @Future @MinutePrecision LocalDateTime endTime) {

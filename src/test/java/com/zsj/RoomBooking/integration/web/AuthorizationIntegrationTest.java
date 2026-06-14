@@ -135,8 +135,8 @@ class AuthorizationIntegrationTest {
                 date.plusDays(1).atStartOfDay()));
 
         mockMvc.perform(get("/rooms/availabilities")
-                        .param("startDate", date.toString())
-                        .param("endDate", date.toString()))
+                        .param("fromDate", date.toString())
+                        .param("toDate", date.toString()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].room.id").value(availableRoom.getId()))

@@ -71,20 +71,20 @@ public class RoomServiceImpl implements RoomService {
     @Override
     @Transactional(readOnly = true)
     public List<RoomSchedule> searchAvailabilities(String name, Integer minCapacity, Integer maxCapacity, String area,
-                                                   LocalDate startDate, LocalDate endDate, Boolean includeUnavailable) {
+                                                   LocalDate fromDate, LocalDate toDate, Boolean includeUnavailable) {
         /* filter rooms */
         List<Room> rooms = searchRooms(
                 new RoomSearchCriteria(name, minCapacity, maxCapacity, area, RoomStatus.ROOM_STATUS_ACTIVE),
                 Pageable.unpaged()).getContent();
         boolean shouldIncludeUnavailable = Boolean.TRUE.equals(includeUnavailable);
-        LocalDateTime startTime = startDate.atStartOfDay();
-        LocalDateTime endTime = endDate.plusDays(1).atStartOfDay();
+        LocalDateTime fromTime = fromDate.atStartOfDay();
+        LocalDateTime toTime = toDate.plusDays(1).atStartOfDay();
         /* calculate availability */
         List<RoomSchedule> availabilities = new ArrayList<>();
         for (Room room : rooms) {
-            List<Occupation> occupations = getOccupationsForRoom(room.getId(), startTime, endTime);
+            List<Occupation> occupations = getOccupationsForRoom(room.getId(), fromTime, toTime);
             /* skip rooms if no gap between occupations during the given range */
-            if (!shouldIncludeUnavailable && !isRoomAvailableDuringDays(room, startDate, endDate, occupations)) {
+            if (!shouldIncludeUnavailable && !isRoomAvailableDuringDays(room, fromDate, toDate, occupations)) {
                 continue;
             }
             availabilities.add(new RoomSchedule(room, occupations));
@@ -92,11 +92,11 @@ public class RoomServiceImpl implements RoomService {
         return availabilities;
     }
 
-    private List<Occupation> getOccupationsForRoom(Long roomId, LocalDateTime startTime, LocalDateTime endTime) {
+    private List<Occupation> getOccupationsForRoom(Long roomId, LocalDateTime fromTime, LocalDateTime toTime) {
         /* get closures and reservations */
-        List<Closure> closures = closureRepository.findByRoomIdAndOverlapping(roomId, startTime, endTime);
+        List<Closure> closures = closureRepository.findByRoomIdAndOverlapping(roomId, fromTime, toTime);
         List<Reservation> reservations = reservationRepository.findByRoomIdAndOverlappingAndScheduled(
-                roomId, startTime, endTime, DefaultSorts.occupationSort());
+                roomId, fromTime, toTime, DefaultSorts.occupationSort());
         /* combine occupations and sort by startTime */
         return Stream.concat(
                         reservations.stream(),

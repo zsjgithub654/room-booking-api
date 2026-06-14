@@ -192,23 +192,23 @@ public class RoomServiceImplTest {
                 new Closure(room,
                         LocalDateTime.of(2026, 3, 3, 0, 0, 0, 0),
                         LocalDateTime.of(2026, 3, 3, 16, 30, 0, 0)));
-        LocalDate searchStartDate = LocalDate.of(2026, 3, 1);
-        LocalDate searchEndDate = LocalDate.of(2026, 3, 3);
+        LocalDate fromDate = LocalDate.of(2026, 3, 1);
+        LocalDate toDate = LocalDate.of(2026, 3, 3);
         /* mock */
         when(roomRepository.findAll(any(Specification.class), eq(Pageable.unpaged(getRoomSort()))))
                 .thenReturn(new PageImpl<>(List.of(room)));
         when(closureRepository.findByRoomIdAndOverlapping(eq(null),
-                eq(searchStartDate.atStartOfDay()),
-                eq(searchEndDate.plusDays(1).atStartOfDay())))
+                eq(fromDate.atStartOfDay()),
+                eq(toDate.plusDays(1).atStartOfDay())))
                 .thenReturn(closures);
         when(reservationRepository.findByRoomIdAndOverlappingAndScheduled(eq(null),
-                eq(searchStartDate.atStartOfDay()),
-                eq(searchEndDate.plusDays(1).atStartOfDay()),
+                eq(fromDate.atStartOfDay()),
+                eq(toDate.plusDays(1).atStartOfDay()),
                 eq(getOccupationSort())))
                 .thenReturn(reservations);
         /* verify */
         List<RoomSchedule> result = roomService.searchAvailabilities(
-                null, null, null, null, searchStartDate, searchEndDate, false);
+                null, null, null, null, fromDate, toDate, false);
         assertThat(result).hasSize(1);
         List<Occupation> expectedOccupations = new ArrayList<>();
         expectedOccupations.addAll(reservations);
@@ -235,24 +235,24 @@ public class RoomServiceImplTest {
                 new Closure(room,
                         LocalDateTime.of(2026, 3, 1, 14, 0, 0, 0),
                         LocalDateTime.of(2026, 3, 1, 16, 0, 0, 0)));
-        LocalDate searchStartDate = LocalDate.of(2026, 3, 1);
-        LocalDate searchEndDate = LocalDate.of(2026, 3, 1);
+        LocalDate fromDate = LocalDate.of(2026, 3, 1);
+        LocalDate toDate = LocalDate.of(2026, 3, 1);
         /* mock */
         when(roomRepository.findAll(any(Specification.class), eq(Pageable.unpaged(getRoomSort()))))
                 .thenReturn(new PageImpl<>(List.of(room)));
         when(closureRepository.findByRoomIdAndOverlapping(eq(null),
-                eq(searchStartDate.atStartOfDay()),
-                eq(searchEndDate.plusDays(1).atStartOfDay())))
+                eq(fromDate.atStartOfDay()),
+                eq(toDate.plusDays(1).atStartOfDay())))
                 .thenReturn(closures);
         when(reservationRepository.findByRoomIdAndOverlappingAndScheduled(eq(null),
-                eq(searchStartDate.atStartOfDay()),
-                eq(searchEndDate.plusDays(1).atStartOfDay()),
+                eq(fromDate.atStartOfDay()),
+                eq(toDate.plusDays(1).atStartOfDay()),
                 eq(getOccupationSort())))
                 .thenReturn(reservations);
         /* verify */
         /* include unavailable rooms */
         List<RoomSchedule> result = roomService.searchAvailabilities(
-                null, null, null, null, searchStartDate, searchEndDate, true);
+                null, null, null, null, fromDate, toDate, true);
         assertThat(result).hasSize(1);
         assertThat(result.get(0).room())
                 .usingRecursiveComparison()
@@ -266,7 +266,7 @@ public class RoomServiceImplTest {
         /* exclude unavailable rooms */
         assertThat(roomService.searchAvailabilities(
                 null, null, null, null,
-                searchStartDate, searchEndDate,
+                fromDate, toDate,
                 false))
                 .hasSize(0);
     }

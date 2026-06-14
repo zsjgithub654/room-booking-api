@@ -17,6 +17,7 @@ import java.util.List;
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
     List<Reservation> findByRoomId(Long roomId);
 
+    /* search reservations whose startTime falls within [fromTime, toTime) */
     @Query("""
             SELECT reservation
             FROM Reservation reservation

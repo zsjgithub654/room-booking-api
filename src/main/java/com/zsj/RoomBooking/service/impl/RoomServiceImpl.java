@@ -152,7 +152,6 @@ public class RoomServiceImpl implements RoomService {
         return releaseAt.isBefore(toTime) ? -1 : startIndex;
     }
 
-    /* TODO: rename */
     @Override
     public Room getRoom(Long id) {
         /* TODO: extract to constant */

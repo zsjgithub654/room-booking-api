@@ -74,7 +74,6 @@ public class RoomController {
     }
 
     @GetMapping("/{roomId}")
-    /* TODO: rename */
     @PreAuthorize("hasRole('ADMIN')")
     public RoomResponse getRoom(@PathVariable @Positive Long roomId) {
         return roomMapper.toResponse(roomService.getRoom(roomId));

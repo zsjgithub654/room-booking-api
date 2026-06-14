@@ -8,7 +8,7 @@ import jakarta.validation.constraints.Size;
 @Range(
         minField = "minCapacity",
         maxField = "maxCapacity",
-        message = "minimum capacity must be less than or equal to maximum capacity."
+        message = "{room.capacity.range}"
 )
 public record SearchRoomRequest(@Size(max = 50) String name,
                                 @Positive Integer minCapacity,

@@ -16,7 +16,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Constraint(validatedBy = MaxDurationDaysValidator.class)
 public @interface MaxDurationDays {
-    String message() default "time range must be no longer than {days} days.";
+    String message() default "{validation.max-duration-days}";
 
     Class<?>[] groups() default {};
 

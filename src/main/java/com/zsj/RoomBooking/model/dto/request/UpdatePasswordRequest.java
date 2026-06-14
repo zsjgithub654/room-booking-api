@@ -7,6 +7,6 @@ import jakarta.validation.constraints.Size;
 public record UpdatePasswordRequest(
         @NotBlank
         @Size(min = 8, max = 30)
-        @Pattern(regexp = "^[A-Za-z0-9\\p{Punct}]+$", message = "password can only contain letters, numbers, and common special characters.")
+        @Pattern(regexp = "^[A-Za-z0-9\\p{Punct}]+$", message = "{user.password.pattern}")
         String password) {
 }

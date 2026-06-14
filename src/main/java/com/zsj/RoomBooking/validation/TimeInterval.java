@@ -23,7 +23,7 @@ import java.lang.annotation.Target;
 @Constraint(validatedBy = TimeIntervalValidator.class)
 public @interface TimeInterval {
     /* default message for validation failure */
-    String message() default "time interval from value must be smaller than time interval to value.";
+    String message() default "{validation.time-interval}";
 
     /* required by bean validation */
     Class<?>[] groups() default {};

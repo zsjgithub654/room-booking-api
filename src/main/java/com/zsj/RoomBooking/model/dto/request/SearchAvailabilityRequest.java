@@ -13,11 +13,11 @@ import java.time.LocalDate;
 @Range(
         minField = "minCapacity",
         maxField = "maxCapacity",
-        message = "minimum capacity must be less than or equal to maximum capacity."
+        message = "{room.capacity.range}"
 )
 @MaxDurationDays(startField = "startDate", endField = "endDate", days = 7)
 @TimeInterval(fromField = "startDate", toField = "endDate", allowEqual = true,
-        message = "start date must be before or equal to end date.")
+        message = "{availability.date-range.time-interval}")
 public record SearchAvailabilityRequest(@Size(max = 50) String name,
                                         @Positive Integer minCapacity,
                                         @Positive Integer maxCapacity, /* use wrapper to accept null */
@@ -26,4 +26,3 @@ public record SearchAvailabilityRequest(@Size(max = 50) String name,
                                         @NotNull @FutureOrPresent LocalDate endDate,
                                         Boolean includeUnavailable) {
 }
-

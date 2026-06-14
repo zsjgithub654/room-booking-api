@@ -18,7 +18,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Constraint(validatedBy = MinutePrecisionValidator.class)
 public @interface MinutePrecision {
-    String message() default "time must use minute precision.";
+    String message() default "{validation.minute-precision}";
 
     Class<?>[] groups() default {};
 

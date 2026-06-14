@@ -11,17 +11,17 @@ import java.time.LocalTime;
 @TimeInterval(
         fromField = "openTime",
         toField = "closeTime",
-        message = "open time must be before close time."
+        message = "{room.open-hours.time-interval}"
 )
 public record RoomRequest(
         @NotBlank
         @Size(max = 50)
-        @Pattern(regexp = "^[A-Za-z0-9._ -]+$", message = "name can only contain letters, numbers, spaces, dots, underscores, and hyphens.")
+        @Pattern(regexp = "^[A-Za-z0-9._ -]+$", message = "{room.name.pattern}")
         String name,
         @Positive
         Integer capacity,
         @Size(max = 50)
-        @Pattern(regexp = "^(?=.*\\S)[A-Za-z0-9._ -]+$", message = "area can only contain letters, numbers, spaces, dots, underscores, and hyphens.")
+        @Pattern(regexp = "^(?=.*\\S)[A-Za-z0-9._ -]+$", message = "{room.area.pattern}")
         String area,
         LocalTime openTime,
         LocalTime closeTime) {

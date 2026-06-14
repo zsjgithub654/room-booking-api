@@ -7,10 +7,10 @@ import jakarta.validation.constraints.Size;
 public record UserRequest(
         @NotBlank
         @Size(min = 3, max = 20)
-        @Pattern(regexp = "^[A-Za-z0-9._-]+$", message = "username can only contain letters, numbers, dots, underscores, and hyphens.")
+        @Pattern(regexp = "^[A-Za-z0-9._-]+$", message = "{user.username.pattern}")
         String username,
         @NotBlank
         @Size(min = 8, max = 30)
-        @Pattern(regexp = "^[A-Za-z0-9\\p{Punct}]+$", message = "password can only contain letters, numbers, and common special characters.")
+        @Pattern(regexp = "^[A-Za-z0-9\\p{Punct}]+$", message = "{user.password.pattern}")
         String password) {
 }

@@ -23,7 +23,7 @@ import java.lang.annotation.Target;
 @Constraint(validatedBy = RangeValidator.class)
 public @interface Range {
     /* default message for validation failure */
-    String message() default "minimum value must be smaller than maximum value.";
+    String message() default "{validation.range}";
 
     /* required by bean validation */
     Class<?>[] groups() default {};

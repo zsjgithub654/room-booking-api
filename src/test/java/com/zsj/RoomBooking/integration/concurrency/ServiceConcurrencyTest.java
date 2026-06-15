@@ -45,9 +45,7 @@ import static com.zsj.RoomBooking.integration.concurrency.ConcurrencyTestUtils.a
 @Testcontainers
 @SpringBootTest(
         /* mock web layer to keep servlet/security beans */
-        webEnvironment = SpringBootTest.WebEnvironment.MOCK,
-        /* create DB schema on start and drop on end */
-        properties = {"spring.jpa.hibernate.ddl-auto=create-drop"}
+        webEnvironment = SpringBootTest.WebEnvironment.MOCK
 )
 class ServiceConcurrencyTest {
     @Autowired

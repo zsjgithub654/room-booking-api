@@ -36,10 +36,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 
 @Testcontainers
-@SpringBootTest(
-        webEnvironment = SpringBootTest.WebEnvironment.MOCK,
-        properties = {"spring.jpa.hibernate.ddl-auto=create-drop"}
-)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 class ServiceWorkflowIntegrationTest {
     @Autowired
     private ReservationService reservationService;

@@ -36,7 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 
 @Testcontainers
-@SpringBootTest(properties = {"spring.jpa.hibernate.ddl-auto=create-drop"})
+@SpringBootTest
 @AutoConfigureMockMvc
 class AuthorizationIntegrationTest {
     @Autowired

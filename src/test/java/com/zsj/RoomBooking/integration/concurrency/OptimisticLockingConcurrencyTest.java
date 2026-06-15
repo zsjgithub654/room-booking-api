@@ -36,10 +36,7 @@ import static com.zsj.RoomBooking.integration.concurrency.ConcurrencyTestUtils.a
  */
 
 @Testcontainers
-@SpringBootTest(
-        webEnvironment = SpringBootTest.WebEnvironment.MOCK,
-        properties = {"spring.jpa.hibernate.ddl-auto=create-drop"}
-)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 class OptimisticLockingConcurrencyTest {
 
     @Autowired

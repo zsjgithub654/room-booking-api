@@ -58,7 +58,7 @@ public class RoomServiceImpl implements RoomService {
             spec = spec.and(RoomSpecifications.maxCapacity(criteria.maxCapacity()));
         }
         /* area */
-        if (criteria.area() != null) {
+        if (criteria.area() != null && !criteria.area().isBlank()) {
             spec = spec.and(RoomSpecifications.inArea(criteria.area()));
         }
         /* status */

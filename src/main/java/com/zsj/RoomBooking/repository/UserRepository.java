@@ -22,7 +22,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     /* select all when arg is null */
     @Query("""
             SELECT user FROM User user
-            WHERE (:username IS NULL OR user.username LIKE %:username%)
+            WHERE (:username IS NULL OR lower(user.username) LIKE concat('%', lower(:username), '%'))
             AND (:role IS NULL OR :role MEMBER OF user.roles)
             AND (:status IS NULL OR :status = user.status)
             """)

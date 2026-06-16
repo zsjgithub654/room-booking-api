@@ -109,7 +109,7 @@ public class UserRepositoryTest {
         userRepository.save(new User("user3", ""));
 
         Page<User> result = userRepository.findByUsernameAndRoleAndStatus(
-                "user",
+                "User",
                 Role.ROLE_USER,
                 UserStatus.USER_STATUS_ACTIVE,
                 PageRequest.of(1, 2, Sort.by("username")));

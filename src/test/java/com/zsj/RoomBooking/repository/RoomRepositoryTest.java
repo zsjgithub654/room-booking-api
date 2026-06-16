@@ -59,7 +59,7 @@ public class RoomRepositoryTest {
     @Test
     void FilterByInAreaTest() {
         Specification<Room> spec = Specification.unrestricted();
-        spec = spec.and(RoomSpecifications.inArea("Building A"));
+        spec = spec.and(RoomSpecifications.inArea("building A"));
         List<Room> result = roomRepository.findAll(spec);
         assertThat(result).hasSize(2);
     }

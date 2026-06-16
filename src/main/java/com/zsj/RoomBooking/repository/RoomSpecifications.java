@@ -4,10 +4,14 @@ import com.zsj.RoomBooking.model.entity.Room;
 import com.zsj.RoomBooking.model.RoomStatus;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.util.Locale;
+
 public class RoomSpecifications {
     public static Specification<Room> nameContains(String name) {
         return (root, query, cb) ->
-                cb.like(root.get("name"), "%" + name + "%");
+                cb.like(
+                        cb.lower(root.get("name")),
+                        "%" + name.toLowerCase(Locale.ROOT) + "%");
     }
 
     public static Specification<Room> minCapacity(Integer minCapacity) {
@@ -22,7 +26,9 @@ public class RoomSpecifications {
 
     public static Specification<Room> inArea(String area) {
         return (root, query, cb) ->
-                cb.equal(root.get("area"), area);
+                cb.like(
+                        cb.lower(root.get("area")),
+                        "%" + area.toLowerCase(Locale.ROOT) + "%");
     }
 
     public static Specification<Room> hasStatus(RoomStatus status) {

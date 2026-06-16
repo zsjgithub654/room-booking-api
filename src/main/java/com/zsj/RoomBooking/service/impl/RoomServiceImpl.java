@@ -70,8 +70,8 @@ public class RoomServiceImpl implements RoomService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<RoomSchedule> searchAvailabilities(String name, Integer minCapacity, Integer maxCapacity, String area,
-                                                   LocalDate fromDate, LocalDate toDate, Boolean includeUnavailable) {
+    public List<RoomSchedule> searchRoomSchedules(String name, Integer minCapacity, Integer maxCapacity, String area,
+                                                  LocalDate fromDate, LocalDate toDate, Boolean includeUnavailable) {
         /* filter rooms */
         List<Room> rooms = searchRooms(
                 new RoomSearchCriteria(name, minCapacity, maxCapacity, area, RoomStatus.ROOM_STATUS_ACTIVE),

@@ -64,8 +64,8 @@ public class RoomController {
     }
 
     @GetMapping("/availabilities")
-    public List<RoomScheduleResponse> searchAvailabilities(@Valid @ModelAttribute SearchAvailabilityRequest request) {
-        return roomService.searchAvailabilities(
+    public List<RoomScheduleResponse> searchRoomSchedules(@Valid @ModelAttribute SearchAvailabilityRequest request) {
+        return roomService.searchRoomSchedules(
                 request.name(),
                 request.minCapacity(), request.maxCapacity(),
                 request.area(),

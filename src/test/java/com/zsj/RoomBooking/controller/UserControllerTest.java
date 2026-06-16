@@ -97,7 +97,7 @@ public class UserControllerTest {
     }
 
     @Test
-    void searchUserTest() throws Exception {
+    void searchUsersTest() throws Exception {
         User user = new User("user1", "");
 
         when(userService.searchUsers(eq("user"), eq(null), eq(null), eq(PageRequest.of(0, 20))))

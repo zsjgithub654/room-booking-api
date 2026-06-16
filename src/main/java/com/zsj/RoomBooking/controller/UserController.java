@@ -1,7 +1,6 @@
 package com.zsj.RoomBooking.controller;
 
 import com.zsj.RoomBooking.mapper.UserMapper;
-import com.zsj.RoomBooking.model.UserStatus;
 import com.zsj.RoomBooking.model.dto.request.SearchUserRequest;
 import com.zsj.RoomBooking.model.dto.request.UpdatePasswordRequest;
 import com.zsj.RoomBooking.model.dto.request.UpdateUsernameRequest;
@@ -53,8 +52,8 @@ public class UserController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public Page<UserResponse> searchUser(@Valid @ModelAttribute SearchUserRequest request,
-                                         Pageable pageable) {
+    public Page<UserResponse> searchUsers(@Valid @ModelAttribute SearchUserRequest request,
+                                          Pageable pageable) {
         return service.searchUsers(
                         request.username(),
                         request.role(),

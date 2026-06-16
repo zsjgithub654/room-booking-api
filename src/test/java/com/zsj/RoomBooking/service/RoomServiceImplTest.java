@@ -180,7 +180,7 @@ public class RoomServiceImplTest {
     }
 
     @Test
-    void searchAvailabilitiesHasResultTest() {
+    void searchRoomSchedulesHasResultTest() {
         Room room = new Room("101", 12, "Building A",
                 LocalTime.of(9, 0, 0, 0),
                 LocalTime.of(16, 0, 0, 0));
@@ -207,7 +207,7 @@ public class RoomServiceImplTest {
                 eq(getOccupationSort())))
                 .thenReturn(reservations);
         /* verify */
-        List<RoomSchedule> result = roomService.searchAvailabilities(
+        List<RoomSchedule> result = roomService.searchRoomSchedules(
                 null, null, null, null, fromDate, toDate, false);
         assertThat(result).hasSize(1);
         List<Occupation> expectedOccupations = new ArrayList<>();
@@ -222,7 +222,7 @@ public class RoomServiceImplTest {
                 .isEqualTo(expectedOccupations);
     }
     @Test
-    void searchAvailabilitiesCanIncludeUnavailableRoomsTest() {
+    void searchRoomSchedulesCanIncludeUnavailableRoomsTest() {
         /* full */
         Room room = new Room("101", 12, "Building A",
                 LocalTime.of(9, 0, 0, 0),
@@ -251,7 +251,7 @@ public class RoomServiceImplTest {
                 .thenReturn(reservations);
         /* verify */
         /* include unavailable rooms */
-        List<RoomSchedule> result = roomService.searchAvailabilities(
+        List<RoomSchedule> result = roomService.searchRoomSchedules(
                 null, null, null, null, fromDate, toDate, true);
         assertThat(result).hasSize(1);
         assertThat(result.get(0).room())
@@ -264,7 +264,7 @@ public class RoomServiceImplTest {
                         closures.get(0)
                 ));
         /* exclude unavailable rooms */
-        assertThat(roomService.searchAvailabilities(
+        assertThat(roomService.searchRoomSchedules(
                 null, null, null, null,
                 fromDate, toDate,
                 false))

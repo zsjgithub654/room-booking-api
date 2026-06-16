@@ -139,7 +139,7 @@ public class RoomControllerTest {
     }
 
     @Test
-    void searchAvailabilitiesTest() throws Exception {
+    void searchRoomSchedulesTest() throws Exception {
         /* request */
         SearchAvailabilityRequest request = new SearchAvailabilityRequest(null,
                 2, 20,
@@ -166,7 +166,7 @@ public class RoomControllerTest {
                                         LocalDateTime.of(2026, 3, 2, 10, 30, 0, 0))
                         )
                 ));
-        when(roomService.searchAvailabilities(
+        when(roomService.searchRoomSchedules(
                 request.name(),
                 request.minCapacity(), request.maxCapacity(),
                 request.area(),
@@ -195,7 +195,7 @@ public class RoomControllerTest {
     }
 
     @Test
-    void searchAvailabilitiesShouldRejectInvalidTimeRangeTest() throws Exception {
+    void searchRoomSchedulesShouldRejectInvalidTimeRangeTest() throws Exception {
         mockMvc.perform(get("/rooms/availabilities")
                         .param("fromDate", LocalDate.of(2300, 3, 2).toString())
                         .param("toDate", LocalDate.of(2300, 3, 1).toString()))
@@ -205,7 +205,7 @@ public class RoomControllerTest {
     }
 
     @Test
-    void searchAvailabilitiesShouldRejectMissingTimeRangeTest() throws Exception {
+    void searchRoomSchedulesShouldRejectMissingTimeRangeTest() throws Exception {
         mockMvc.perform(get("/rooms/availabilities"))
                 .andExpect(status().isBadRequest());
 
@@ -213,11 +213,11 @@ public class RoomControllerTest {
     }
 
     @Test
-    void searchAvailabilitiesShouldValidateTimeRangeLengthTest() throws Exception {
+    void searchRoomSchedulesShouldValidateTimeRangeLengthTest() throws Exception {
         LocalDate fromDate = LocalDate.of(2300, 3, 1);
         LocalDate validToDate = LocalDate.of(2300, 3, 7);
 
-        when(roomService.searchAvailabilities(
+        when(roomService.searchRoomSchedules(
                 null,
                 null, null,
                 null,
@@ -230,7 +230,7 @@ public class RoomControllerTest {
                         .param("toDate", validToDate.toString()))
                 .andExpect(status().isOk());
 
-        verify(roomService).searchAvailabilities(
+        verify(roomService).searchRoomSchedules(
                 null,
                 null, null,
                 null,

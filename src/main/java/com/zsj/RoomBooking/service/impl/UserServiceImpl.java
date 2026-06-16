@@ -23,6 +23,7 @@ import java.util.List;
 @Service
 public class UserServiceImpl implements UserService {
     private static final String USER_NOT_FOUND = "User not found.";
+    private static final String ADMIN_CANNOT_REMOVE_OWN_ADMIN_ROLE = "Admin cannot remove its own admin role.";
 
     @Autowired
     private UserRepository userRepository;
@@ -78,10 +79,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User removeAdminRole(Long id) {
+    public User removeAdminRole(Long id, String operatorUsername) {
         User user = userRepository.findById(id)
                 .filter(User::isActive)
                 .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND));
+        if (user.getUsername().equals(operatorUsername)) {
+            throw new IllegalStateException(ADMIN_CANNOT_REMOVE_OWN_ADMIN_ROLE);
+        }
         user.removeAdminRole();
         return user;
     }

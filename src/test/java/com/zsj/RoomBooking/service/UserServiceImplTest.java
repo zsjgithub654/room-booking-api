@@ -159,10 +159,22 @@ public class UserServiceImplTest {
         Long searchId = 2L;
 
         when(userRepository.findById(eq(searchId))).thenReturn(Optional.of(user));
-        User updatedUser = userService.removeAdminRole(searchId);
+        User updatedUser = userService.removeAdminRole(searchId, "admin1");
 
         assertThat(updatedUser.getRoles()).doesNotContain(Role.ROLE_ADMIN);
         assertThat(updatedUser.getRoles()).contains(Role.ROLE_USER);
+    }
+
+    @Test
+    void RemoveAdminRoleShouldRejectSelfRemovalTest() {
+        User user = new User("admin1", "");
+        user.addAdminRole();
+        Long searchId = 2L;
+
+        when(userRepository.findById(eq(searchId))).thenReturn(Optional.of(user));
+
+        assertThrows(IllegalStateException.class,
+                () -> userService.removeAdminRole(searchId, user.getUsername()));
     }
 
     @Test
@@ -172,7 +184,7 @@ public class UserServiceImplTest {
         when(userRepository.findById(eq(searchId))).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class,
-                () -> userService.removeAdminRole(searchId));
+                () -> userService.removeAdminRole(searchId, "admin1"));
     }
 
     @Test

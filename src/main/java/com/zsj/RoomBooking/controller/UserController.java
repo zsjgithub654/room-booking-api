@@ -18,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -104,8 +105,9 @@ public class UserController {
 
     @DeleteMapping("/{id}/roles/admin")
     @PreAuthorize("hasRole('ADMIN')")
-    public UserResponse removeAdminRole(@PathVariable @Positive Long id) {
-        return userMapper.toResponse(service.removeAdminRole(id));
+    public UserResponse removeAdminRole(@PathVariable @Positive Long id,
+                                        Authentication authentication) {
+        return userMapper.toResponse(service.removeAdminRole(id, authentication.getName()));
     }
 
     @DeleteMapping("/{id}")

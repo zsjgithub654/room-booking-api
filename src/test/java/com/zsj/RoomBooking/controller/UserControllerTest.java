@@ -60,14 +60,14 @@ public class UserControllerTest {
 
     @Test
     void getUserTest() throws Exception {
-        Long id = 1L;
+        Long userId = 1L;
         String username = "user1";
         Set<Role> roles = new HashSet<>();
         roles.add(Role.ROLE_USER);
 
-        when(userService.getUser(id)).thenReturn(new User(username, ""));
+        when(userService.getUser(userId)).thenReturn(new User(username, ""));
 
-        mockMvc.perform(get("/users/{id}", id)
+        mockMvc.perform(get("/users/{userId}", userId)
                         .with(user("admin1").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value(username))
@@ -199,16 +199,16 @@ public class UserControllerTest {
 
     @Test
     void deleteUserTest() throws Exception {
-        Long id = 1L;
+        Long userId = 1L;
 
-        doNothing().when(userService).closeUserAccount(id);
+        doNothing().when(userService).closeUserAccount(userId);
 
-        mockMvc.perform(delete("/users/{id}", id)
+        mockMvc.perform(delete("/users/{userId}", userId)
                         .with(csrf())
                         .with(user("admin1").roles("ADMIN")))
                 .andExpect(status().isNoContent());
 
-        verify(userService).closeUserAccount(id);
+        verify(userService).closeUserAccount(userId);
     }
 
     @Test
@@ -228,13 +228,13 @@ public class UserControllerTest {
 
     @Test
     void updateUsernameTest() throws Exception {
-        Long id = 1L;
+        Long userId = 1L;
         String usernameNew = "user1NewName";
 
-        when(userService.updateUsername(eq(id), eq(usernameNew)))
+        when(userService.updateUsername(eq(userId), eq(usernameNew)))
                 .thenReturn(new User(usernameNew, ""));
 
-        mockMvc.perform(patch("/users/{id}/username", id)
+        mockMvc.perform(patch("/users/{userId}/username", userId)
                         .with(csrf())
                         .with(user("admin1").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -267,9 +267,9 @@ public class UserControllerTest {
 
     @Test
     void updateUsernameShouldRejectBlankUsername() throws Exception {
-        Long id = 1L;
+        Long userId = 1L;
 
-        mockMvc.perform(patch("/users/{id}/username", id)
+        mockMvc.perform(patch("/users/{userId}/username", userId)
                         .with(csrf())
                         .with(user("admin1").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -281,9 +281,9 @@ public class UserControllerTest {
 
     @Test
     void updateUsernameShouldRejectUsernameLongerThanTwentyChars() throws Exception {
-        Long id = 1L;
+        Long userId = 1L;
 
-        mockMvc.perform(patch("/users/{id}/username", id)
+        mockMvc.perform(patch("/users/{userId}/username", userId)
                         .with(csrf())
                         .with(user("admin1").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -295,13 +295,13 @@ public class UserControllerTest {
 
     @Test
     void updatePasswordTest() throws Exception {
-        Long id = 1L;
+        Long userId = 1L;
         String password = "password1";
 
-        when(userService.updatePassword(eq(id), eq(password)))
+        when(userService.updatePassword(eq(userId), eq(password)))
                 .thenReturn(new User("user1", password));
 
-        mockMvc.perform(patch("/users/{id}/password", id)
+        mockMvc.perform(patch("/users/{userId}/password", userId)
                         .with(csrf())
                         .with(user("admin1").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -310,25 +310,25 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$.username").value("user1"))
                 .andExpect(jsonPath("$.password").doesNotExist())
                 .andExpect(jsonPath("$.roles", hasItem(Role.ROLE_USER.name())));
-        verify(userService).updatePassword(id, password);
+        verify(userService).updatePassword(userId, password);
     }
 
     @Test
     void addAdminRoleTest() throws Exception {
-        Long id = 1L;
+        Long userId = 1L;
         User user = new User("user1", "");
         user.addAdminRole();
 
-        when(userService.addAdminRole(eq(id))).thenReturn(user);
+        when(userService.addAdminRole(eq(userId))).thenReturn(user);
 
-        mockMvc.perform(patch("/users/{id}/roles/admin", id)
+        mockMvc.perform(patch("/users/{userId}/roles/admin", userId)
                         .with(csrf())
                         .with(user("admin1").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("user1"))
                 .andExpect(jsonPath("$.roles", hasItem(Role.ROLE_ADMIN.name())));
 
-        verify(userService).addAdminRole(id);
+        verify(userService).addAdminRole(userId);
     }
 
     @Test
@@ -343,19 +343,20 @@ public class UserControllerTest {
 
     @Test
     void removeAdminRoleTest() throws Exception {
-        Long id = 1L;
+        Long userId = 1L;
         User user = new User("user1", "");
+        String operatorUsername = "admin1";
 
-        when(userService.removeAdminRole(eq(id))).thenReturn(user);
+        when(userService.removeAdminRole(eq(userId), eq(operatorUsername))).thenReturn(user);
 
-        mockMvc.perform(delete("/users/{id}/roles/admin", id)
+        mockMvc.perform(delete("/users/{userId}/roles/admin", userId)
                         .with(csrf())
-                        .with(user("admin1").roles("ADMIN")))
+                        .with(user(operatorUsername).roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("user1"))
                 .andExpect(jsonPath("$.roles", hasItem(Role.ROLE_USER.name())));
 
-        verify(userService).removeAdminRole(id);
+        verify(userService).removeAdminRole(userId, operatorUsername);
     }
 
     @Test
@@ -391,9 +392,9 @@ public class UserControllerTest {
 
     @Test
     void updatePasswordShouldRejectBlankPassword() throws Exception {
-        Long id = 1L;
+        Long userId = 1L;
 
-        mockMvc.perform(patch("/users/{id}/password", id)
+        mockMvc.perform(patch("/users/{userId}/password", userId)
                         .with(csrf())
                         .with(user("admin1").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -407,6 +408,4 @@ public class UserControllerTest {
         CustomUserDetails customUserDetails = new CustomUserDetails(userId, username, "password", Set.of(Role.ROLE_USER), true);
         return new UsernamePasswordAuthenticationToken(customUserDetails, null, customUserDetails.getAuthorities());
     }
-
-
 }

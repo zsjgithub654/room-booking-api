@@ -13,6 +13,6 @@ public interface UserService {
     User updateUsername(Long id, String username);
     User updatePassword(Long id, String password);
     User addAdminRole(Long id);
-    User removeAdminRole(Long id);
+    User removeAdminRole(Long id, String operatorUsername);
     void closeUserAccount(Long id);
 }

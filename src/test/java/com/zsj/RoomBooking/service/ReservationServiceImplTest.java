@@ -207,6 +207,21 @@ public class ReservationServiceImplTest {
     }
 
     @Test
+    void addReservationUserAccountClosedTest() {
+        Long userId = 2L;
+        Long roomId = 3L;
+        LocalDateTime startTime = LocalDateTime.of(2026, 3, 1, 10, 0, 0, 0);
+        LocalDateTime endTime = LocalDateTime.of(2026, 3, 1, 11, 0, 0, 0);
+        User user = new User("user1", "");
+        user.setStatus(UserStatus.USER_STATUS_CLOSED);
+
+        when(userRepository.findByIdWithLock(eq(userId))).thenReturn(Optional.of(user));
+
+        assertThrows(IllegalStateException.class,
+                () -> reservationService.addReservation(userId, roomId, startTime, endTime));
+    }
+
+    @Test
     void addReservationRoomNotFoundTest() {
         Long userId = 2L;
         Long roomId = 3L;
@@ -428,6 +443,42 @@ public class ReservationServiceImplTest {
     }
 
     @Test
+    void updateReservationCanceledTest() {
+        Long reservationId = 2L;
+        Reservation reservation = new Reservation(new User("user1", ""),
+                new Room("101", 12, "Building A", null, null),
+                LocalDateTime.of(2300, 3, 1, 10, 0, 0, 0),
+                LocalDateTime.of(2300, 3, 1, 11, 0, 0, 0));
+        reservation.setStatus(ReservationStatus.RESERVATION_STATUS_CANCELED);
+
+        when(reservationRepository.findById(eq(reservationId))).thenReturn(Optional.of(reservation));
+
+        assertThrows(IllegalStateException.class,
+                () -> reservationService.updateReservationTime(
+                        reservationId,
+                        LocalDateTime.of(2300, 3, 1, 12, 0, 0, 0),
+                        LocalDateTime.of(2300, 3, 1, 13, 0, 0, 0)));
+    }
+
+    @Test
+    void updateReservationClosedTest() {
+        Long reservationId = 2L;
+        Reservation reservation = new Reservation(new User("user1", ""),
+                new Room("101", 12, "Building A", null, null),
+                LocalDateTime.of(2300, 3, 1, 10, 0, 0, 0),
+                LocalDateTime.of(2300, 3, 1, 11, 0, 0, 0));
+        reservation.setStatus(ReservationStatus.RESERVATION_STATUS_CLOSED);
+
+        when(reservationRepository.findById(eq(reservationId))).thenReturn(Optional.of(reservation));
+
+        assertThrows(IllegalStateException.class,
+                () -> reservationService.updateReservationTime(
+                        reservationId,
+                        LocalDateTime.of(2300, 3, 1, 12, 0, 0, 0),
+                        LocalDateTime.of(2300, 3, 1, 13, 0, 0, 0)));
+    }
+
+    @Test
     void updateReservationOutsideRoomHoursTest() {
         Long reservationId = 2L;
         Long roomId = 3L;
@@ -500,7 +551,7 @@ public class ReservationServiceImplTest {
         when(reservationRepository.findById(eq(reservationId))).thenReturn(Optional.of(reservation));
         when(userRepository.findByIdWithLock(eq(user.getId()))).thenReturn(Optional.of(user));
 
-        assertThrows(ResourceNotFoundException.class,
+        assertThrows(IllegalStateException.class,
                 () -> reservationService.updateReservationTime(reservationId, startTime, endTime));
     }
 

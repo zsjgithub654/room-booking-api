@@ -25,7 +25,10 @@ import java.time.LocalDateTime;
 @Service
 public class ReservationServiceImpl implements ReservationService {
     private static final String RESERVATION_NOT_FOUND = "Reservation not found.";
+    private static final String RESERVATION_IS_CANCELED = "Reservation is canceled.";
+    private static final String RESERVATION_IS_CLOSED = "Reservation is closed.";
     private static final String USER_NOT_FOUND = "User not found.";
+    private static final String USER_ACCOUNT_IS_CLOSED = "User account is closed.";
     private static final String ROOM_NOT_FOUND = "Room not found.";
     private static final String STARTED_RESERVATION_CANNOT_BE_UPDATED = "Started reservation cannot be updated.";
     private static final String ROOM_NOT_IN_OPEN_HOURS = "Room not in open hours.";
@@ -73,8 +76,10 @@ public class ReservationServiceImpl implements ReservationService {
     public Reservation addReservation(Long userId, Long roomId, LocalDateTime startTime, LocalDateTime endTime) {
         /* verify and acquire lock on user and room, keep order of acquiring locks consistent across transactions */
         User user = userRepository.findByIdWithLock(userId)
-                .filter(User::isActive)
                 .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND));
+        if (!user.isActive()) {
+            throw new IllegalStateException(USER_ACCOUNT_IS_CLOSED);
+        }
         Room room = roomRepository.findByIdWithLock(roomId)
                 .filter(Room::isActive)
                 .orElseThrow(() -> new ResourceNotFoundException(ROOM_NOT_FOUND));
@@ -110,15 +115,22 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     public Reservation updateReservationTime(Long id, LocalDateTime startTime, LocalDateTime endTime) {
         Reservation reservation = reservationRepository.findById(id)
-                .filter(Reservation::isScheduled)
                 .orElseThrow(() -> new ResourceNotFoundException(RESERVATION_NOT_FOUND));
+        if (reservation.getStatus() == ReservationStatus.RESERVATION_STATUS_CANCELED) {
+            throw new IllegalStateException(RESERVATION_IS_CANCELED);
+        }
+        if (reservation.getStatus() == ReservationStatus.RESERVATION_STATUS_CLOSED) {
+            throw new IllegalStateException(RESERVATION_IS_CLOSED);
+        }
         if (!reservation.getStartTime().isAfter(LocalDateTime.now())) {
             throw new IllegalStateException(STARTED_RESERVATION_CANNOT_BE_UPDATED);
         }
         /* acquire lock on user and room */
-        userRepository.findByIdWithLock(reservation.getUser().getId())
-                .filter(User::isActive)
+        User user = userRepository.findByIdWithLock(reservation.getUser().getId())
                 .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND));
+        if (!user.isActive()) {
+            throw new IllegalStateException(USER_ACCOUNT_IS_CLOSED);
+        }
         Room room = roomRepository.findByIdWithLock(reservation.getRoom().getId())
                 .filter(Room::isActive)
                 .orElseThrow(() -> new ResourceNotFoundException(ROOM_NOT_FOUND));

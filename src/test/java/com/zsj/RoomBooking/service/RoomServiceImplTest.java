@@ -149,6 +149,24 @@ public class RoomServiceImplTest {
     }
 
     @Test
+    void UpdateRoomDeletedTest() {
+        Room room = new Room("101", 12, "Building A", null, null);
+        room.setStatus(RoomStatus.ROOM_STATUS_DELETED);
+        Room newRoom = new Room("102", 10, "Building 1", null, null);
+        Long searchId = 2L;
+
+        when(roomRepository.findById(eq(searchId))).thenReturn(Optional.of(room));
+
+        assertThrows(IllegalStateException.class,
+                () -> roomService.updateRoom(searchId,
+                        newRoom.getName(),
+                        newRoom.getCapacity(),
+                        newRoom.getArea(),
+                        newRoom.getOpenTime(),
+                        newRoom.getCloseTime()));
+    }
+
+    @Test
     void SearchRoomsTest() {
         RoomSearchCriteria criteria = new RoomSearchCriteria(null, null, null, null, null);
         List<Room> rooms = List.of(

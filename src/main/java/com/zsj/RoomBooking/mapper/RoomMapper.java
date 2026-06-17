@@ -12,7 +12,8 @@ public class RoomMapper {
                 room.getName(),
                 room.getCapacity(),
                 room.getArea(),
-                room.getOpenTime(), room.getCloseTime());
+                room.getOpenTime(), room.getCloseTime(),
+                room.getStatus());
     }
 
     public Room toEntity(RoomRequest request) {

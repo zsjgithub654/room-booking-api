@@ -25,6 +25,7 @@ import java.util.List;
 @Service
 public class UserServiceImpl implements UserService {
     private static final String USER_NOT_FOUND = "User not found.";
+    private static final String USER_ACCOUNT_IS_CLOSED = "User account is closed.";
     private static final String LAST_ACTIVE_ADMIN_CANNOT_BE_REMOVED = "Last active admin cannot be removed.";
 
     @Autowired
@@ -66,8 +67,10 @@ public class UserServiceImpl implements UserService {
     @Override
     public User updateUsername(Long id, String username) {
         User user = userRepository.findById(id)
-                .filter(User::isActive)
                 .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND));
+        if (!user.isActive()) {
+            throw new IllegalStateException(USER_ACCOUNT_IS_CLOSED);
+        }
         user.setUsername(username);
         return user;
     }
@@ -75,8 +78,10 @@ public class UserServiceImpl implements UserService {
     @Override
     public User updatePassword(Long id, String password) {
         User user = userRepository.findById(id)
-                .filter(User::isActive)
                 .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND));
+        if (!user.isActive()) {
+            throw new IllegalStateException(USER_ACCOUNT_IS_CLOSED);
+        }
         user.setPassword(passwordEncoder.encode(password));
         return user;
     }
@@ -84,8 +89,10 @@ public class UserServiceImpl implements UserService {
     @Override
     public User addAdminRole(Long id) {
         User user = userRepository.findById(id)
-                .filter(User::isActive)
                 .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND));
+        if (!user.isActive()) {
+            throw new IllegalStateException(USER_ACCOUNT_IS_CLOSED);
+        }
         user.addAdminRole();
         return user;
     }
@@ -93,8 +100,10 @@ public class UserServiceImpl implements UserService {
     @Override
     public User removeAdminRole(Long id) {
         User user = userRepository.findById(id)
-                .filter(User::isActive)
                 .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND));
+        if (!user.isActive()) {
+            throw new IllegalStateException(USER_ACCOUNT_IS_CLOSED);
+        }
         validateNotLastActiveAdmin(user);
         user.removeAdminRole();
         return user;

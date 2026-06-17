@@ -405,6 +405,23 @@ public class UserControllerTest {
         verifyNoInteractions(userService);
     }
 
+    @Test
+    void updateUsernameShouldRejectWhenUserClosedTest() throws Exception {
+        Long userId = 1L;
+        String usernameNew = "user1NewName";
+
+        when(userService.updateUsername(eq(userId), eq(usernameNew)))
+                .thenThrow(new IllegalStateException("User account is closed."));
+
+        mockMvc.perform(patch("/users/{userId}/username", userId)
+                        .with(csrf())
+                        .with(user("admin1").roles("ADMIN"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper.writeValueAsString(new UpdateUsernameRequest(usernameNew))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("User account is closed."));
+    }
+
     private UsernamePasswordAuthenticationToken getAuthentication(Long userId, String username) {
         CustomUserDetails customUserDetails = new CustomUserDetails(userId, username, "password", Set.of(Role.ROLE_USER), true);
         return new UsernamePasswordAuthenticationToken(customUserDetails, null, customUserDetails.getAuthorities());

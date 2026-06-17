@@ -1,5 +1,6 @@
 package com.zsj.RoomBooking.controller;
 
+import com.zsj.RoomBooking.exception.ResourceNotFoundException;
 import com.zsj.RoomBooking.mapper.RoomScheduleMapper;
 import com.zsj.RoomBooking.mapper.ReservationMapper;
 import com.zsj.RoomBooking.mapper.RoomMapper;
@@ -10,6 +11,7 @@ import com.zsj.RoomBooking.model.dto.response.RoomResponse;
 import com.zsj.RoomBooking.model.dto.request.SearchAvailabilityRequest;
 import com.zsj.RoomBooking.model.dto.response.RoomScheduleResponse;
 import com.zsj.RoomBooking.model.criteria.RoomSearchCriteria;
+import com.zsj.RoomBooking.model.entity.Room;
 import com.zsj.RoomBooking.service.RoomService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
@@ -19,6 +21,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,6 +39,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/rooms")
 public class RoomController {
+    private static final String ROOM_NOT_FOUND = "Room not found.";
+
     @Autowired
     private RoomService roomService;
 
@@ -75,9 +80,17 @@ public class RoomController {
     }
 
     @GetMapping("/{roomId}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public RoomResponse getRoom(@PathVariable @Positive Long roomId) {
-        return roomMapper.toResponse(roomService.getRoom(roomId));
+    @PreAuthorize("isAuthenticated()")
+    public RoomResponse getRoom(@PathVariable @Positive Long roomId,
+                                Authentication authentication) {
+        Room room = roomService.getRoom(roomId);
+        /* deleted rooms are not accessible to non-admin users */
+        if (!authentication.getAuthorities().stream()
+                .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_ADMIN"))
+                && !room.isActive()) {
+            throw new ResourceNotFoundException(ROOM_NOT_FOUND);
+        }
+        return roomMapper.toResponse(room);
     }
 
     @PostMapping

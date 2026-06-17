@@ -104,6 +104,18 @@ public class UserServiceImplTest {
     }
 
     @Test
+    void UpdateUsernameAccountClosedTest() {
+        User user = new User("user1", "");
+        user.setStatus(UserStatus.USER_STATUS_CLOSED);
+        Long searchId = 2L;
+
+        when(userRepository.findById(eq(searchId))).thenReturn(Optional.of(user));
+
+        assertThrows(IllegalStateException.class,
+                () -> userService.updateUsername(searchId, "user1new"));
+    }
+
+    @Test
     void UpdatePasswordSucceedTest() {
         User user = new User("user1", "");
         Long searchId = 2L;
@@ -150,6 +162,18 @@ public class UserServiceImplTest {
         when(userRepository.findById(eq(searchId))).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class,
+                () -> userService.addAdminRole(searchId));
+    }
+
+    @Test
+    void AddAdminRoleAccountClosedTest() {
+        User user = new User("user1", "");
+        user.setStatus(UserStatus.USER_STATUS_CLOSED);
+        Long searchId = 2L;
+
+        when(userRepository.findById(eq(searchId))).thenReturn(Optional.of(user));
+
+        assertThrows(IllegalStateException.class,
                 () -> userService.addAdminRole(searchId));
     }
 

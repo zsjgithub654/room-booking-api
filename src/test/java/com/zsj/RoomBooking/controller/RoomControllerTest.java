@@ -253,7 +253,7 @@ public class RoomControllerTest {
         when(roomService.getRoom(id)).thenReturn(room);
         /* perform and verify */
         String responseString = mockMvc.perform(get("/rooms/{id}", id)
-                        .with(user("admin1").roles("ADMIN")))
+                        .with(user("user1").roles("USER")))
                 .andExpect(status().isOk())
                 .andReturn()
                 .getResponse()
@@ -267,10 +267,38 @@ public class RoomControllerTest {
     @Test
     void getRoomShouldRejectNonPositiveId() throws Exception {
         mockMvc.perform(get("/rooms/{id}", 0)
-                        .with(user("admin1").roles("ADMIN")))
+                        .with(user("user1").roles("USER")))
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(roomService);
+    }
+
+    @Test
+    void getRoomShouldRejectDeletedRoomForNonAdminTest() throws Exception {
+        Long id = 1L;
+        Room room = new Room("101", 12, "Building-A", null, null);
+        room.setStatus(RoomStatus.ROOM_STATUS_DELETED);
+
+        when(roomService.getRoom(id)).thenReturn(room);
+
+        mockMvc.perform(get("/rooms/{id}", id)
+                        .with(user("user1").roles("USER")))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Room not found."));
+    }
+
+    @Test
+    void getRoomShouldAllowDeletedRoomForAdminTest() throws Exception {
+        Long id = 1L;
+        Room room = new Room("101", 12, "Building-A", null, null);
+        room.setStatus(RoomStatus.ROOM_STATUS_DELETED);
+
+        when(roomService.getRoom(id)).thenReturn(room);
+
+        mockMvc.perform(get("/rooms/{id}", id)
+                        .with(user("admin1").roles("ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(RoomStatus.ROOM_STATUS_DELETED.name()));
     }
 
     @Test
@@ -506,5 +534,33 @@ public class RoomControllerTest {
         assertThat(response)
                 .usingRecursiveComparison()
                 .isEqualTo(room);
+    }
+
+    @Test
+    void updateRoomShouldRejectWhenDeletedTest() throws Exception {
+        Long id = 1L;
+        Room room = new Room("101", 12, "Building-A",
+                LocalTime.of(9, 0, 0, 0),
+                LocalTime.of(16, 0, 0, 0));
+
+        when(roomService.updateRoom(id,
+                room.getName(),
+                room.getCapacity(),
+                room.getArea(),
+                room.getOpenTime(), room.getCloseTime()))
+                .thenThrow(new IllegalStateException("Room is deleted."));
+
+        mockMvc.perform(put("/rooms/{id}", id)
+                        .with(csrf())
+                        .with(user("admin1").roles("ADMIN"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper.writeValueAsString(new RoomRequest(
+                                room.getName(),
+                                room.getCapacity(),
+                                room.getArea(),
+                                room.getOpenTime(), room.getCloseTime()
+                        ))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Room is deleted."));
     }
 }

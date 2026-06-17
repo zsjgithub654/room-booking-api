@@ -352,6 +352,24 @@ public class ReservationControllerTest {
         verifyNoInteractions(reservationService);
     }
 
+    @Test
+    void updateReservationShouldRejectWhenCanceledTest() throws Exception {
+        Long id = 1L;
+        LocalDateTime startTime = LocalDateTime.of(2300, 3, 1, 10, 30, 0, 0);
+        LocalDateTime endTime = LocalDateTime.of(2300, 3, 1, 11, 30, 0, 0);
+
+        when(reservationService.updateReservationTime(eq(id), eq(startTime), eq(endTime)))
+                .thenThrow(new IllegalStateException("Reservation is canceled."));
+
+        mockMvc.perform(patch("/reservations/{id}", id)
+                        .with(csrf())
+                        .with(user("admin1").roles("ADMIN"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper.writeValueAsString(new UpdateReservationRequest(startTime, endTime))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Reservation is canceled."));
+    }
+
     private UsernamePasswordAuthenticationToken getAuthentication(Long userId, String username) {
         CustomUserDetails customUserDetails = new CustomUserDetails(userId, username, "password", Set.of(Role.ROLE_USER), true);
         return new UsernamePasswordAuthenticationToken(customUserDetails, null, customUserDetails.getAuthorities());

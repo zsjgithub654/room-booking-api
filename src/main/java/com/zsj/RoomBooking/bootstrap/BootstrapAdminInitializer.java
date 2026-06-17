@@ -31,6 +31,7 @@ public class BootstrapAdminInitializer implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
+        /* TODO: regex and length validation missing */
         if (username.isEmpty() || password.isEmpty()) {
             return;
         }

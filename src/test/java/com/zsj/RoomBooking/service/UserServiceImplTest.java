@@ -159,22 +159,28 @@ public class UserServiceImplTest {
         Long searchId = 2L;
 
         when(userRepository.findById(eq(searchId))).thenReturn(Optional.of(user));
-        User updatedUser = userService.removeAdminRole(searchId, "admin1");
+        when(userRepository.existsByRolesContainsAndStatusAndIdNot(
+                eq(Role.ROLE_ADMIN), eq(UserStatus.USER_STATUS_ACTIVE), any()))
+                .thenReturn(true);
+        User updatedUser = userService.removeAdminRole(searchId);
 
         assertThat(updatedUser.getRoles()).doesNotContain(Role.ROLE_ADMIN);
         assertThat(updatedUser.getRoles()).contains(Role.ROLE_USER);
     }
 
     @Test
-    void RemoveAdminRoleShouldRejectSelfRemovalTest() {
+    void RemoveAdminRoleShouldRejectLastActiveAdminTest() {
         User user = new User("admin1", "");
         user.addAdminRole();
         Long searchId = 2L;
 
         when(userRepository.findById(eq(searchId))).thenReturn(Optional.of(user));
+        when(userRepository.existsByRolesContainsAndStatusAndIdNot(
+                eq(Role.ROLE_ADMIN), eq(UserStatus.USER_STATUS_ACTIVE), any()))
+                .thenReturn(false);
 
         assertThrows(IllegalStateException.class,
-                () -> userService.removeAdminRole(searchId, user.getUsername()));
+                () -> userService.removeAdminRole(searchId));
     }
 
     @Test
@@ -184,7 +190,7 @@ public class UserServiceImplTest {
         when(userRepository.findById(eq(searchId))).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class,
-                () -> userService.removeAdminRole(searchId, "admin1"));
+                () -> userService.removeAdminRole(searchId));
     }
 
     @Test
@@ -259,6 +265,20 @@ public class UserServiceImplTest {
         userService.closeUserAccount(searchId);
         assertThat(reservations.get(0).getStatus()).isEqualTo(ReservationStatus.RESERVATION_STATUS_CLOSED);
         assertThat(reservations.get(1).getStatus()).isEqualTo(ReservationStatus.RESERVATION_STATUS_CLOSED);
+    }
+
+    @Test
+    void closeUserAccountShouldRejectLastActiveAdminTest() {
+        User user = new User("admin1", "");
+        user.addAdminRole();
+        Long searchId = 2L;
+
+        when(userRepository.findByIdWithLock(eq(searchId))).thenReturn(Optional.of(user));
+        when(userRepository.existsByRolesContainsAndStatusAndIdNot(
+                eq(Role.ROLE_ADMIN), eq(UserStatus.USER_STATUS_ACTIVE), any()))
+                .thenReturn(false);
+
+        assertThrows(IllegalStateException.class, () -> userService.closeUserAccount(searchId));
     }
 
     @Test

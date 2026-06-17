@@ -345,18 +345,17 @@ public class UserControllerTest {
     void removeAdminRoleTest() throws Exception {
         Long userId = 1L;
         User user = new User("user1", "");
-        String operatorUsername = "admin1";
 
-        when(userService.removeAdminRole(eq(userId), eq(operatorUsername))).thenReturn(user);
+        when(userService.removeAdminRole(eq(userId))).thenReturn(user);
 
         mockMvc.perform(delete("/users/{userId}/roles/admin", userId)
                         .with(csrf())
-                        .with(user(operatorUsername).roles("ADMIN")))
+                        .with(user("admin1").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("user1"))
                 .andExpect(jsonPath("$.roles", hasItem(Role.ROLE_USER.name())));
 
-        verify(userService).removeAdminRole(userId, operatorUsername);
+        verify(userService).removeAdminRole(userId);
     }
 
     @Test

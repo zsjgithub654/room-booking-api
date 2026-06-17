@@ -19,6 +19,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     boolean existsByRolesContainsAndStatus(Role role, UserStatus status);
 
+    boolean existsByRolesContainsAndStatusAndIdNot(Role role, UserStatus status, Long id);
+
     /* select all when arg is null */
     @Query("""
             SELECT user FROM User user

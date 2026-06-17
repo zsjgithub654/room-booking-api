@@ -23,7 +23,7 @@ import java.util.List;
 @Service
 public class UserServiceImpl implements UserService {
     private static final String USER_NOT_FOUND = "User not found.";
-    private static final String ADMIN_CANNOT_REMOVE_OWN_ADMIN_ROLE = "Admin cannot remove its own admin role.";
+    private static final String LAST_ACTIVE_ADMIN_CANNOT_BE_REMOVED = "Last active admin cannot be removed.";
 
     @Autowired
     private UserRepository userRepository;
@@ -79,13 +79,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User removeAdminRole(Long id, String operatorUsername) {
+    public User removeAdminRole(Long id) {
         User user = userRepository.findById(id)
                 .filter(User::isActive)
                 .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND));
-        if (user.getUsername().equals(operatorUsername)) {
-            throw new IllegalStateException(ADMIN_CANNOT_REMOVE_OWN_ADMIN_ROLE);
-        }
+        validateNotLastActiveAdmin(user);
         user.removeAdminRole();
         return user;
     }
@@ -97,6 +95,7 @@ public class UserServiceImpl implements UserService {
         if (!user.isActive()) {
             return;
         }
+        validateNotLastActiveAdmin(user);
         /* delete user info, but keep the record as FK of history reservations */
         user.setStatus(UserStatus.USER_STATUS_CLOSED);
         user.setUsername(null);
@@ -108,6 +107,18 @@ public class UserServiceImpl implements UserService {
                 DefaultSorts.occupationSort());
         for (Reservation reservation : reservations) {
             reservation.setStatus(ReservationStatus.RESERVATION_STATUS_CLOSED);
+        }
+    }
+
+    private void validateNotLastActiveAdmin(User user) {
+        if (!user.getRoles().contains(Role.ROLE_ADMIN)) {
+            return;
+        }
+        if (!userRepository.existsByRolesContainsAndStatusAndIdNot(
+                Role.ROLE_ADMIN,
+                UserStatus.USER_STATUS_ACTIVE,
+                user.getId())) {
+            throw new IllegalStateException(LAST_ACTIVE_ADMIN_CANNOT_BE_REMOVED);
         }
     }
 }

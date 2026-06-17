@@ -3,6 +3,7 @@ package com.zsj.RoomBooking.controller;
 import com.zsj.RoomBooking.config.SecurityConfig;
 import com.zsj.RoomBooking.mapper.UserMapper;
 import com.zsj.RoomBooking.model.Role;
+import com.zsj.RoomBooking.model.UserStatus;
 import com.zsj.RoomBooking.model.dto.request.UpdatePasswordRequest;
 import com.zsj.RoomBooking.model.dto.request.UpdateUsernameRequest;
 import com.zsj.RoomBooking.model.dto.request.UserRequest;
@@ -71,6 +72,7 @@ public class UserControllerTest {
                         .with(user("admin1").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value(username))
+                .andExpect(jsonPath("$.status").value(UserStatus.USER_STATUS_ACTIVE.name()))
                 .andExpect(jsonPath("$.password").doesNotExist())
                 .andExpect(jsonPath("$.roles", hasItem(Role.ROLE_USER.name())));
     }

@@ -359,7 +359,7 @@ public class ReservationControllerTest {
         LocalDateTime endTime = LocalDateTime.of(2300, 3, 1, 11, 30, 0, 0);
 
         when(reservationService.updateReservationTime(eq(id), eq(startTime), eq(endTime)))
-                .thenThrow(new IllegalStateException("Reservation is canceled."));
+                .thenThrow(new IllegalStateException("Cannot update a canceled reservation."));
 
         mockMvc.perform(patch("/reservations/{id}", id)
                         .with(csrf())
@@ -367,7 +367,7 @@ public class ReservationControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(new UpdateReservationRequest(startTime, endTime))))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Reservation is canceled."));
+                .andExpect(jsonPath("$.message").value("Cannot update a canceled reservation."));
     }
 
     private UsernamePasswordAuthenticationToken getAuthentication(Long userId, String username) {

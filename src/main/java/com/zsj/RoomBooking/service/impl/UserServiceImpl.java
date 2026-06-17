@@ -25,7 +25,7 @@ import java.util.List;
 @Service
 public class UserServiceImpl implements UserService {
     private static final String USER_NOT_FOUND = "User not found.";
-    private static final String USER_ACCOUNT_IS_CLOSED = "User account is closed.";
+    private static final String CLOSED_USER_CANNOT_BE_UPDATED = "Cannot update a closed user.";
     private static final String LAST_ACTIVE_ADMIN_CANNOT_BE_REMOVED = "Last active admin cannot be removed.";
 
     @Autowired
@@ -69,7 +69,7 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND));
         if (!user.isActive()) {
-            throw new IllegalStateException(USER_ACCOUNT_IS_CLOSED);
+            throw new IllegalStateException(CLOSED_USER_CANNOT_BE_UPDATED);
         }
         user.setUsername(username);
         return user;
@@ -80,7 +80,7 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND));
         if (!user.isActive()) {
-            throw new IllegalStateException(USER_ACCOUNT_IS_CLOSED);
+            throw new IllegalStateException(CLOSED_USER_CANNOT_BE_UPDATED);
         }
         user.setPassword(passwordEncoder.encode(password));
         return user;
@@ -91,7 +91,7 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND));
         if (!user.isActive()) {
-            throw new IllegalStateException(USER_ACCOUNT_IS_CLOSED);
+            throw new IllegalStateException(CLOSED_USER_CANNOT_BE_UPDATED);
         }
         user.addAdminRole();
         return user;
@@ -102,7 +102,7 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND));
         if (!user.isActive()) {
-            throw new IllegalStateException(USER_ACCOUNT_IS_CLOSED);
+            throw new IllegalStateException(CLOSED_USER_CANNOT_BE_UPDATED);
         }
         validateNotLastActiveAdmin(user);
         user.removeAdminRole();

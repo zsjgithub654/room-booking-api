@@ -25,10 +25,10 @@ import java.time.LocalDateTime;
 @Service
 public class ReservationServiceImpl implements ReservationService {
     private static final String RESERVATION_NOT_FOUND = "Reservation not found.";
-    private static final String RESERVATION_IS_CANCELED = "Reservation is canceled.";
-    private static final String RESERVATION_IS_CLOSED = "Reservation is closed.";
+    private static final String CANCELED_RESERVATION_CANNOT_BE_UPDATED = "Cannot update a canceled reservation.";
+    private static final String CLOSED_RESERVATION_CANNOT_BE_UPDATED = "Cannot update a closed reservation.";
     private static final String USER_NOT_FOUND = "User not found.";
-    private static final String USER_ACCOUNT_IS_CLOSED = "User account is closed.";
+    private static final String CLOSED_USER_CANNOT_BOOK_RESERVATIONS = "Cannot book reservations for a closed user account.";
     private static final String ROOM_NOT_FOUND = "Room not found.";
     private static final String STARTED_RESERVATION_CANNOT_BE_UPDATED = "Started reservation cannot be updated.";
     private static final String ROOM_NOT_IN_OPEN_HOURS = "Room not in open hours.";
@@ -78,7 +78,7 @@ public class ReservationServiceImpl implements ReservationService {
         User user = userRepository.findByIdWithLock(userId)
                 .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND));
         if (!user.isActive()) {
-            throw new IllegalStateException(USER_ACCOUNT_IS_CLOSED);
+            throw new IllegalStateException(CLOSED_USER_CANNOT_BOOK_RESERVATIONS);
         }
         Room room = roomRepository.findByIdWithLock(roomId)
                 .filter(Room::isActive)
@@ -117,10 +117,10 @@ public class ReservationServiceImpl implements ReservationService {
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(RESERVATION_NOT_FOUND));
         if (reservation.getStatus() == ReservationStatus.RESERVATION_STATUS_CANCELED) {
-            throw new IllegalStateException(RESERVATION_IS_CANCELED);
+            throw new IllegalStateException(CANCELED_RESERVATION_CANNOT_BE_UPDATED);
         }
         if (reservation.getStatus() == ReservationStatus.RESERVATION_STATUS_CLOSED) {
-            throw new IllegalStateException(RESERVATION_IS_CLOSED);
+            throw new IllegalStateException(CLOSED_RESERVATION_CANNOT_BE_UPDATED);
         }
         if (!reservation.getStartTime().isAfter(LocalDateTime.now())) {
             throw new IllegalStateException(STARTED_RESERVATION_CANNOT_BE_UPDATED);
@@ -129,7 +129,7 @@ public class ReservationServiceImpl implements ReservationService {
         User user = userRepository.findByIdWithLock(reservation.getUser().getId())
                 .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND));
         if (!user.isActive()) {
-            throw new IllegalStateException(USER_ACCOUNT_IS_CLOSED);
+            throw new IllegalStateException(CLOSED_USER_CANNOT_BOOK_RESERVATIONS);
         }
         Room room = roomRepository.findByIdWithLock(reservation.getRoom().getId())
                 .filter(Room::isActive)

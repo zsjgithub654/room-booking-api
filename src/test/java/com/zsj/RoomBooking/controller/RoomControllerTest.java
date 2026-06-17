@@ -548,7 +548,7 @@ public class RoomControllerTest {
                 room.getCapacity(),
                 room.getArea(),
                 room.getOpenTime(), room.getCloseTime()))
-                .thenThrow(new IllegalStateException("Room is deleted."));
+                .thenThrow(new IllegalStateException("Cannot update a deleted room."));
 
         mockMvc.perform(put("/rooms/{id}", id)
                         .with(csrf())
@@ -561,6 +561,6 @@ public class RoomControllerTest {
                                 room.getOpenTime(), room.getCloseTime()
                         ))))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Room is deleted."));
+                .andExpect(jsonPath("$.message").value("Cannot update a deleted room."));
     }
 }

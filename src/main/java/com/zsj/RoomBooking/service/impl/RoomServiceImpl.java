@@ -33,7 +33,7 @@ import java.util.stream.Stream;
 @Transactional
 public class RoomServiceImpl implements RoomService {
     private static final String ROOM_NOT_FOUND = "Room not found.";
-    private static final String ROOM_IS_DELETED = "Room is deleted.";
+    private static final String DELETED_ROOM_CANNOT_BE_UPDATED = "Cannot update a deleted room.";
 
     @Autowired
     private RoomRepository roomRepository;
@@ -190,7 +190,7 @@ public class RoomServiceImpl implements RoomService {
         Room room = roomRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(ROOM_NOT_FOUND));
         if (!room.isActive()) {
-            throw new IllegalStateException(ROOM_IS_DELETED);
+            throw new IllegalStateException(DELETED_ROOM_CANNOT_BE_UPDATED);
         }
         room.setName(name);
         room.setCapacity(capacity);

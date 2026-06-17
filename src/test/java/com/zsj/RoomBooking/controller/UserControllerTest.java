@@ -411,15 +411,15 @@ public class UserControllerTest {
         String usernameNew = "user1NewName";
 
         when(userService.updateUsername(eq(userId), eq(usernameNew)))
-                .thenThrow(new IllegalStateException("User account is closed."));
+                .thenThrow(new IllegalStateException("Cannot update a closed user."));
 
         mockMvc.perform(patch("/users/{userId}/username", userId)
                         .with(csrf())
                         .with(user("admin1").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(this.objectMapper.writeValueAsString(new UpdateUsernameRequest(usernameNew))))
+                .content(this.objectMapper.writeValueAsString(new UpdateUsernameRequest(usernameNew))))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("User account is closed."));
+                .andExpect(jsonPath("$.message").value("Cannot update a closed user."));
     }
 
     private UsernamePasswordAuthenticationToken getAuthentication(Long userId, String username) {

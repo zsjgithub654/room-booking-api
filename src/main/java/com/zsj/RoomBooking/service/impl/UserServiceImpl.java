@@ -40,7 +40,7 @@ public class UserServiceImpl implements UserService {
     public Page<User> searchUsers(String username, Role role, UserStatus status, Pageable pageable) {
         Pageable queryPageable = DefaultSorts.addUserDefaultSort(pageable);
         Specification<User> specification = Specification.unrestricted();
-        if (username != null) {
+        if (username != null && !username.isBlank()) {
             specification = specification.and(UserSpecifications.usernameContains(username));
         }
         if (role != null) {

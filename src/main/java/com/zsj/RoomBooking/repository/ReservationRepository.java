@@ -2,9 +2,8 @@ package com.zsj.RoomBooking.repository;
 
 import com.zsj.RoomBooking.model.ReservationStatus;
 import com.zsj.RoomBooking.model.entity.Reservation;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -14,27 +13,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
-public interface ReservationRepository extends JpaRepository<Reservation, Long> {
+public interface ReservationRepository extends JpaRepository<Reservation, Long>, JpaSpecificationExecutor<Reservation> {
     List<Reservation> findByRoomId(Long roomId);
-
-    /* search reservations whose startTime falls within [fromTime, toTime) */
-    @Query("""
-            SELECT reservation
-            FROM Reservation reservation
-            WHERE (:userId IS NULL OR reservation.user.id = :userId)
-              AND (:roomId IS NULL OR reservation.room.id = :roomId)
-              AND (:fromTime IS NULL OR reservation.startTime >= :fromTime)
-              AND (:toTime IS NULL OR reservation.startTime < :toTime)
-              AND (:status IS NULL OR reservation.status = :status)
-            """)
-    Page<Reservation> findByUserIdAndRoomIdAndStartTimeAndStatus(
-            @Param("userId") Long userId,
-            @Param("roomId") Long roomId,
-            @Param("fromTime") LocalDateTime fromTime,
-            @Param("toTime") LocalDateTime toTime,
-            @Param("status") ReservationStatus status,
-            Pageable pageable
-    );
 
     @Query("""
                 SELECT reservation

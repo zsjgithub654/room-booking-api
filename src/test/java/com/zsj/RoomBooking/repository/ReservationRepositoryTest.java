@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
 import java.time.LocalDateTime;
@@ -71,75 +70,12 @@ public class ReservationRepositoryTest {
         assertThat(reservationsRetrieved).hasSize(0);
     }
 
-    /* findByUserIdAndRoomIdAndStartTimeAndStatus */
+    /* ReservationSpecifications */
     @Test
-    void findByUserIdAndRoomIdAndStartTimeAndStatusHasResultTest() {
-        List<Reservation> result = reservationRepository.findByUserIdAndRoomIdAndStartTimeAndStatus(
-                user.getId(),
-                room.getId(),
-                LocalDateTime.of(2026, 6, 1, 0, 0, 0, 0),
-                LocalDateTime.of(2026, 6, 2, 0, 0, 0, 0),
-                ReservationStatus.RESERVATION_STATUS_SCHEDULED,
-                Pageable.unpaged()).getContent();
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0)).isEqualTo(reservations.get(1));
-    }
+    void filterByUserIdTest() {
+        List<Reservation> result = reservationRepository.findAll(
+                ReservationSpecifications.hasUserId(user.getId()));
 
-    @Test
-    void findByUserIdAndRoomIdAndStartTimeAndStatusNoResultMatchRoomTest() {
-        List<Reservation> result = reservationRepository.findByUserIdAndRoomIdAndStartTimeAndStatus(
-                user.getId(),
-                room.getId() + 1,
-                LocalDateTime.of(2026, 6, 1, 0, 0, 0, 0),
-                LocalDateTime.of(2026, 6, 2, 0, 0, 0, 0),
-                ReservationStatus.RESERVATION_STATUS_SCHEDULED,
-                Pageable.unpaged()).getContent();
-        assertThat(result).hasSize(0);
-    }
-
-    @Test
-    void findByUserIdAndRoomIdAndStartTimeAndStatusNoResultMatchUserTest() {
-        List<Reservation> result = reservationRepository.findByUserIdAndRoomIdAndStartTimeAndStatus(
-                user.getId() + 1,
-                room.getId(),
-                LocalDateTime.of(2026, 6, 1, 0, 0, 0, 0),
-                LocalDateTime.of(2026, 6, 2, 0, 0, 0, 0),
-                ReservationStatus.RESERVATION_STATUS_SCHEDULED,
-                Pageable.unpaged()).getContent();
-        assertThat(result).hasSize(0);
-    }
-
-    @Test
-    void findByUserIdAndRoomIdAndStartTimeAndStatusNoResultMatchTimeTest() {
-        List<Reservation> result = reservationRepository.findByUserIdAndRoomIdAndStartTimeAndStatus(
-                user.getId(),
-                room.getId(),
-                LocalDateTime.of(2026, 7, 1, 0, 0, 0, 0),
-                LocalDateTime.of(2026, 7, 2, 0, 0, 0, 0),
-                ReservationStatus.RESERVATION_STATUS_SCHEDULED,
-                Pageable.unpaged()).getContent();
-        assertThat(result).hasSize(0);
-    }
-
-    @Test
-    void findByUserIdAndRoomIdAndStartTimeAndStatusNoResultMatchStatusTest() {
-        reservations.get(1).setStatus(ReservationStatus.RESERVATION_STATUS_CANCELED);
-        reservationRepository.saveAll(reservations);
-
-        List<Reservation> result = reservationRepository.findByUserIdAndRoomIdAndStartTimeAndStatus(
-                user.getId(),
-                room.getId(),
-                LocalDateTime.of(2026, 6, 1, 0, 0, 0, 0),
-                LocalDateTime.of(2026, 6, 2, 0, 0, 0, 0),
-                ReservationStatus.RESERVATION_STATUS_SCHEDULED,
-                Pageable.unpaged()).getContent();
-        assertThat(result).hasSize(0);
-    }
-
-    @Test
-    void findByUserIdAndRoomIdAndStartTimeAndStatusAllNullArgsTest() {
-        List<Reservation> result = reservationRepository.findByUserIdAndRoomIdAndStartTimeAndStatus(
-                null, null, null, null, null, Pageable.unpaged()).getContent();
         assertThat(result).hasSize(reservations.size());
         assertThat(result)
                 .usingRecursiveComparison()
@@ -148,13 +84,68 @@ public class ReservationRepositoryTest {
     }
 
     @Test
-    void findByUserIdAndRoomIdAndStartTimeAndStatusPagedTest() {
-        Page<Reservation> result = reservationRepository.findByUserIdAndRoomIdAndStartTimeAndStatus(
-                user.getId(),
-                room.getId(),
-                null,
-                null,
-                ReservationStatus.RESERVATION_STATUS_SCHEDULED,
+    void filterByRoomIdTest() {
+        List<Reservation> result = reservationRepository.findAll(
+                ReservationSpecifications.hasRoomId(room.getId()));
+
+        assertThat(result).hasSize(reservations.size());
+        assertThat(result)
+                .usingRecursiveComparison()
+                .ignoringFields("id")
+                .isEqualTo(reservations);
+    }
+
+    @Test
+    void filterByStartAtOrAfterTest() {
+        List<Reservation> result = reservationRepository.findAll(
+                ReservationSpecifications.startsAtOrAfter(LocalDateTime.of(2026, 6, 1, 0, 0, 0, 0)),
+                getOccupationSort());
+
+        assertThat(result).hasSize(2);
+        assertThat(result).isEqualTo(List.of(reservations.get(1), reservations.get(2)));
+    }
+
+    @Test
+    void filterByStartBeforeTest() {
+        List<Reservation> result = reservationRepository.findAll(
+                ReservationSpecifications.startsBefore(LocalDateTime.of(2026, 6, 2, 0, 0, 0, 0)),
+                getOccupationSort());
+
+        assertThat(result).hasSize(3);
+        assertThat(result).isEqualTo(List.of(reservations.get(0), reservations.get(3), reservations.get(1)));
+    }
+
+    @Test
+    void filterByStatusTest() {
+        reservations.get(1).setStatus(ReservationStatus.RESERVATION_STATUS_CANCELED);
+        reservationRepository.saveAll(reservations);
+
+        List<Reservation> result = reservationRepository.findAll(
+                ReservationSpecifications.hasStatus(ReservationStatus.RESERVATION_STATUS_CANCELED));
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0)).isEqualTo(reservations.get(1));
+    }
+
+    @Test
+    void findAllWithCombinedReservationSpecificationsHasResultTest() {
+        List<Reservation> result = reservationRepository.findAll(
+                ReservationSpecifications.hasUserId(user.getId())
+                        .and(ReservationSpecifications.hasRoomId(room.getId()))
+                        .and(ReservationSpecifications.startsAtOrAfter(LocalDateTime.of(2026, 6, 1, 0, 0, 0, 0)))
+                        .and(ReservationSpecifications.startsBefore(LocalDateTime.of(2026, 6, 2, 0, 0, 0, 0)))
+                        .and(ReservationSpecifications.hasStatus(ReservationStatus.RESERVATION_STATUS_SCHEDULED)));
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0)).isEqualTo(reservations.get(1));
+    }
+
+    @Test
+    void findAllWithCombinedReservationSpecificationsPagedTest() {
+        Page<Reservation> result = reservationRepository.findAll(
+                ReservationSpecifications.hasUserId(user.getId())
+                        .and(ReservationSpecifications.hasRoomId(room.getId()))
+                        .and(ReservationSpecifications.hasStatus(ReservationStatus.RESERVATION_STATUS_SCHEDULED)),
                 PageRequest.of(0, 2, Sort.by("startTime")));
 
         assertThat(result.getTotalElements()).isEqualTo(4);

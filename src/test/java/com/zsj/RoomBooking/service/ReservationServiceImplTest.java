@@ -21,6 +21,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
@@ -93,10 +94,7 @@ public class ReservationServiceImplTest {
                         LocalDateTime.of(2026, 3, 1, 12, 0, 0, 0),
                         LocalDateTime.of(2026, 3, 1, 13, 0, 0, 0)));
 
-        when(reservationRepository.findByUserIdAndRoomIdAndStartTimeAndStatus(
-                eq(userId), eq(roomId),
-                eq(date.atStartOfDay()), eq(date.plusDays(1).atStartOfDay()),
-                eq(status), eq(Pageable.unpaged(getOccupationSort()))))
+        when(reservationRepository.findAll(any(Specification.class), eq(Pageable.unpaged(getOccupationSort()))))
                 .thenReturn(new PageImpl<>(reservations));
 
         List<Reservation> result = reservationService.searchReservations(userId, roomId, date, status, Pageable.unpaged()).getContent();
@@ -118,22 +116,12 @@ public class ReservationServiceImplTest {
                 20,
                 getOccupationSort());
 
-        when(reservationRepository.findByUserIdAndRoomIdAndStartTimeAndStatus(
-                eq(userId), eq(roomId),
-                eq(date.atStartOfDay()), eq(date.plusDays(1).atStartOfDay()),
-                eq(status),
-                any(Pageable.class)))
+        when(reservationRepository.findAll(any(Specification.class), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(), expectedPageable, 0));
 
         reservationService.searchReservations(userId, roomId, date, status, pageable);
 
-        verify(reservationRepository).findByUserIdAndRoomIdAndStartTimeAndStatus(
-                userId,
-                roomId,
-                date.atStartOfDay(),
-                date.plusDays(1).atStartOfDay(),
-                status,
-                expectedPageable);
+        verify(reservationRepository).findAll(any(Specification.class), eq(expectedPageable));
     }
 
     @Test

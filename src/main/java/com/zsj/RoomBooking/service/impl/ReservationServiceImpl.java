@@ -7,12 +7,14 @@ import com.zsj.RoomBooking.model.entity.Room;
 import com.zsj.RoomBooking.model.entity.User;
 import com.zsj.RoomBooking.repository.ClosureRepository;
 import com.zsj.RoomBooking.repository.ReservationRepository;
+import com.zsj.RoomBooking.repository.ReservationSpecifications;
 import com.zsj.RoomBooking.repository.RoomRepository;
 import com.zsj.RoomBooking.repository.UserRepository;
 import com.zsj.RoomBooking.service.ReservationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,11 +47,21 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     public Page<Reservation> searchReservations(Long userId, Long roomId, LocalDate date, ReservationStatus status, Pageable pageable) {
         Pageable queryPageable = DefaultSorts.addReservationDefaultSort(pageable);
-        return reservationRepository.findByUserIdAndRoomIdAndStartTimeAndStatus(
-                userId, roomId,
-                date == null ? null : date.atStartOfDay(),
-                date == null ? null : date.plusDays(1).atStartOfDay(),
-                status, queryPageable);
+        Specification<Reservation> specification = Specification.unrestricted();
+        if (userId != null) {
+            specification = specification.and(ReservationSpecifications.hasUserId(userId));
+        }
+        if (roomId != null) {
+            specification = specification.and(ReservationSpecifications.hasRoomId(roomId));
+        }
+        if (date != null) {
+            specification = specification.and(ReservationSpecifications.startsAtOrAfter(date.atStartOfDay()));
+            specification = specification.and(ReservationSpecifications.startsBefore(date.plusDays(1).atStartOfDay()));
+        }
+        if (status != null) {
+            specification = specification.and(ReservationSpecifications.hasStatus(status));
+        }
+        return reservationRepository.findAll(specification, queryPageable);
     }
 
     @Override

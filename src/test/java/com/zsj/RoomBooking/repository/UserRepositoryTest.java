@@ -5,11 +5,10 @@ import com.zsj.RoomBooking.model.UserStatus;
 import com.zsj.RoomBooking.model.entity.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 
 import java.util.List;
 
@@ -21,12 +20,12 @@ public class UserRepositoryTest {
     private UserRepository userRepository;
 
     @Test
-    void findByUsernameAndRoleAndStatusHasResultTest() {
+    void filterByUsernameContainsTest() {
         User user = new User("user1", "");
         userRepository.save(user);
 
-        List<User> result = userRepository.findByUsernameAndRoleAndStatus(
-                "user", Role.ROLE_USER, UserStatus.USER_STATUS_ACTIVE, Pageable.unpaged()).getContent();
+        List<User> result = userRepository.findAll(UserSpecifications.usernameContains("USER"));
+
         assertThat(result).hasSize(1);
         assertThat(result.get(0))
                 .usingRecursiveComparison()
@@ -34,84 +33,49 @@ public class UserRepositoryTest {
     }
 
     @Test
-    void findByUsernameAndRoleAndStatusWithoutUsernameHasResultTest() {
-        User user = new User("user1", "");
-        userRepository.save(user);
-
-        List<User> result = userRepository.findByUsernameAndRoleAndStatus(
-                null, Role.ROLE_USER, UserStatus.USER_STATUS_ACTIVE, Pageable.unpaged()).getContent();
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0))
-                .usingRecursiveComparison()
-                .isEqualTo(user);
-    }
-
-    @Test
-    void findByUsernameAndRoleAndStatusWithoutRoleHasResultTest() {
-        User user = new User("user1", "");
-        userRepository.save(user);
-
-        List<User> result = userRepository.findByUsernameAndRoleAndStatus(
-                "user", null, UserStatus.USER_STATUS_ACTIVE, Pageable.unpaged()).getContent();
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0))
-                .usingRecursiveComparison()
-                .isEqualTo(user);
-    }
-
-    @Test
-    void findByUsernameAndRoleAndStatusWithoutStatusHasResultTest() {
-        User user = new User("user1", "");
-        userRepository.save(user);
-
-        List<User> result = userRepository.findByUsernameAndRoleAndStatus(
-                "user", Role.ROLE_USER, null, Pageable.unpaged()).getContent();
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0))
-                .usingRecursiveComparison()
-                .isEqualTo(user);
-    }
-
-    @Test
-    void findByUsernameAndRoleAndStatusUsernameNotFoundTest() {
-        User user = new User("user1", "");
-        userRepository.save(user);
-
-        List<User> result = userRepository.findByUsernameAndRoleAndStatus(
-                "user2", Role.ROLE_USER, UserStatus.USER_STATUS_ACTIVE, Pageable.unpaged()).getContent();
-        assertThat(result).hasSize(0);
-    }
-
-    @Test
-    void findByUsernameAndRoleAndStatusRoleNotFoundTest() {
-        User user = new User("user1", "");
-        userRepository.save(user);
-
-        List<User> result = userRepository.findByUsernameAndRoleAndStatus(
-                "user", Role.ROLE_ADMIN, UserStatus.USER_STATUS_ACTIVE, Pageable.unpaged()).getContent();
-        assertThat(result).hasSize(0);
-    }
-
-    @Test
-    void findByUsernameAndRoleAndStatusStatusNotFoundTest() {
-        User user = new User("user1", "");
-        userRepository.save(user);
-
-        List<User> result = userRepository.findByUsernameAndRoleAndStatus(
-                "user", Role.ROLE_USER, UserStatus.USER_STATUS_CLOSED, Pageable.unpaged()).getContent();
-        assertThat(result).hasSize(0);
-    }
-
-    @Test
-    void findByUsernameAndRoleAndStatusPagedTest() {
+    void filterByRoleTest() {
+        User admin = new User("admin1", "");
+        admin.addAdminRole();
+        userRepository.save(admin);
         userRepository.save(new User("user1", ""));
-        userRepository.save(new User("user2", ""));
-        userRepository.save(new User("user3", ""));
 
-        Page<User> result = userRepository.findByUsernameAndRoleAndStatus(
-                "User",
-                Role.ROLE_USER,
-                UserStatus.USER_STATUS_ACTIVE,
+        List<User> result = userRepository.findAll(UserSpecifications.hasRole(Role.ROLE_ADMIN));
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0))
+                .usingRecursiveComparison()
+                .isEqualTo(admin);
+    }
+
+    @Test
+    void filterByStatusTest() {
+        User activeUser = new User("user1", "");
+        User closedUser = new User("user2", "");
+        closedUser.setStatus(UserStatus.USER_STATUS_CLOSED);
+        userRepository.save(activeUser);
+        userRepository.save(closedUser);
+
+        List<User> result = userRepository.findAll(UserSpecifications.hasStatus(UserStatus.USER_STATUS_CLOSED));
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0))
+                .usingRecursiveComparison()
+                .isEqualTo(closedUser);
+    }
+
+    @Test
+    void findAllWithCombinedUserSpecificationsPagedTest() {
+        User firstUser = new User("user1", "");
+        User secondUser = new User("user2", "");
+        User thirdUser = new User("user3", "");
+        userRepository.save(firstUser);
+        userRepository.save(secondUser);
+        userRepository.save(thirdUser);
+
+        Page<User> result = userRepository.findAll(
+                UserSpecifications.usernameContains("User")
+                        .and(UserSpecifications.hasRole(Role.ROLE_USER))
+                        .and(UserSpecifications.hasStatus(UserStatus.USER_STATUS_ACTIVE)),
                 PageRequest.of(1, 2, Sort.by("username")));
 
         assertThat(result.getTotalElements()).isEqualTo(3);

@@ -6,12 +6,14 @@ import com.zsj.RoomBooking.model.Role;
 import com.zsj.RoomBooking.model.UserStatus;
 import com.zsj.RoomBooking.model.entity.Reservation;
 import com.zsj.RoomBooking.model.entity.User;
+import com.zsj.RoomBooking.repository.UserSpecifications;
 import com.zsj.RoomBooking.repository.ReservationRepository;
 import com.zsj.RoomBooking.repository.UserRepository;
 import com.zsj.RoomBooking.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,7 +39,17 @@ public class UserServiceImpl implements UserService {
     @Override
     public Page<User> searchUsers(String username, Role role, UserStatus status, Pageable pageable) {
         Pageable queryPageable = DefaultSorts.addUserDefaultSort(pageable);
-        return userRepository.findByUsernameAndRoleAndStatus(username, role, status, queryPageable);
+        Specification<User> specification = Specification.unrestricted();
+        if (username != null) {
+            specification = specification.and(UserSpecifications.usernameContains(username));
+        }
+        if (role != null) {
+            specification = specification.and(UserSpecifications.hasRole(role));
+        }
+        if (status != null) {
+            specification = specification.and(UserSpecifications.hasStatus(status));
+        }
+        return userRepository.findAll(specification, queryPageable);
     }
 
     @Override

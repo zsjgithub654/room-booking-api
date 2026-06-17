@@ -19,6 +19,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
@@ -204,8 +205,7 @@ public class UserServiceImplTest {
         Role searchRole = Role.ROLE_USER;
         UserStatus searchStatus = UserStatus.USER_STATUS_ACTIVE;
 
-        when(userRepository.findByUsernameAndRoleAndStatus(
-                eq(searchUsername), eq(searchRole), eq(searchStatus), eq(Pageable.unpaged(getUserSort()))))
+        when(userRepository.findAll(any(Specification.class), eq(Pageable.unpaged(getUserSort()))))
                 .thenReturn(new PageImpl<>(users));
 
         List<User> result = userService.searchUsers(searchUsername, searchRole, searchStatus, Pageable.unpaged()).getContent();
@@ -220,29 +220,22 @@ public class UserServiceImplTest {
         Pageable pageable = PageRequest.of(0, 20);
         Pageable expectedPageable = PageRequest.of(0, 20, getUserSort());
 
-        when(userRepository.findByUsernameAndRoleAndStatus(
-                eq("user"), eq(Role.ROLE_USER), eq(UserStatus.USER_STATUS_ACTIVE), eq(expectedPageable)))
+        when(userRepository.findAll(any(Specification.class), eq(expectedPageable)))
                 .thenReturn(new PageImpl<>(List.of(), expectedPageable, 0));
 
         userService.searchUsers("user", Role.ROLE_USER, UserStatus.USER_STATUS_ACTIVE, pageable);
 
-        verify(userRepository).findByUsernameAndRoleAndStatus(
-                "user", Role.ROLE_USER, UserStatus.USER_STATUS_ACTIVE, expectedPageable);
+        verify(userRepository).findAll(any(Specification.class), eq(expectedPageable));
     }
 
     @Test
     void SearchUsersShouldApplyDefaultSortToUnpagedQueryTest() {
-        when(userRepository.findByUsernameAndRoleAndStatus(
-                eq("user"), eq(Role.ROLE_USER), eq(UserStatus.USER_STATUS_ACTIVE), eq(Pageable.unpaged(getUserSort()))))
+        when(userRepository.findAll(any(Specification.class), eq(Pageable.unpaged(getUserSort()))))
                 .thenReturn(new PageImpl<>(List.of()));
 
         userService.searchUsers("user", Role.ROLE_USER, UserStatus.USER_STATUS_ACTIVE, Pageable.unpaged());
 
-        verify(userRepository).findByUsernameAndRoleAndStatus(
-                "user",
-                Role.ROLE_USER,
-                UserStatus.USER_STATUS_ACTIVE,
-                Pageable.unpaged(getUserSort()));
+        verify(userRepository).findAll(any(Specification.class), eq(Pageable.unpaged(getUserSort())));
     }
 
     @Test

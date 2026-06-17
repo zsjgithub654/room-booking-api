@@ -33,7 +33,7 @@ public class RoomRepositoryTest {
     }
 
     @Test
-    void FilterByNameContainsTest() {
+    void filterByNameContainsTest() {
         Specification<Room> spec = Specification.unrestricted();
         spec = spec.and(RoomSpecifications.nameContains("101"));
         List<Room> result = roomRepository.findAll(spec);
@@ -41,7 +41,7 @@ public class RoomRepositoryTest {
     }
 
     @Test
-    void FilterByMinCapacityTest() {
+    void filterByMinCapacityTest() {
         Specification<Room> spec = Specification.unrestricted();
         spec = spec.and(RoomSpecifications.minCapacity(6));
         List<Room> result = roomRepository.findAll(spec);
@@ -49,7 +49,7 @@ public class RoomRepositoryTest {
     }
 
     @Test
-    void FilterByMaxCapacityTest() {
+    void filterByMaxCapacityTest() {
         Specification<Room> spec = Specification.unrestricted();
         spec = spec.and(RoomSpecifications.maxCapacity(6));
         List<Room> result = roomRepository.findAll(spec);
@@ -57,7 +57,7 @@ public class RoomRepositoryTest {
     }
 
     @Test
-    void FilterByInAreaTest() {
+    void filterByInAreaTest() {
         Specification<Room> spec = Specification.unrestricted();
         spec = spec.and(RoomSpecifications.inArea("building A"));
         List<Room> result = roomRepository.findAll(spec);
@@ -65,7 +65,7 @@ public class RoomRepositoryTest {
     }
 
     @Test
-    void FilterByHasStatusTest() {
+    void filterByHasStatusTest() {
         Specification<Room> spec = Specification.unrestricted();
         spec = spec.and(RoomSpecifications.hasStatus(RoomStatus.ROOM_STATUS_ACTIVE));
         List<Room> result = roomRepository.findAll(spec);

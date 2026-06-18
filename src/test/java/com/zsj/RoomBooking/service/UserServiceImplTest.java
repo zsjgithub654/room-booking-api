@@ -50,7 +50,7 @@ public class UserServiceImplTest {
     private UserServiceImpl userService;
 
     @Test
-    void GetUserSucceedTest() {
+    void getUserSucceedTest() {
         User user = new User("user1", "");
         Long searchId = 2L;
         when(userRepository.findById(eq(searchId))).thenReturn(Optional.of(user));
@@ -60,14 +60,14 @@ public class UserServiceImplTest {
     }
 
     @Test
-    void GetUserNotFoundTest() {
+    void getUserNotFoundTest() {
         Long searchId = 2L;
         when(userRepository.findById(eq(searchId))).thenReturn(Optional.empty());
         assertThrows(ResourceNotFoundException.class, () -> userService.getUser(searchId));
     }
 
     @Test
-    void AddUserTest() {
+    void addUserTest() {
         User user = new User("user1", "");
         when(passwordEncoder.encode(eq(user.getPassword()))).thenReturn("encoded-password");
         when(userRepository.saveAndFlush(any(User.class))).thenReturn(user);
@@ -78,7 +78,7 @@ public class UserServiceImplTest {
     }
 
     @Test
-    void AddUserShouldRejectDuplicateUsernameTest() {
+    void addUserShouldRejectDuplicateUsernameTest() {
         User user = new User("user1", "");
 
         when(passwordEncoder.encode(eq(user.getPassword()))).thenReturn("encoded-password");
@@ -88,7 +88,7 @@ public class UserServiceImplTest {
     }
 
     @Test
-    void UpdateUsernameSucceedTest() {
+    void updateUsernameSucceedTest() {
         User user = new User("user1", "");
         Long searchId = 2L;
         String newName = "user1new";
@@ -105,7 +105,7 @@ public class UserServiceImplTest {
     }
 
     @Test
-    void UpdateUsernameNotFoundTest() {
+    void updateUsernameNotFoundTest() {
         Long searchId = 2L;
         String newName = "user1new";
 
@@ -116,7 +116,7 @@ public class UserServiceImplTest {
     }
 
     @Test
-    void UpdateUsernameAccountClosedTest() {
+    void updateUsernameAccountClosedTest() {
         User user = new User("user1", "");
         user.setStatus(UserStatus.USER_STATUS_CLOSED);
         Long searchId = 2L;
@@ -128,7 +128,7 @@ public class UserServiceImplTest {
     }
 
     @Test
-    void UpdateUsernameShouldRejectDuplicateUsernameTest() {
+    void updateUsernameShouldRejectDuplicateUsernameTest() {
         User user = new User("user1", "");
         Long searchId = 2L;
 
@@ -140,7 +140,7 @@ public class UserServiceImplTest {
     }
 
     @Test
-    void UpdatePasswordSucceedTest() {
+    void updatePasswordSucceedTest() {
         User user = new User("user1", "");
         Long searchId = 2L;
         String newPassword = "11111";
@@ -158,7 +158,7 @@ public class UserServiceImplTest {
     }
 
     @Test
-    void UpdatePasswordNotFoundTest() {
+    void updatePasswordNotFoundTest() {
         Long searchId = 2L;
         String newPassword = "11111";
 
@@ -169,7 +169,7 @@ public class UserServiceImplTest {
     }
 
     @Test
-    void AddAdminRoleSucceedTest() {
+    void addAdminRoleSucceedTest() {
         User user = new User("user1", "");
         Long searchId = 2L;
 
@@ -180,7 +180,7 @@ public class UserServiceImplTest {
     }
 
     @Test
-    void AddAdminRoleNotFoundTest() {
+    void addAdminRoleNotFoundTest() {
         Long searchId = 2L;
 
         when(userRepository.findById(eq(searchId))).thenReturn(Optional.empty());
@@ -190,7 +190,7 @@ public class UserServiceImplTest {
     }
 
     @Test
-    void AddAdminRoleAccountClosedTest() {
+    void addAdminRoleAccountClosedTest() {
         User user = new User("user1", "");
         user.setStatus(UserStatus.USER_STATUS_CLOSED);
         Long searchId = 2L;
@@ -202,7 +202,7 @@ public class UserServiceImplTest {
     }
 
     @Test
-    void RemoveAdminRoleSucceedTest() {
+    void removeAdminRoleSucceedTest() {
         User user = new User("user1", "");
         user.addAdminRole();
         Long searchId = 2L;
@@ -218,7 +218,7 @@ public class UserServiceImplTest {
     }
 
     @Test
-    void RemoveAdminRoleShouldRejectLastActiveAdminTest() {
+    void removeAdminRoleShouldRejectLastActiveAdminTest() {
         User user = new User("admin1", "");
         user.addAdminRole();
         Long searchId = 2L;
@@ -233,7 +233,7 @@ public class UserServiceImplTest {
     }
 
     @Test
-    void RemoveAdminRoleNotFoundTest() {
+    void removeAdminRoleNotFoundTest() {
         Long searchId = 2L;
 
         when(userRepository.findById(eq(searchId))).thenReturn(Optional.empty());
@@ -243,7 +243,7 @@ public class UserServiceImplTest {
     }
 
     @Test
-    void SearchUsersTest() {
+    void searchUsersTest() {
         List<User> users = List.of(
                 new User("user1", ""),
                 new User("user2", ""),
@@ -264,7 +264,7 @@ public class UserServiceImplTest {
     }
 
     @Test
-    void SearchUsersShouldApplyDefaultSortToPagedQueryTest() {
+    void searchUsersShouldApplyDefaultSortToPagedQueryTest() {
         Pageable pageable = PageRequest.of(0, 20);
         Pageable expectedPageable = PageRequest.of(0, 20, getUserSort());
 
@@ -277,7 +277,7 @@ public class UserServiceImplTest {
     }
 
     @Test
-    void SearchUsersShouldApplyDefaultSortToUnpagedQueryTest() {
+    void searchUsersShouldApplyDefaultSortToUnpagedQueryTest() {
         when(userRepository.findAll(any(Specification.class), eq(Pageable.unpaged(getUserSort()))))
                 .thenReturn(new PageImpl<>(List.of()));
 

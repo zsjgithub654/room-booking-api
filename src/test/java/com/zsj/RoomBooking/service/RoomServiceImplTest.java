@@ -59,7 +59,7 @@ public class RoomServiceImplTest {
     private RoomServiceImpl roomService;
 
     @Test
-    void GetRoomSucceedTest() {
+    void getRoomSucceedTest() {
         Room room = new Room("101", 12, "Building A",
                 LocalTime.of(9, 0, 0, 0),
                 LocalTime.of(16, 0, 0, 0));
@@ -71,14 +71,14 @@ public class RoomServiceImplTest {
     }
 
     @Test
-    void GetRoomNotFoundTest() {
+    void getRoomNotFoundTest() {
         Long searchId = 2L;
         when(roomRepository.findById(eq(searchId))).thenReturn(Optional.empty());
         assertThrows(ResourceNotFoundException.class, () -> roomService.getRoom(searchId));
     }
 
     @Test
-    void AddRoomTest() {
+    void addRoomTest() {
         Room room = new Room("101", 12, "Building A",
                 LocalTime.of(9, 0, 0, 0),
                 LocalTime.of(16, 0, 0, 0));
@@ -89,7 +89,7 @@ public class RoomServiceImplTest {
     }
 
     @Test
-    void AddRoomInvalidOpenHoursTest() {
+    void addRoomInvalidOpenHoursTest() {
         assertThrows(IllegalArgumentException.class,
                 () -> new Room("101", 12, "Building A",
                         LocalTime.of(16, 0, 0, 0),
@@ -97,7 +97,7 @@ public class RoomServiceImplTest {
     }
 
     @Test
-    void UpdateRoomSucceedTest() {
+    void updateRoomSucceedTest() {
         Room room = new Room("101", 12, "Building A", null, null);
         Room newRoom = new Room("102", 10, "Building 1",
                 LocalTime.of(8, 30, 0, 0),
@@ -115,7 +115,7 @@ public class RoomServiceImplTest {
     }
 
     @Test
-    void UpdateRoomCanSetBackToOpenAllDayTest() {
+    void updateRoomCanSetBackToOpenAllDayTest() {
         Room room = new Room("101", 12, "Building A",
                 LocalTime.of(8, 30, 0, 0),
                 LocalTime.of(16, 30, 0, 0));
@@ -133,7 +133,7 @@ public class RoomServiceImplTest {
     }
 
     @Test
-    void UpdateRoomNotFoundTest() {
+    void updateRoomNotFoundTest() {
         Room newRoom = new Room("102", 10, "Building 1", null, null);
         Long searchId = 2L;
 
@@ -149,7 +149,7 @@ public class RoomServiceImplTest {
     }
 
     @Test
-    void UpdateRoomDeletedTest() {
+    void updateRoomDeletedTest() {
         Room room = new Room("101", 12, "Building A", null, null);
         room.setStatus(RoomStatus.ROOM_STATUS_DELETED);
         Room newRoom = new Room("102", 10, "Building 1", null, null);
@@ -167,7 +167,7 @@ public class RoomServiceImplTest {
     }
 
     @Test
-    void SearchRoomsTest() {
+    void searchRoomsTest() {
         RoomSearchCriteria criteria = new RoomSearchCriteria(null, null, null, null, null);
         List<Room> rooms = List.of(
                 new Room("101", 12, "Building A", null, null),
@@ -184,7 +184,7 @@ public class RoomServiceImplTest {
     }
 
     @Test
-    void SearchRoomsShouldApplyDefaultSortToPagedQueryTest() {
+    void searchRoomsShouldApplyDefaultSortToPagedQueryTest() {
         RoomSearchCriteria criteria = new RoomSearchCriteria(null, null, null, null, null);
         Pageable pageable = PageRequest.of(0, 20);
         Pageable expectedPageable = PageRequest.of(0, 20, getRoomSort());
@@ -290,7 +290,7 @@ public class RoomServiceImplTest {
     }
 
     @Test
-    void DeleteRoomSucceedTest() {
+    void deleteRoomSucceedTest() {
         Room room = new Room("101", 12, "Building A", null, null);
         Long searchId = 2L;
         List<Reservation> reservations = List.of(
@@ -320,7 +320,7 @@ public class RoomServiceImplTest {
     }
 
     @Test
-    void DeleteRoomShouldSortClosedReservationsByTimeTest() {
+    void deleteRoomShouldSortClosedReservationsByTimeTest() {
         Room room = new Room("101", 12, "Building A", null, null);
         Long searchId = 2L;
         Reservation earlierReservation = new Reservation(new User(), room,
@@ -347,7 +347,7 @@ public class RoomServiceImplTest {
     }
 
     @Test
-    void DeleteRoomAlreadyDeletedTest() {
+    void deleteRoomAlreadyDeletedTest() {
         Room room = new Room("101", 12, "Building A", null, null);
         room.setStatus(RoomStatus.ROOM_STATUS_DELETED);
         Long searchId = 2L;
@@ -358,7 +358,7 @@ public class RoomServiceImplTest {
     }
 
     @Test
-    void DeleteRoomNotFoundTest() {
+    void deleteRoomNotFoundTest() {
         Long searchId = 2L;
         when(roomRepository.findByIdWithLock(eq(searchId))).thenReturn(Optional.empty());
 

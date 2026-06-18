@@ -21,7 +21,7 @@ public class RoomRepositoryTest {
     private RoomRepository roomRepository;
 
     @BeforeAll
-    void Setup() {
+    void setup() {
         roomRepository.deleteAll();
         List<Room> rooms = List.of(
                 new Room("101", 12, "Building A", null, null),

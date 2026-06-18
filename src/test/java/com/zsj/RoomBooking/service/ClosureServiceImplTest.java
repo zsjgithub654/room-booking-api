@@ -46,7 +46,7 @@ public class ClosureServiceImplTest {
     private ClosureServiceImpl closureService;
 
     @Test
-    void GetClosureSucceedTest() {
+    void getClosureSucceedTest() {
         Closure closure = new Closure(new Room(),
                 LocalDateTime.of(2026, 3, 1, 10, 0, 0, 0),
                 LocalDateTime.of(2026, 3, 1, 11, 0, 0, 0));
@@ -59,7 +59,7 @@ public class ClosureServiceImplTest {
     }
 
     @Test
-    void GetClosureNotFoundTest() {
+    void getClosureNotFoundTest() {
         Long searchId = 2L;
         when(closureRepository.findById(eq(searchId))).thenThrow(new ResourceNotFoundException("Closure not found."));
 
@@ -67,7 +67,7 @@ public class ClosureServiceImplTest {
     }
 
     @Test
-    void GetClosuresOfRoomSucceedTest() {
+    void getClosuresOfRoomSucceedTest() {
         Long searchRoomId = 2L;
         List<Closure> closures = List.of(
                 new Closure(new Room(),
@@ -86,7 +86,7 @@ public class ClosureServiceImplTest {
     }
 
     @Test
-    void GetClosuresOfRoomShouldSortByTimeTest() {
+    void getClosuresOfRoomShouldSortByTimeTest() {
         Long searchRoomId = 2L;
         Closure laterClosure = new Closure(new Room(),
                 LocalDateTime.of(2026, 3, 1, 12, 0, 0, 0),
@@ -105,7 +105,7 @@ public class ClosureServiceImplTest {
     }
 
     @Test
-    void GetClosuresOfRoomNoResultTest() {
+    void getClosuresOfRoomNoResultTest() {
         Long roomId = 2L;
         when(closureRepository.findByRoomId(eq(roomId), eq(getOccupationSort()))).thenReturn(List.of());
 
@@ -113,7 +113,7 @@ public class ClosureServiceImplTest {
     }
 
     @Test
-    void AddClosureSucceedReservationsClosedTest() {
+    void addClosureSucceedReservationsClosedTest() {
         Room room = new Room("101", 12, "Building A", null, null);
         LocalDateTime startTime = LocalDateTime.of(2026, 3, 1, 12, 0, 0, 0);
         LocalDateTime endTime = LocalDateTime.of(2026, 3, 1, 16, 0, 0, 0);
@@ -151,7 +151,7 @@ public class ClosureServiceImplTest {
     }
 
     @Test
-    void AddClosureShouldSortClosedReservationsByTimeTest() {
+    void addClosureShouldSortClosedReservationsByTimeTest() {
         Room room = new Room("101", 12, "Building A", null, null);
         LocalDateTime startTime = LocalDateTime.of(2026, 3, 1, 12, 0, 0, 0);
         LocalDateTime endTime = LocalDateTime.of(2026, 3, 1, 16, 0, 0, 0);
@@ -179,7 +179,7 @@ public class ClosureServiceImplTest {
     }
 
     @Test
-    void AddClosureRoomNotFoundTest() {
+    void addClosureRoomNotFoundTest() {
         LocalDateTime startTime = LocalDateTime.of(2026, 3, 1, 12, 0, 0, 0);
         LocalDateTime endTime = LocalDateTime.of(2026, 3, 1, 16, 0, 0, 0);
         Long roomId = 2L;
@@ -190,7 +190,7 @@ public class ClosureServiceImplTest {
     }
 
     @Test
-    void DeleteClosureTest() {
+    void deleteClosureTest() {
         Closure closure = new Closure(new Room(),
                 LocalDateTime.of(2026, 3, 1, 13, 0, 0, 0),
                 LocalDateTime.of(2026, 3, 1, 14, 0, 0, 0));
@@ -203,7 +203,7 @@ public class ClosureServiceImplTest {
     }
 
     @Test
-    void DeleteClosureNotFoundTest() {
+    void deleteClosureNotFoundTest() {
         Long searchId = 2L;
 
         when(closureRepository.findById(eq(searchId))).thenThrow(new ResourceNotFoundException("Closure not found."));

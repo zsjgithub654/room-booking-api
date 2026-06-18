@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +28,7 @@ public class UserServiceImpl implements UserService {
     private static final String USER_NOT_FOUND = "User not found.";
     private static final String CLOSED_USER_CANNOT_BE_UPDATED = "Cannot update a closed user.";
     private static final String LAST_ACTIVE_ADMIN_CANNOT_BE_REMOVED = "Last active admin cannot be removed.";
+    private static final String USERNAME_ALREADY_EXISTS = "Username already exists.";
 
     @Autowired
     private UserRepository userRepository;
@@ -61,7 +63,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public User addUser(User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        return userRepository.save(user);
+        return saveUserOrThrowIfUsernameExists(user);
     }
 
     @Override
@@ -72,7 +74,7 @@ public class UserServiceImpl implements UserService {
             throw new IllegalStateException(CLOSED_USER_CANNOT_BE_UPDATED);
         }
         user.setUsername(username);
-        return user;
+        return saveUserOrThrowIfUsernameExists(user);
     }
 
     @Override
@@ -140,6 +142,14 @@ public class UserServiceImpl implements UserService {
                 UserStatus.USER_STATUS_ACTIVE,
                 user.getId())) {
             throw new IllegalStateException(LAST_ACTIVE_ADMIN_CANNOT_BE_REMOVED);
+        }
+    }
+
+    private User saveUserOrThrowIfUsernameExists(User user) {
+        try {
+            return userRepository.saveAndFlush(user);
+        } catch (DataIntegrityViolationException exception) {
+            throw new IllegalStateException(USERNAME_ALREADY_EXISTS);
         }
     }
 }

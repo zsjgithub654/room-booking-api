@@ -12,6 +12,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.DefaultApplicationArguments;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Set;
@@ -48,12 +49,12 @@ public class BootstrapAdminInitializerTest {
                 .thenReturn(false);
         when(validator.validate(bootstrapAdminProperties)).thenReturn(Set.of());
         when(passwordEncoder.encode(bootstrapAdminProperties.password())).thenReturn("encodedPassword");
-        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(userRepository.saveAndFlush(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         bootstrapAdminInitializer.run(new DefaultApplicationArguments(new String[0]));
 
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
-        verify(userRepository).save(userCaptor.capture());
+        verify(userRepository).saveAndFlush(userCaptor.capture());
         User user = userCaptor.getValue();
         assertThat(user.getUsername()).isEqualTo(bootstrapAdminProperties.username());
         assertThat(user.getPassword()).isEqualTo("encodedPassword");
@@ -77,7 +78,7 @@ public class BootstrapAdminInitializerTest {
 
         verify(validator, never()).validate(any(BootstrapAdminProperties.class));
         verify(passwordEncoder, never()).encode(any());
-        verify(userRepository, never()).save(any());
+        verify(userRepository, never()).saveAndFlush(any());
     }
 
     @Test
@@ -95,7 +96,7 @@ public class BootstrapAdminInitializerTest {
 
         verify(validator, never()).validate(any(BootstrapAdminProperties.class));
         verify(passwordEncoder, never()).encode(any());
-        verify(userRepository, never()).save(any());
+        verify(userRepository, never()).saveAndFlush(any());
     }
 
     @Test
@@ -116,7 +117,7 @@ public class BootstrapAdminInitializerTest {
         verify(userRepository).existsByRolesContainsAndStatus(eq(Role.ROLE_ADMIN), eq(UserStatus.USER_STATUS_ACTIVE));
         verify(validator, never()).validate(any(BootstrapAdminProperties.class));
         verify(passwordEncoder, never()).encode(any());
-        verify(userRepository, never()).save(any());
+        verify(userRepository, never()).saveAndFlush(any());
     }
 
     @Test
@@ -140,6 +141,26 @@ public class BootstrapAdminInitializerTest {
                 .hasMessage("size must be between 3 and 20");
 
         verify(passwordEncoder, never()).encode(any());
-        verify(userRepository, never()).save(any());
+        verify(userRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void runShouldThrowIllegalStateExceptionWhenUsernameAlreadyExistsTest() {
+        BootstrapAdminProperties bootstrapAdminProperties = new BootstrapAdminProperties("admin1", "password1");
+        BootstrapAdminInitializer bootstrapAdminInitializer = new BootstrapAdminInitializer(
+                userRepository,
+                passwordEncoder,
+                validator,
+                bootstrapAdminProperties);
+
+        when(userRepository.existsByRolesContainsAndStatus(Role.ROLE_ADMIN, UserStatus.USER_STATUS_ACTIVE))
+                .thenReturn(false);
+        when(validator.validate(bootstrapAdminProperties)).thenReturn(Set.of());
+        when(passwordEncoder.encode(bootstrapAdminProperties.password())).thenReturn("encodedPassword");
+        when(userRepository.saveAndFlush(any(User.class))).thenThrow(DataIntegrityViolationException.class);
+
+        assertThatThrownBy(() -> bootstrapAdminInitializer.run(new DefaultApplicationArguments(new String[0])))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("Username already exists.");
     }
 }

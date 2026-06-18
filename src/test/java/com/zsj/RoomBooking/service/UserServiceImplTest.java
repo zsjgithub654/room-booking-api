@@ -20,6 +20,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
@@ -69,11 +70,21 @@ public class UserServiceImplTest {
     void AddUserTest() {
         User user = new User("user1", "");
         when(passwordEncoder.encode(eq(user.getPassword()))).thenReturn("encoded-password");
-        when(userRepository.save(any(User.class))).thenReturn(user);
+        when(userRepository.saveAndFlush(any(User.class))).thenReturn(user);
         assertThat(userService.addUser(user))
                 .usingRecursiveComparison()
                 .isEqualTo(user);
         assertThat(user.getPassword()).isEqualTo("encoded-password");
+    }
+
+    @Test
+    void AddUserShouldRejectDuplicateUsernameTest() {
+        User user = new User("user1", "");
+
+        when(passwordEncoder.encode(eq(user.getPassword()))).thenReturn("encoded-password");
+        when(userRepository.saveAndFlush(any(User.class))).thenThrow(DataIntegrityViolationException.class);
+
+        assertThrows(IllegalStateException.class, () -> userService.addUser(user));
     }
 
     @Test
@@ -83,6 +94,7 @@ public class UserServiceImplTest {
         String newName = "user1new";
 
         when(userRepository.findById(eq(searchId))).thenReturn(Optional.of(user));
+        when(userRepository.saveAndFlush(eq(user))).thenReturn(user);
         User newUser = userService.updateUsername(searchId, newName);
 
         assertThat(newUser)
@@ -113,6 +125,18 @@ public class UserServiceImplTest {
 
         assertThrows(IllegalStateException.class,
                 () -> userService.updateUsername(searchId, "user1new"));
+    }
+
+    @Test
+    void UpdateUsernameShouldRejectDuplicateUsernameTest() {
+        User user = new User("user1", "");
+        Long searchId = 2L;
+
+        when(userRepository.findById(eq(searchId))).thenReturn(Optional.of(user));
+        when(userRepository.saveAndFlush(eq(user))).thenThrow(DataIntegrityViolationException.class);
+
+        assertThrows(IllegalStateException.class,
+                () -> userService.updateUsername(searchId, "user2"));
     }
 
     @Test

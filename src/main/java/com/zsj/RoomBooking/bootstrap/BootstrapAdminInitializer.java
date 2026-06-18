@@ -8,6 +8,7 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -21,6 +22,7 @@ import java.util.Set;
 public class BootstrapAdminInitializer implements ApplicationRunner {
     private static final String BOOTSTRAP_ADMIN_USERNAME_REQUIRED = "Bootstrap admin username is required.";
     private static final String BOOTSTRAP_ADMIN_PASSWORD_REQUIRED = "Bootstrap admin password is required.";
+    private static final String USERNAME_ALREADY_EXISTS = "Username already exists.";
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -59,6 +61,10 @@ public class BootstrapAdminInitializer implements ApplicationRunner {
                 bootstrapAdminProperties.username(),
                 passwordEncoder.encode(bootstrapAdminProperties.password()));
         user.addAdminRole();
-        userRepository.save(user);
+        try {
+            userRepository.saveAndFlush(user);
+        } catch (DataIntegrityViolationException exception) {
+            throw new IllegalStateException(USERNAME_ALREADY_EXISTS);
+        }
     }
 }

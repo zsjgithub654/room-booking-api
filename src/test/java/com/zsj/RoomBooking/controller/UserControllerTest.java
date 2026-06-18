@@ -131,6 +131,17 @@ public class UserControllerTest {
     }
 
     @Test
+    void searchUsersShouldRejectInvalidSortProperty() throws Exception {
+        mockMvc.perform(get("/users")
+                        .with(user("admin1").roles("ADMIN"))
+                        .param("sort", "[\"\"]"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Invalid sorting parameters."));
+
+        verifyNoInteractions(userService);
+    }
+
+    @Test
     void getUserShouldRejectNonPositiveId() throws Exception {
         mockMvc.perform(get("/users/{id}", 0)
                         .with(user("admin1").roles("ADMIN")))

@@ -29,10 +29,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Set;
+
 @Validated
 @RestController
 @RequestMapping("users")
 public class UserController {
+    private static final Set<String> ALLOWED_SORT_PROPERTIES = Set.of("id", "username", "status");
+
     @Autowired
     private UserService service;
 
@@ -54,6 +58,7 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN')")
     public Page<UserResponse> searchUsers(@Valid @ModelAttribute SearchUserRequest request,
                                           @ParameterObject Pageable pageable) {
+        PageableValidation.validateSort(pageable, ALLOWED_SORT_PROPERTIES);
         return service.searchUsers(
                         request.username(),
                         request.role(),

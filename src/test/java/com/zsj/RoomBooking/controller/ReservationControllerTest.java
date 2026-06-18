@@ -130,6 +130,17 @@ public class ReservationControllerTest {
     }
 
     @Test
+    void searchReservationsShouldRejectInvalidSortProperty() throws Exception {
+        mockMvc.perform(get("/reservations")
+                        .with(user("admin1").roles("ADMIN"))
+                        .param("sort", "[\"\"]"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Invalid sorting parameters."));
+
+        verifyNoInteractions(reservationService);
+    }
+
+    @Test
     void getReservationTest() throws Exception {
         /* request */
         Long id = 1L;

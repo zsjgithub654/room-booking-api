@@ -35,12 +35,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Set;
 
 @Validated
 @RestController
 @RequestMapping("/rooms")
 public class RoomController {
     private static final String ROOM_NOT_FOUND = "Room not found.";
+    private static final Set<String> ALLOWED_SORT_PROPERTIES =
+            Set.of("id", "name", "capacity", "area", "status", "openTime", "closeTime");
 
     @Autowired
     private RoomService roomService;
@@ -58,6 +61,7 @@ public class RoomController {
     @PreAuthorize("hasRole('ADMIN')")
     public Page<RoomResponse> searchRooms(@Valid @ModelAttribute SearchRoomRequest request,
                                           @ParameterObject Pageable pageable) {
+        PageableValidation.validateSort(pageable, ALLOWED_SORT_PROPERTIES);
         return roomService.searchRooms(
                 new RoomSearchCriteria(
                         request.name(),

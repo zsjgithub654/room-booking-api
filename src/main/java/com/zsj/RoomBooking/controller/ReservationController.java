@@ -27,10 +27,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Set;
 
 @Validated
 @RestController
 public class ReservationController {
+    private static final Set<String> ALLOWED_SORT_PROPERTIES =
+            Set.of("id", "user.id", "room.id", "startTime", "endTime", "status");
+
     @Autowired
     private ReservationService service;
 
@@ -41,6 +45,7 @@ public class ReservationController {
     @PreAuthorize("hasRole('ADMIN')")
     public Page<ReservationResponse> searchReservations(@Valid @ModelAttribute SearchReservationRequest request,
                                                         @ParameterObject Pageable pageable) {
+        PageableValidation.validateSort(pageable, ALLOWED_SORT_PROPERTIES);
         return service.searchReservations(
                         request.userId(),
                         request.roomId(),

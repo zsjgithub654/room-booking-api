@@ -131,6 +131,17 @@ public class RoomControllerTest {
     }
 
     @Test
+    void searchRoomsShouldRejectInvalidSortProperty() throws Exception {
+        mockMvc.perform(get("/rooms")
+                        .with(user("admin1").roles("ADMIN"))
+                        .param("sort", "[\"\"]"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Invalid sorting parameters."));
+
+        verifyNoInteractions(roomService);
+    }
+
+    @Test
     void searchRoomsShouldRejectNonAdmin() throws Exception {
         mockMvc.perform(get("/rooms"))
                 .andExpect(status().isUnauthorized());

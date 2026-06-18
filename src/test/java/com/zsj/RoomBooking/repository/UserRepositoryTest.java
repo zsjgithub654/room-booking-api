@@ -33,18 +33,34 @@ public class UserRepositoryTest {
     }
 
     @Test
-    void filterByRoleTest() {
+    void filterByIsAdminTrueTest() {
         User admin = new User("admin1", "");
         admin.addAdminRole();
         userRepository.save(admin);
         userRepository.save(new User("user1", ""));
 
-        List<User> result = userRepository.findAll(UserSpecifications.hasRole(Role.ROLE_ADMIN));
+        List<User> result = userRepository.findAll(UserSpecifications.hasAdminRole(true));
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0))
                 .usingRecursiveComparison()
                 .isEqualTo(admin);
+    }
+
+    @Test
+    void filterByIsAdminFalseTest() {
+        User admin = new User("admin1", "");
+        admin.addAdminRole();
+        User user = new User("user1", "");
+        userRepository.save(admin);
+        userRepository.save(user);
+
+        List<User> result = userRepository.findAll(UserSpecifications.hasAdminRole(false));
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0))
+                .usingRecursiveComparison()
+                .isEqualTo(user);
     }
 
     @Test
@@ -68,13 +84,16 @@ public class UserRepositoryTest {
         User firstUser = new User("user1", "");
         User secondUser = new User("user2", "");
         User thirdUser = new User("user3", "");
+        User admin = new User("admin1", "");
+        admin.addAdminRole();
         userRepository.save(firstUser);
         userRepository.save(secondUser);
         userRepository.save(thirdUser);
+        userRepository.save(admin);
 
         Page<User> result = userRepository.findAll(
                 UserSpecifications.usernameContains("User")
-                        .and(UserSpecifications.hasRole(Role.ROLE_USER))
+                        .and(UserSpecifications.hasAdminRole(false))
                         .and(UserSpecifications.hasStatus(UserStatus.USER_STATUS_ACTIVE)),
                 PageRequest.of(1, 2, Sort.by("username")));
 

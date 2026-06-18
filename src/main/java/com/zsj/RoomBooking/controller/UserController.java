@@ -61,7 +61,7 @@ public class UserController {
         PageableValidation.validateSort(pageable, ALLOWED_SORT_PROPERTIES);
         return service.searchUsers(
                         request.username(),
-                        request.role(),
+                        request.isAdmin(),
                         request.status(),
                         pageable)
                 .map(userMapper::toResponse);

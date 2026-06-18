@@ -100,19 +100,22 @@ public class UserControllerTest {
 
     @Test
     void searchUsersTest() throws Exception {
-        User user = new User("user1", "");
+        User user = new User("admin1", "");
+        user.addAdminRole();
 
-        when(userService.searchUsers(eq("user"), eq(null), eq(null), eq(PageRequest.of(0, 20))))
+        when(userService.searchUsers(eq("user"), eq(true), eq(null), eq(PageRequest.of(0, 20))))
                 .thenReturn(new PageImpl<>(java.util.List.of(user), PageRequest.of(0, 20), 1));
 
         String responseString = mockMvc.perform(get("/users")
                         .with(user("admin1").roles("ADMIN"))
                         .param("username", "user")
+                        .param("isAdmin", "true")
                         .param("page", "0")
                         .param("size", "20"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.length()").value(1))
-                .andExpect(jsonPath("$.content[0].username").value("user1"))
+                .andExpect(jsonPath("$.content[0].username").value("admin1"))
+                .andExpect(jsonPath("$.content[0].roles", hasItem(Role.ROLE_ADMIN.name())))
                 .andExpect(jsonPath("$.totalElements").value(1))
                 .andExpect(jsonPath("$.size").value(20))
                 .andExpect(jsonPath("$.number").value(0))
@@ -120,7 +123,7 @@ public class UserControllerTest {
                 .getResponse()
                 .getContentAsString();
 
-        verify(userService).searchUsers("user", null, null, PageRequest.of(0, 20));
+        verify(userService).searchUsers("user", true, null, PageRequest.of(0, 20));
         TypeReference<List<UserResponse>> typeReference = new TypeReference<List<UserResponse>>() {
         };
         String contentString = objectMapper.readTree(responseString).get("content").toString();

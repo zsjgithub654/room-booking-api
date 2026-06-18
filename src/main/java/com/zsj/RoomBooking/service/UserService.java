@@ -7,7 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface UserService {
-    Page<User> searchUsers(String username, Role role, UserStatus status, Pageable pageable);
+    Page<User> searchUsers(String username, Boolean isAdmin, UserStatus status, Pageable pageable);
     User getUser(Long id);
     User addUser(User user);
     User updateUsername(Long id, String username);

@@ -250,13 +250,13 @@ public class UserServiceImplTest {
                 new User("user3", "")
         );
         String searchUsername = "user";
-        Role searchRole = Role.ROLE_USER;
+        Boolean searchIsAdmin = false;
         UserStatus searchStatus = UserStatus.USER_STATUS_ACTIVE;
 
         when(userRepository.findAll(any(Specification.class), eq(Pageable.unpaged(getUserSort()))))
                 .thenReturn(new PageImpl<>(users));
 
-        List<User> result = userService.searchUsers(searchUsername, searchRole, searchStatus, Pageable.unpaged()).getContent();
+        List<User> result = userService.searchUsers(searchUsername, searchIsAdmin, searchStatus, Pageable.unpaged()).getContent();
         assertThat(result).hasSize(3);
         assertThat(result)
                 .usingRecursiveComparison()
@@ -271,7 +271,7 @@ public class UserServiceImplTest {
         when(userRepository.findAll(any(Specification.class), eq(expectedPageable)))
                 .thenReturn(new PageImpl<>(List.of(), expectedPageable, 0));
 
-        userService.searchUsers("user", Role.ROLE_USER, UserStatus.USER_STATUS_ACTIVE, pageable);
+        userService.searchUsers("user", false, UserStatus.USER_STATUS_ACTIVE, pageable);
 
         verify(userRepository).findAll(any(Specification.class), eq(expectedPageable));
     }
@@ -281,7 +281,7 @@ public class UserServiceImplTest {
         when(userRepository.findAll(any(Specification.class), eq(Pageable.unpaged(getUserSort()))))
                 .thenReturn(new PageImpl<>(List.of()));
 
-        userService.searchUsers("user", Role.ROLE_USER, UserStatus.USER_STATUS_ACTIVE, Pageable.unpaged());
+        userService.searchUsers("user", false, UserStatus.USER_STATUS_ACTIVE, Pageable.unpaged());
 
         verify(userRepository).findAll(any(Specification.class), eq(Pageable.unpaged(getUserSort())));
     }

@@ -40,14 +40,14 @@ public class UserServiceImpl implements UserService {
     private PasswordEncoder passwordEncoder;
 
     @Override
-    public Page<User> searchUsers(String username, Role role, UserStatus status, Pageable pageable) {
+    public Page<User> searchUsers(String username, Boolean isAdmin, UserStatus status, Pageable pageable) {
         Pageable queryPageable = DefaultSorts.addUserDefaultSort(pageable);
         Specification<User> specification = Specification.unrestricted();
         if (username != null && !username.isBlank()) {
             specification = specification.and(UserSpecifications.usernameContains(username));
         }
-        if (role != null) {
-            specification = specification.and(UserSpecifications.hasRole(role));
+        if (isAdmin != null) {
+            specification = specification.and(UserSpecifications.hasAdminRole(isAdmin));
         }
         if (status != null) {
             specification = specification.and(UserSpecifications.hasStatus(status));

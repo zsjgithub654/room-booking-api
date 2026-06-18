@@ -15,9 +15,13 @@ public class UserSpecifications {
                         "%" + username.toLowerCase(Locale.ROOT) + "%");
     }
 
-    public static Specification<User> hasRole(Role role) {
-        return (root, query, cb) ->
-                cb.isMember(role, root.get("roles"));
+    public static Specification<User> hasAdminRole(Boolean isAdmin) {
+        return (root, query, cb) -> {
+            if (Boolean.TRUE.equals(isAdmin)) {
+                return cb.isMember(Role.ROLE_ADMIN, root.get("roles"));
+            }
+            return cb.isNotMember(Role.ROLE_ADMIN, root.get("roles"));
+        };
     }
 
     public static Specification<User> hasStatus(UserStatus status) {

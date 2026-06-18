@@ -13,6 +13,7 @@ import com.zsj.RoomBooking.model.entity.Reservation;
 import com.zsj.RoomBooking.model.entity.Room;
 import com.zsj.RoomBooking.model.entity.User;
 import com.zsj.RoomBooking.service.ClosureService;
+import com.zsj.RoomBooking.exception.ResourceNotFoundException;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -149,6 +150,18 @@ public class ClosureControllerTest {
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(closureService);
+    }
+
+    @Test
+    void getClosuresOfRoomRoomNotFoundTest() throws Exception {
+        Long roomId = 2L;
+
+        when(closureService.getClosuresOfRoom(eq(roomId)))
+                .thenThrow(new ResourceNotFoundException("Room not found."));
+
+        mockMvc.perform(get("/rooms/{roomId}/closures", roomId)
+                        .with(user("admin1").roles("ADMIN")))
+                .andExpect(status().isNotFound());
     }
 
     @Test

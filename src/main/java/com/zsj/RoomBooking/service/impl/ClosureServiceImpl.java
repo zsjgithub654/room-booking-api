@@ -40,6 +40,8 @@ public class ClosureServiceImpl implements ClosureService {
 
     @Override
     public List<Closure> getClosuresOfRoom(Long roomId) {
+        roomRepository.findById(roomId)
+                .orElseThrow(() -> new ResourceNotFoundException(ROOM_NOT_FOUND));
         return closureRepository.findByRoomId(roomId, DefaultSorts.occupationSort());
     }
 

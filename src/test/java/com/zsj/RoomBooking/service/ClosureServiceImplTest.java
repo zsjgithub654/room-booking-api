@@ -69,6 +69,7 @@ public class ClosureServiceImplTest {
     @Test
     void getClosuresOfRoomSucceedTest() {
         Long searchRoomId = 2L;
+        when(roomRepository.findById(eq(searchRoomId))).thenReturn(Optional.of(new Room()));
         List<Closure> closures = List.of(
                 new Closure(new Room(),
                         LocalDateTime.of(2026, 3, 1, 10, 0, 0, 0),
@@ -88,6 +89,7 @@ public class ClosureServiceImplTest {
     @Test
     void getClosuresOfRoomShouldSortByTimeTest() {
         Long searchRoomId = 2L;
+        when(roomRepository.findById(eq(searchRoomId))).thenReturn(Optional.of(new Room()));
         Closure laterClosure = new Closure(new Room(),
                 LocalDateTime.of(2026, 3, 1, 12, 0, 0, 0),
                 LocalDateTime.of(2026, 3, 1, 13, 0, 0, 0));
@@ -107,9 +109,19 @@ public class ClosureServiceImplTest {
     @Test
     void getClosuresOfRoomNoResultTest() {
         Long roomId = 2L;
+        when(roomRepository.findById(eq(roomId))).thenReturn(Optional.of(new Room()));
         when(closureRepository.findByRoomId(eq(roomId), eq(getOccupationSort()))).thenReturn(List.of());
 
         assertThat(closureService.getClosuresOfRoom(roomId)).hasSize(0);
+    }
+
+    @Test
+    void getClosuresOfRoomRoomNotFoundTest() {
+        Long roomId = 2L;
+
+        when(roomRepository.findById(eq(roomId))).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> closureService.getClosuresOfRoom(roomId));
     }
 
     @Test

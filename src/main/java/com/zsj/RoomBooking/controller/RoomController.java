@@ -15,6 +15,7 @@ import com.zsj.RoomBooking.model.entity.Room;
 import com.zsj.RoomBooking.service.RoomService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -56,7 +57,7 @@ public class RoomController {
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public Page<RoomResponse> searchRooms(@Valid @ModelAttribute SearchRoomRequest request,
-                                          Pageable pageable) {
+                                          @ParameterObject Pageable pageable) {
         return roomService.searchRooms(
                 new RoomSearchCriteria(
                         request.name(),

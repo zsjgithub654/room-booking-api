@@ -10,6 +10,7 @@ import com.zsj.RoomBooking.security.CustomUserDetails;
 import com.zsj.RoomBooking.service.UserService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -52,7 +53,7 @@ public class UserController {
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public Page<UserResponse> searchUsers(@Valid @ModelAttribute SearchUserRequest request,
-                                          Pageable pageable) {
+                                          @ParameterObject Pageable pageable) {
         return service.searchUsers(
                         request.username(),
                         request.role(),

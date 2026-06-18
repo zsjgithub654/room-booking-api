@@ -9,6 +9,7 @@ import com.zsj.RoomBooking.security.CustomUserDetails;
 import com.zsj.RoomBooking.service.ReservationService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -39,7 +40,7 @@ public class ReservationController {
     @GetMapping("/reservations")
     @PreAuthorize("hasRole('ADMIN')")
     public Page<ReservationResponse> searchReservations(@Valid @ModelAttribute SearchReservationRequest request,
-                                                        Pageable pageable) {
+                                                        @ParameterObject Pageable pageable) {
         return service.searchReservations(
                         request.userId(),
                         request.roomId(),

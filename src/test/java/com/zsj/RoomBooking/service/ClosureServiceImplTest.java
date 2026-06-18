@@ -29,6 +29,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -204,14 +206,28 @@ public class ClosureServiceImplTest {
     @Test
     void deleteClosureTest() {
         Closure closure = new Closure(new Room(),
-                LocalDateTime.of(2026, 3, 1, 13, 0, 0, 0),
-                LocalDateTime.of(2026, 3, 1, 14, 0, 0, 0));
+                LocalDateTime.of(2300, 3, 1, 13, 0, 0, 0),
+                LocalDateTime.of(2300, 3, 1, 14, 0, 0, 0));
         Long closureId = 2L;
 
         when(closureRepository.findById(closureId)).thenReturn(Optional.of(closure));
         doNothing().when(closureRepository).delete(eq(closure));
 
         closureService.deleteClosure(closureId);
+        verify(closureRepository).delete(closure);
+    }
+
+    @Test
+    void deleteClosureShouldRejectPassedClosureTest() {
+        Closure closure = new Closure(new Room(),
+                LocalDateTime.of(2026, 3, 1, 13, 0, 0, 0),
+                LocalDateTime.of(2026, 3, 1, 14, 0, 0, 0));
+        Long closureId = 2L;
+
+        when(closureRepository.findById(closureId)).thenReturn(Optional.of(closure));
+
+        assertThrows(IllegalStateException.class, () -> closureService.deleteClosure(closureId));
+        verify(closureRepository, never()).delete(any(Closure.class));
     }
 
     @Test

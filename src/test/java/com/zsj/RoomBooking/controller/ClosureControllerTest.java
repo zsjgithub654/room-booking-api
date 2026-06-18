@@ -32,6 +32,7 @@ import java.util.List;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -114,6 +115,19 @@ public class ClosureControllerTest {
                 /* deleted status code 204 */
                 .andExpect(status().isNoContent());
         verify(closureService).deleteClosure(closureId);
+    }
+
+    @Test
+    void deleteClosureShouldRejectPassedClosureTest() throws Exception {
+        Long closureId = 3L;
+
+        doThrow(new IllegalStateException("Cannot delete a passed closure."))
+                .when(closureService).deleteClosure(eq(closureId));
+
+        mockMvc.perform(delete("/closures/{closureId}", closureId)
+                        .with(csrf())
+                        .with(user("admin1").roles("ADMIN")))
+                .andExpect(status().isBadRequest());
     }
 
     @Test

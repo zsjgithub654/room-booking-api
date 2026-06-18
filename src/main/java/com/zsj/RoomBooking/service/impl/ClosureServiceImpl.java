@@ -22,6 +22,7 @@ import java.util.List;
 @Service
 public class ClosureServiceImpl implements ClosureService {
     private static final String CLOSURE_NOT_FOUND = "Closure not found.";
+    private static final String PASSED_CLOSURE_CANNOT_BE_DELETED = "Cannot delete a passed closure.";
     private static final String ROOM_NOT_FOUND = "Room not found.";
 
     @Autowired
@@ -76,6 +77,9 @@ public class ClosureServiceImpl implements ClosureService {
     @Override
     public void deleteClosure(Long closureId) {
         Closure closure = closureRepository.findById(closureId).orElseThrow(() -> new ResourceNotFoundException(CLOSURE_NOT_FOUND));
+        if (closure.getEndTime().isBefore(LocalDateTime.now())) {
+            throw new IllegalStateException(PASSED_CLOSURE_CANNOT_BE_DELETED);
+        }
         closureRepository.delete(closure);
     }
 }

@@ -1,4 +1,4 @@
-# Room booking REST API
+# Room booking API
 
 Room booking REST API built with Spring Boot with role-based access control, room availability search, reservation management, and closure management. It separates request validation from business-rule validation and includes repository, service, controller, and integration tests.
 

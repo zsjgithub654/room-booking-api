@@ -49,10 +49,47 @@ The application expects a PostgreSQL database named `room_booking`.
 Default local config in [application.properties](src/main/resources/application.properties):
 
 - URL: `jdbc:postgresql://localhost:5432/room_booking`
-- username: `room_booking`
-- password: `room_booking`
 
-Create the database before starting the application.
+Create the database before starting the application, and provide datasource credentials externally.
+
+Example with environment variables in PowerShell:
+
+```powershell
+$env:SPRING_DATASOURCE_USERNAME="room_booking"
+$env:SPRING_DATASOURCE_PASSWORD="room_booking"
+```
+
+Local-only option:
+
+You can also put the datasource credentials directly into [application.properties](src/main/resources/application.properties) while developing locally:
+
+```properties
+spring.datasource.username=room_booking
+spring.datasource.password=room_booking
+```
+
+Do not commit local credentials back into the repository.
+
+Example with command-line arguments:
+
+```powershell
+.\mvnw.cmd spring-boot:run "-Dspring-boot.run.arguments=--spring.datasource.username=room_booking,--spring.datasource.password=room_booking"
+```
+
+Example with external configuration file:
+
+`config/application.properties`
+
+```properties
+spring.datasource.username=room_booking
+spring.datasource.password=room_booking
+```
+
+Then run:
+
+```powershell
+java -jar target/RoomBooking-0.0.1-SNAPSHOT.jar --spring.config.additional-location=file:./config/
+```
 
 ### Bootstrap Admin
 
@@ -67,6 +104,32 @@ Example with environment variables in PowerShell:
 $env:APP_BOOTSTRAP_ADMIN_USERNAME="admin"
 $env:APP_BOOTSTRAP_ADMIN_PASSWORD="password1!"
 .\mvnw.cmd spring-boot:run
+```
+
+Local-only option:
+
+You can also add the bootstrap admin values directly into [application.properties](src/main/resources/application.properties) for local development:
+
+```properties
+app.bootstrap.admin.username=admin
+app.bootstrap.admin.password=password1!
+```
+
+Do not commit local credentials back into the repository.
+
+Example with command-line arguments:
+
+```powershell
+.\mvnw.cmd spring-boot:run "-Dspring-boot.run.arguments=--app.bootstrap.admin.username=admin,--app.bootstrap.admin.password=password1!"
+```
+
+Example with external configuration file:
+
+`config/application.properties`
+
+```properties
+app.bootstrap.admin.username=admin
+app.bootstrap.admin.password=password1!
 ```
 
 If an active admin already exists, the bootstrap step is skipped.

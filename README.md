@@ -1,6 +1,6 @@
-# RoomBooking
+# Room booking REST API
 
-RoomBooking is a Spring Boot room booking system with role-based access control, room availability search, reservation management, and closure management. It separates request validation from business-rule validation and includes repository, service, controller, and integration tests.
+Room booking REST API built with Spring Boot with role-based access control, room availability search, reservation management, and closure management. It separates request validation from business-rule validation and includes repository, service, controller, and integration tests.
 
 ## Tech Stack
 

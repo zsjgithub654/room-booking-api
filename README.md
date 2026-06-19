@@ -49,8 +49,8 @@ The application expects a PostgreSQL database named `room_booking`.
 Default local config in [application.properties](src/main/resources/application.properties):
 
 - URL: `jdbc:postgresql://localhost:5432/room_booking`
-- username: `postgres`
-- password: `postgres`
+- username: `room_booking`
+- password: `room_booking`
 
 Create the database before starting the application.
 

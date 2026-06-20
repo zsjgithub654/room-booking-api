@@ -5,11 +5,13 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 
 import java.time.LocalTime;
 
 @Entity
+@Table(name = "rooms")
 public class Room {
     private static final LocalTime OPEN_ALL_DAY_OPEN_TIME = LocalTime.MIN;
     private static final String PROVIDE_BOTH_OPEN_TIME_AND_CLOSE_TIME_OR_NEITHER =

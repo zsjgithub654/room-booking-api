@@ -14,7 +14,7 @@ import jakarta.persistence.Version;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(indexes = {
+@Table(name = "closures", indexes = {
         @Index(name = "idx_closure_room_start_time", columnList = "room_id, start_time")
 })
 public class Closure implements Occupation {

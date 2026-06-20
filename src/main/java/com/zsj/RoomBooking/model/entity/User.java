@@ -20,6 +20,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
+/* user is db reserved word */
 @Table(name = "users")
 public class User {
     @Id

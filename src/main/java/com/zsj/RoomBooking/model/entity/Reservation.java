@@ -15,7 +15,7 @@ import jakarta.persistence.Version;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(indexes = {
+@Table(name = "reservations", indexes = {
         @Index(name = "idx_reservation_room_status_start_time", columnList = "room_id, status, start_time"),
         @Index(name = "idx_reservation_user_status_start_time", columnList = "user_id, status, start_time")
 })

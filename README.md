@@ -138,7 +138,7 @@ The properties can be set in multiple ways:
 ### Demo Data:
 
 - a ready-to-import demo dump is available at [database/demo.sql](database/demo.sql). For instructions and data summary
-check out [database/README.md](database/README.md).
+check out [database/demo.md](database/demo.md).
 
 ## Testing
 

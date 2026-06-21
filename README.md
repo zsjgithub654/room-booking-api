@@ -44,105 +44,101 @@ Room booking REST API built with Spring Boot with role-based access control, roo
 
 ### Database
 
-The application expects a PostgreSQL database named `room_booking`.
+#### Data Source
+The application expects a PostgreSQL database. By default it connects to a local database named `room_booking`,
+as configured in [application.properties](src/main/resources/application.properties):
 
-Default local config in [application.properties](src/main/resources/application.properties):
+- `spring.datasource.url=jdbc:postgresql://localhost:5432/room_booking`
 
-- URL: `jdbc:postgresql://localhost:5432/room_booking`
+The database needs to be created before the application starts. If a different name is used,
+you need to override the default url, see [Properties Setting](#properties-setting).
 
-Create the database before starting the application, and provide datasource credentials externally.
+#### Database Credentials
+For the application to access the database, database credentials are required. See [Properties Setting](#properties-setting) for ways to provide these:
 
-Example with environment variables in PowerShell:
+- `spring.datasource.username`
+- `spring.datasource.password`
 
-```powershell
-$env:SPRING_DATASOURCE_USERNAME="room_booking"
-$env:SPRING_DATASOURCE_PASSWORD="room_booking"
-```
-
-Local-only option:
-
-You can also put the datasource credentials directly into [application.properties](src/main/resources/application.properties) while developing locally:
+Example values:
 
 ```properties
 spring.datasource.username=room_booking
 spring.datasource.password=room_booking
-```
-
-Do not commit local credentials back into the repository.
-
-Example with command-line arguments:
-
-```powershell
-.\mvnw.cmd spring-boot:run "-Dspring-boot.run.arguments=--spring.datasource.username=room_booking,--spring.datasource.password=room_booking"
-```
-
-Example with external configuration file:
-
-`config/application.properties`
-
-```properties
-spring.datasource.username=room_booking
-spring.datasource.password=room_booking
-```
-
-Then run:
-
-```powershell
-java -jar target/RoomBooking-0.0.1-SNAPSHOT.jar --spring.config.additional-location=file:./config/
 ```
 
 ### Bootstrap Admin
 
-If there is no active admin in the database, the application requires bootstrap admin credentials at startup:
+If there is no active admin in the database, the application requires bootstrap admin credentials to create one at startup. See [Properties Setting](#properties-setting) for ways to provide these:
 
 - `app.bootstrap.admin.username`
 - `app.bootstrap.admin.password`
 
-Example with environment variables in PowerShell:
-
-```powershell
-$env:APP_BOOTSTRAP_ADMIN_USERNAME="admin"
-$env:APP_BOOTSTRAP_ADMIN_PASSWORD="password1!"
-.\mvnw.cmd spring-boot:run
-```
-
-Local-only option:
-
-You can also add the bootstrap admin values directly into [application.properties](src/main/resources/application.properties) for local development:
+Example values:
 
 ```properties
 app.bootstrap.admin.username=admin
 app.bootstrap.admin.password=password1!
 ```
 
-Do not commit local credentials back into the repository.
-
-Example with command-line arguments:
-
-```powershell
-.\mvnw.cmd spring-boot:run "-Dspring-boot.run.arguments=--app.bootstrap.admin.username=admin,--app.bootstrap.admin.password=password1!"
-```
-
-Example with external configuration file:
-
-`config/application.properties`
-
-```properties
-app.bootstrap.admin.username=admin
-app.bootstrap.admin.password=password1!
-```
-
-If an active admin already exists, the bootstrap step is skipped.
+If an active admin already exists, the bootstrap step will be skipped.
 
 ### Start the Application
 
 ```powershell
 .\mvnw.cmd spring-boot:run
 ```
+### Properties Setting
+The properties can be set in multiple ways:
+1. Before starting the application, set environment variables in PowerShell:
 
-Swagger UI:
+    ```powershell
+    $env:SPRING_DATASOURCE_URL="jdbc:postgresql://localhost:5432/room_booking"
+    $env:SPRING_DATASOURCE_USERNAME="room_booking"
+    $env:SPRING_DATASOURCE_PASSWORD="room_booking"
+    $env:APP_BOOTSTRAP_ADMIN_USERNAME="admin"
+    $env:APP_BOOTSTRAP_ADMIN_PASSWORD="password1!"
+    .\mvnw.cmd spring-boot:run
+    ```
+
+2. Start the application with command-line arguments:
+
+    ```powershell
+    .\mvnw.cmd spring-boot:run "-Dspring-boot.run.arguments=--spring.datasource.url=jdbc:postgresql://localhost:5432/room_booking,--spring.datasource.username=room_booking,--spring.datasource.password=room_booking,--app.bootstrap.admin.username=admin,--app.bootstrap.admin.password=password1!"
+    ```
+
+3. Before starting the application, add an external configuration file:
+
+   `./config/application.properties`
+
+   and add the following properties:
+    ```properties
+    spring.datasource.url=jdbc:postgresql://localhost:5432/room_booking
+    spring.datasource.username=room_booking
+    spring.datasource.password=room_booking
+    app.bootstrap.admin.username=admin
+    app.bootstrap.admin.password=password1!
+    ```
+
+4. If running from source code, you can also add the properties directly into [application.properties](src/main/resources/application.properties):
+
+    ```properties
+    spring.datasource.url=your-database-url
+    spring.datasource.username=room_booking
+    spring.datasource.password=room_booking
+    app.bootstrap.admin.username=admin
+    app.bootstrap.admin.password=password1!
+    ```
+
+   Do not commit local credentials back into the repository.
+
+### Swagger UI:
 
 - `http://localhost:8080/swagger-ui/index.html`
+
+### Demo Data:
+
+- a ready-to-import demo dump is available at [database/demo.sql](database/demo.sql). For instructions and data summary
+check out [database/README.md](database/README.md).
 
 ## Testing
 

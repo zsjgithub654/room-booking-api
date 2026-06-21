@@ -10,7 +10,7 @@ run the following command to import demo.sql into the database:
 psql -U your_user_name -d room_booking -f path_of_demo/demo.sql
 ```
 * Do not start the application before import, otherwise the schema and bootstrap admin initialized by the application
-will conflict with the demo.sql. If it happens, clear the database and import again.
+will conflict with the ones in demo.sql. If it happens, clear the database and import again.
 * After the import succeeds, configure and run the application as normal.
 
 ## Data Summary

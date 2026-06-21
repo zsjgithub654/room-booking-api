@@ -1,17 +1,23 @@
 # Demo Data
-* demo.sql is a SQL dump of the demo data and schema. Import if you want to run the application with demo data.
+* To make it easier to explore the application, pre-defined users and rooms can be imported from [demo.sql](demo.sql). Check 
+[Data Summary](#data-summary) for user credentials and room schedules.
 
-## How to use
-* An empty `room_booking` database is required.
-* Run the following command to import demo.sql into the database before running the application for the first time,
-otherwise the user id in demo will conflict with the bootstrap admin id.
+## Import Demo Data
+* The demo.sql contains both schema and data, and needs to be imported into an empty database.
+* Create a database as required in [Data Source](../README.md#data-source). Before moving on, 
+run the following command to import demo.sql into the database:
 ```powershell
 psql -U your_user_name -d room_booking -f path_of_demo/demo.sql
 ```
-* run the application as normal. If a different database name is used, confi.
+* Do not start the application before import, otherwise the schema and bootstrap admin initialized by the application
+will conflict with the demo.sql. If it happens, clear the database and import again.
+* After the import succeeds, configure and run the application as normal.
 
-## Users
-* The user1 is an admin, others are regular users.
+## Data Summary
+### Users
+* User 1 is an admin
+* Users 3, 4 and 5 are regular users.
+* User 2 is a closed account and can no longer log in.
 
 | User ID | Username | Password   | Roles                     | Status |
 |---------|----------|------------|---------------------------|--------|
@@ -21,7 +27,8 @@ psql -U your_user_name -d room_booking -f path_of_demo/demo.sql
 | 4       | `user4`  | `44444444` | `ROLE_USER`               | active |
 | 5       | `user5`  | `55555555` | `ROLE_USER`               | active |
 
-## Rooms
+### Rooms
+* Room 4 is deleted and can only be seen by the admin.
 
 | Room ID | Name   | Area         | Capacity | Open Hours           | Status  |
 |---------|--------|--------------|----------|----------------------|---------|
@@ -30,7 +37,8 @@ psql -U your_user_name -d room_booking -f path_of_demo/demo.sql
 | 3       | `B101` | `building B` | 12       | `08:00` - `18:00`    | active  |
 | 4       | `B102` | `building B` | 16       | `08:00` - `18:00`    | deleted |
 
-## Schedule on `2026-06-20`
+### Past Schedules
+All past schedules were on `2026-06-20`.
 
 | Time              | `A101`                                | `A102`       | `B101`       | `B102 (deleted)` |
 |-------------------|---------------------------------------|--------------|--------------|------------------|
@@ -40,7 +48,8 @@ psql -U your_user_name -d room_booking -f path_of_demo/demo.sql
 | `10:00` - `12:00` | closure `#1`                          |              |              | -                |
 | `18:00` - `24:00` |                                       | closed hours | closed hours | -                |
 
-## Schedule on `2300-06-20`
+### Future Schedules
+All futurn schedules are on `2300-06-20`.
 
 | Time              | `A101 (available all day)` | `A102 (closed all day)`                          | `B101`                                | `B102 (deleted)`                   |
 |-------------------|----------------------------|--------------------------------------------------|---------------------------------------|------------------------------------|

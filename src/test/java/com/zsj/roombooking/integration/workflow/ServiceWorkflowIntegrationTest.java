@@ -1,5 +1,6 @@
 package com.zsj.roombooking.integration.workflow;
 
+import com.zsj.roombooking.bootstrap.BootstrapAdminInitializer;
 import com.zsj.roombooking.model.ReservationStatus;
 import com.zsj.roombooking.model.RoomStatus;
 import com.zsj.roombooking.model.UserStatus;
@@ -21,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.data.domain.Sort;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -38,6 +40,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Testcontainers
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 class ServiceWorkflowIntegrationTest {
+    @MockitoBean
+    private BootstrapAdminInitializer bootstrapAdminInitializer;
+
     @Autowired
     private ReservationService reservationService;
 

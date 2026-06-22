@@ -1,5 +1,6 @@
 package com.zsj.roombooking.integration.concurrency;
 
+import com.zsj.roombooking.bootstrap.BootstrapAdminInitializer;
 import com.zsj.roombooking.exception.ResourceNotFoundException;
 import com.zsj.roombooking.model.ReservationStatus;
 import com.zsj.roombooking.model.RoomStatus;
@@ -22,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.data.domain.Sort;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -48,6 +50,9 @@ import static com.zsj.roombooking.integration.concurrency.ConcurrencyTestUtils.a
         webEnvironment = SpringBootTest.WebEnvironment.MOCK
 )
 class ServiceConcurrencyTest {
+    @MockitoBean
+    private BootstrapAdminInitializer bootstrapAdminInitializer;
+
     @Autowired
     private ReservationService reservationService;
 

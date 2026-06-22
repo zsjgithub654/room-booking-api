@@ -1,5 +1,6 @@
 package com.zsj.roombooking.integration.concurrency;
 
+import com.zsj.roombooking.bootstrap.BootstrapAdminInitializer;
 import com.zsj.roombooking.model.entity.Closure;
 import com.zsj.roombooking.model.entity.Reservation;
 import com.zsj.roombooking.model.entity.Room;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -38,6 +40,8 @@ import static com.zsj.roombooking.integration.concurrency.ConcurrencyTestUtils.a
 @Testcontainers
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 class OptimisticLockingConcurrencyTest {
+    @MockitoBean
+    private BootstrapAdminInitializer bootstrapAdminInitializer;
 
     @Autowired
     private UserRepository userRepository;

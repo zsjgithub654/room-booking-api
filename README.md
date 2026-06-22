@@ -142,6 +142,8 @@ check out [database/demo.md](database/demo.md).
 
 ## Testing
 
+Tests in [integration](src/test/java/com/zsj/roombooking/integration) are running with testcontainers, which require a docker environment.
+
 Run the full test suite:
 
 ```powershell

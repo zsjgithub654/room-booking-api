@@ -1,0 +1,248 @@
+package com.zsj.roombooking.service;
+
+import com.zsj.roombooking.exception.ResourceNotFoundException;
+import com.zsj.roombooking.model.entity.Closure;
+import com.zsj.roombooking.model.entity.Reservation;
+import com.zsj.roombooking.model.entity.Room;
+import com.zsj.roombooking.model.entity.User;
+import com.zsj.roombooking.model.result.AddClosureResult;
+import com.zsj.roombooking.repository.ClosureRepository;
+import com.zsj.roombooking.repository.ReservationRepository;
+import com.zsj.roombooking.repository.RoomRepository;
+import com.zsj.roombooking.service.impl.ClosureServiceImpl;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Sort;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.AdditionalAnswers.returnsFirstArg;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+public class ClosureServiceImplTest {
+    @Mock
+    private ClosureRepository closureRepository;
+
+    @Mock
+    private RoomRepository roomRepository;
+
+    @Mock
+    private ReservationRepository reservationRepository;
+
+    @InjectMocks
+    private ClosureServiceImpl closureService;
+
+    @Test
+    void getClosureSucceedTest() {
+        Closure closure = new Closure(new Room(),
+                LocalDateTime.of(2026, 3, 1, 10, 0, 0, 0),
+                LocalDateTime.of(2026, 3, 1, 11, 0, 0, 0));
+        Long searchId = 2L;
+        when(closureRepository.findById(eq(searchId))).thenReturn(Optional.of(closure));
+
+        assertThat(closureService.getClosure(searchId))
+                .usingRecursiveComparison()
+                .isEqualTo(closure);
+    }
+
+    @Test
+    void getClosureNotFoundTest() {
+        Long searchId = 2L;
+        when(closureRepository.findById(eq(searchId))).thenThrow(new ResourceNotFoundException("Closure not found."));
+
+        assertThrows(ResourceNotFoundException.class, () -> closureService.getClosure(searchId));
+    }
+
+    @Test
+    void getClosuresOfRoomSucceedTest() {
+        Long searchRoomId = 2L;
+        when(roomRepository.findById(eq(searchRoomId))).thenReturn(Optional.of(new Room()));
+        List<Closure> closures = List.of(
+                new Closure(new Room(),
+                        LocalDateTime.of(2026, 3, 1, 10, 0, 0, 0),
+                        LocalDateTime.of(2026, 3, 1, 11, 0, 0, 0)),
+                new Closure(new Room(),
+                        LocalDateTime.of(2026, 3, 1, 12, 0, 0, 0),
+                        LocalDateTime.of(2026, 3, 1, 13, 0, 0, 0)));
+        when(closureRepository.findByRoomId(eq(searchRoomId), eq(getOccupationSort()))).thenReturn(closures);
+
+        List<Closure> result = closureService.getClosuresOfRoom(searchRoomId);
+        assertThat(result).hasSize(closures.size());
+        assertThat(result)
+                .usingRecursiveComparison()
+                .isEqualTo(closures);
+    }
+
+    @Test
+    void getClosuresOfRoomShouldSortByTimeTest() {
+        Long searchRoomId = 2L;
+        when(roomRepository.findById(eq(searchRoomId))).thenReturn(Optional.of(new Room()));
+        Closure laterClosure = new Closure(new Room(),
+                LocalDateTime.of(2026, 3, 1, 12, 0, 0, 0),
+                LocalDateTime.of(2026, 3, 1, 13, 0, 0, 0));
+        Closure earlierClosure = new Closure(new Room(),
+                LocalDateTime.of(2026, 3, 1, 10, 0, 0, 0),
+                LocalDateTime.of(2026, 3, 1, 11, 0, 0, 0));
+        when(closureRepository.findByRoomId(eq(searchRoomId), eq(getOccupationSort())))
+                .thenReturn(List.of(earlierClosure, laterClosure));
+
+        List<Closure> result = closureService.getClosuresOfRoom(searchRoomId);
+
+        assertThat(result)
+                .usingRecursiveComparison()
+                .isEqualTo(List.of(earlierClosure, laterClosure));
+    }
+
+    @Test
+    void getClosuresOfRoomNoResultTest() {
+        Long roomId = 2L;
+        when(roomRepository.findById(eq(roomId))).thenReturn(Optional.of(new Room()));
+        when(closureRepository.findByRoomId(eq(roomId), eq(getOccupationSort()))).thenReturn(List.of());
+
+        assertThat(closureService.getClosuresOfRoom(roomId)).hasSize(0);
+    }
+
+    @Test
+    void getClosuresOfRoomRoomNotFoundTest() {
+        Long roomId = 2L;
+
+        when(roomRepository.findById(eq(roomId))).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> closureService.getClosuresOfRoom(roomId));
+    }
+
+    @Test
+    void addClosureSucceedReservationsClosedTest() {
+        Room room = new Room("101", 12, "Building A", null, null);
+        LocalDateTime startTime = LocalDateTime.of(2026, 3, 1, 12, 0, 0, 0);
+        LocalDateTime endTime = LocalDateTime.of(2026, 3, 1, 16, 0, 0, 0);
+        List<Reservation> reservations = List.of(
+                new Reservation(new User(), room,
+                        LocalDateTime.of(2300, 3, 1, 10, 0, 0, 0),
+                        LocalDateTime.of(2300, 3, 1, 13, 0, 0, 0)),
+                new Reservation(new User(), room,
+                        LocalDateTime.of(2300, 3, 1, 14, 0, 0, 0),
+                        LocalDateTime.of(2300, 3, 1, 15, 0, 0, 0)));
+        List<Closure> overlappingClosures = List.of(
+                new Closure(new Room(),
+                        LocalDateTime.of(2026, 3, 1, 13, 0, 0, 0),
+                        LocalDateTime.of(2026, 3, 1, 14, 0, 0, 0)),
+                new Closure(new Room(),
+                        LocalDateTime.of(2026, 3, 1, 16, 0, 0, 0),
+                        LocalDateTime.of(2026, 3, 1, 17, 0, 0, 0)));
+        Long roomId = 2L;
+        /* mock */
+        when(roomRepository.findByIdWithLock(roomId)).thenReturn(Optional.of(room));
+        when(reservationRepository.findByRoomIdAndOverlappingAndScheduled(roomId, startTime, endTime, getOccupationSort()))
+                .thenReturn(reservations);
+        when(closureRepository.findByRoomIdAndOverlappingOrAdjacent(roomId, startTime, endTime))
+                .thenReturn(overlappingClosures);
+        doAnswer(returnsFirstArg()).when(closureRepository).save(any(Closure.class));
+        doNothing().when(closureRepository).deleteAll(eq(overlappingClosures));
+        /* verify */
+        AddClosureResult result = closureService.addClosure(roomId, startTime, endTime);
+        assertThat(result.closure().getStartTime()).isEqualTo(startTime);
+        assertThat(result.closure().getEndTime()).isEqualTo(LocalDateTime.of(2026, 3, 1, 17, 0, 0, 0));
+        assertThat(result.closedReservations()).hasSize(reservations.size());
+        assertThat(result.closedReservations())
+                .usingRecursiveComparison()
+                .isEqualTo(reservations);
+    }
+
+    @Test
+    void addClosureShouldSortClosedReservationsByTimeTest() {
+        Room room = new Room("101", 12, "Building A", null, null);
+        LocalDateTime startTime = LocalDateTime.of(2026, 3, 1, 12, 0, 0, 0);
+        LocalDateTime endTime = LocalDateTime.of(2026, 3, 1, 16, 0, 0, 0);
+        Reservation laterReservation = new Reservation(new User(), room,
+                LocalDateTime.of(2300, 3, 1, 14, 0, 0, 0),
+                LocalDateTime.of(2300, 3, 1, 15, 0, 0, 0));
+        Reservation earlierReservation = new Reservation(new User(), room,
+                LocalDateTime.of(2300, 3, 1, 10, 0, 0, 0),
+                LocalDateTime.of(2300, 3, 1, 13, 0, 0, 0));
+        Long roomId = 2L;
+        /* mock */
+        when(roomRepository.findByIdWithLock(roomId)).thenReturn(Optional.of(room));
+        when(reservationRepository.findByRoomIdAndOverlappingAndScheduled(roomId, startTime, endTime, getOccupationSort()))
+                .thenReturn(List.of(earlierReservation, laterReservation));
+        when(closureRepository.findByRoomIdAndOverlappingOrAdjacent(roomId, startTime, endTime))
+                .thenReturn(List.of());
+        doAnswer(returnsFirstArg()).when(closureRepository).save(any(Closure.class));
+        doNothing().when(closureRepository).deleteAll(eq(List.of()));
+
+        AddClosureResult result = closureService.addClosure(roomId, startTime, endTime);
+
+        assertThat(result.closedReservations())
+                .usingRecursiveComparison()
+                .isEqualTo(List.of(earlierReservation, laterReservation));
+    }
+
+    @Test
+    void addClosureRoomNotFoundTest() {
+        LocalDateTime startTime = LocalDateTime.of(2026, 3, 1, 12, 0, 0, 0);
+        LocalDateTime endTime = LocalDateTime.of(2026, 3, 1, 16, 0, 0, 0);
+        Long roomId = 2L;
+        /* mock */
+        when(roomRepository.findByIdWithLock(roomId)).thenReturn(Optional.empty());
+        /* verify */
+        assertThrows(ResourceNotFoundException.class, () -> closureService.addClosure(roomId, startTime, endTime));
+    }
+
+    @Test
+    void deleteClosureTest() {
+        Closure closure = new Closure(new Room(),
+                LocalDateTime.of(2300, 3, 1, 13, 0, 0, 0),
+                LocalDateTime.of(2300, 3, 1, 14, 0, 0, 0));
+        Long closureId = 2L;
+
+        when(closureRepository.findById(closureId)).thenReturn(Optional.of(closure));
+        doNothing().when(closureRepository).delete(eq(closure));
+
+        closureService.deleteClosure(closureId);
+        verify(closureRepository).delete(closure);
+    }
+
+    @Test
+    void deleteClosureShouldRejectPassedClosureTest() {
+        Closure closure = new Closure(new Room(),
+                LocalDateTime.of(2026, 3, 1, 13, 0, 0, 0),
+                LocalDateTime.of(2026, 3, 1, 14, 0, 0, 0));
+        Long closureId = 2L;
+
+        when(closureRepository.findById(closureId)).thenReturn(Optional.of(closure));
+
+        assertThrows(IllegalStateException.class, () -> closureService.deleteClosure(closureId));
+        verify(closureRepository, never()).delete(any(Closure.class));
+    }
+
+    @Test
+    void deleteClosureNotFoundTest() {
+        Long searchId = 2L;
+
+        when(closureRepository.findById(eq(searchId))).thenThrow(new ResourceNotFoundException("Closure not found."));
+
+        assertThrows(ResourceNotFoundException.class, () -> closureService.deleteClosure(searchId));
+    }
+
+    private Sort getOccupationSort() {
+        return Sort.by(
+                Sort.Order.asc("startTime"),
+                Sort.Order.asc("endTime"),
+                Sort.Order.asc("id"));
+    }
+}

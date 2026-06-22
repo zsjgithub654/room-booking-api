@@ -1,0 +1,28 @@
+package com.zsj.roombooking.model.dto.request;
+
+import com.zsj.roombooking.validation.MaxDurationDays;
+import com.zsj.roombooking.validation.TimeInterval;
+import com.zsj.roombooking.validation.Range;
+import jakarta.validation.constraints.FutureOrPresent;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
+
+import java.time.LocalDate;
+
+@Range(
+        minField = "minCapacity",
+        maxField = "maxCapacity",
+        message = "{room.capacity.range}"
+)
+@MaxDurationDays(startField = "fromDate", endField = "toDate", days = 7)
+@TimeInterval(startField = "fromDate", endField = "toDate", allowEqual = true,
+        message = "{availability.date-range.time-interval}")
+public record SearchAvailabilityRequest(@Size(max = 50) String name,
+                                        @Positive Integer minCapacity,
+                                        @Positive Integer maxCapacity, /* use wrapper to accept null */
+                                        @Size(max = 50) String area,
+                                        @NotNull @FutureOrPresent LocalDate fromDate,
+                                        @NotNull @FutureOrPresent LocalDate toDate,
+                                        Boolean includeUnavailable) {
+}

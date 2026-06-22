@@ -1,0 +1,269 @@
+package com.zsj.roombooking.controller;
+
+import com.zsj.roombooking.config.SecurityConfig;
+import com.zsj.roombooking.mapper.AddClosureMapper;
+import com.zsj.roombooking.mapper.ClosureMapper;
+import com.zsj.roombooking.mapper.ReservationMapper;
+import com.zsj.roombooking.model.result.AddClosureResult;
+import com.zsj.roombooking.model.dto.request.ClosureRequest;
+import com.zsj.roombooking.model.dto.response.AddClosureResponse;
+import com.zsj.roombooking.model.dto.response.ClosureResponse;
+import com.zsj.roombooking.model.entity.Closure;
+import com.zsj.roombooking.model.entity.Reservation;
+import com.zsj.roombooking.model.entity.Room;
+import com.zsj.roombooking.model.entity.User;
+import com.zsj.roombooking.service.ClosureService;
+import com.zsj.roombooking.exception.ResourceNotFoundException;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@AutoConfigureMockMvc
+@WebMvcTest(ClosureController.class)
+@Import({
+        SecurityConfig.class,
+        ClosureMapper.class,
+        AddClosureMapper.class,
+        ReservationMapper.class
+})
+public class ClosureControllerTest {
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockitoBean
+    private ClosureService closureService;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @Test
+    void getClosureTest() throws Exception {
+        /* request */
+        Long closureId = 1L;
+        /* mock service response */
+        Closure closure = new Closure(new Room(),
+                LocalDateTime.of(2026, 3, 1, 10, 30, 0, 0),
+                LocalDateTime.of(2026, 3, 2, 10, 30, 0, 0));
+        when(closureService.getClosure(eq(closureId))).thenReturn(closure);
+        /* perform */
+        String responseString = mockMvc.perform(get("/closures/{closureId}", closureId)
+                        .with(user("admin1").roles("ADMIN")))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        ClosureResponse controllerResponse = objectMapper.readValue(responseString, ClosureResponse.class);
+        /* verify */
+        verify(closureService).getClosure(closureId);
+        assertThat(controllerResponse)
+                .usingRecursiveComparison()
+                .ignoringFields("userId", "roomId")
+                .isEqualTo(closure);
+    }
+
+    @Test
+    void getClosureShouldRejectNonPositiveId() throws Exception {
+        mockMvc.perform(get("/closures/{closureId}", 0)
+                        .with(user("admin1").roles("ADMIN")))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(closureService);
+    }
+
+    @Test
+    void getClosureShouldRejectNonAdmin() throws Exception {
+        mockMvc.perform(get("/closures/{closureId}", 1L))
+                .andExpect(status().isUnauthorized());
+
+        verifyNoInteractions(closureService);
+    }
+
+    @Test
+    void deleteClosureTest() throws Exception {
+        Long closureId = 3L;
+
+        doNothing().when(closureService).deleteClosure(eq(closureId));
+
+        mockMvc.perform(delete("/closures/{closureId}", closureId)
+                        /* add a csrf token for write request to pass Spring security csrf protection */
+                        .with(csrf())
+                        .with(user("admin1").roles("ADMIN")))
+                /* deleted status code 204 */
+                .andExpect(status().isNoContent());
+        verify(closureService).deleteClosure(closureId);
+    }
+
+    @Test
+    void deleteClosureShouldRejectPassedClosureTest() throws Exception {
+        Long closureId = 3L;
+
+        doThrow(new IllegalStateException("Cannot delete a passed closure."))
+                .when(closureService).deleteClosure(eq(closureId));
+
+        mockMvc.perform(delete("/closures/{closureId}", closureId)
+                        .with(csrf())
+                        .with(user("admin1").roles("ADMIN")))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getClosuresOfRoomTest() throws Exception {
+        /* request */
+        Long roomId = 2L;
+        /* mock service result */
+        List<Closure> closures = List.of(
+                new Closure(new Room(), LocalDateTime.of(2026, 3, 1, 10, 30, 0, 0), LocalDateTime.of(2026, 3, 2, 10, 30, 0, 0)),
+                new Closure(new Room(), LocalDateTime.of(2026, 3, 3, 8, 30, 0, 0), LocalDateTime.of(2026, 3, 3, 12, 0, 0, 0)));
+        when(closureService.getClosuresOfRoom(eq(roomId))).thenReturn(closures);
+        /* perform, to compare LocalDateTime, parse response to dto object */
+        String responseString = mockMvc.perform(get("/rooms/{roomId}/closures", roomId)
+                        .with(user("admin1").roles("ADMIN")))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        List<ClosureResponse> controllerResponse =
+                objectMapper.readValue(responseString, new TypeReference<List<ClosureResponse>>() {
+                });
+        /* verify */
+        verify(closureService).getClosuresOfRoom(roomId);
+        Assertions.assertThat(controllerResponse)
+                .usingRecursiveComparison()
+                .ignoringFields("userId", "roomId")
+                .isEqualTo(closures);
+    }
+
+    @Test
+    void getClosuresOfRoomShouldRejectNonPositiveRoomId() throws Exception {
+        mockMvc.perform(get("/rooms/{roomId}/closures", 0)
+                        .with(user("admin1").roles("ADMIN")))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(closureService);
+    }
+
+    @Test
+    void getClosuresOfRoomRoomNotFoundTest() throws Exception {
+        Long roomId = 2L;
+
+        when(closureService.getClosuresOfRoom(eq(roomId)))
+                .thenThrow(new ResourceNotFoundException("Room not found."));
+
+        mockMvc.perform(get("/rooms/{roomId}/closures", roomId)
+                        .with(user("admin1").roles("ADMIN")))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void addClosureTest() throws Exception {
+        /* request */
+        Long roomId = 2L;
+        LocalDateTime startTime = LocalDateTime.of(2300, 1, 1, 10, 30, 0, 0);
+        LocalDateTime endTime = LocalDateTime.of(2300, 1, 10, 10, 30, 0, 0);
+        /* mock service result */
+        AddClosureResult addClosureResult = new AddClosureResult(
+                new Closure(new Room(), startTime, endTime),
+                List.of(
+                        new Reservation(new User(), new Room(),
+                                LocalDateTime.of(2300, 1, 1, 10, 0, 0, 0),
+                                LocalDateTime.of(2300, 1, 1, 12, 0, 0, 0)),
+                        new Reservation(new User(), new Room(),
+                                LocalDateTime.of(2300, 1, 2, 8, 0, 0, 0),
+                                LocalDateTime.of(2300, 1, 2, 9, 0, 0, 0))
+                ));
+        when(closureService.addClosure(eq(roomId), eq(startTime), eq(endTime))).thenReturn(addClosureResult);
+
+        /* perform, need to parse response to dto object to compare LocalDateTime */
+        String responseString = mockMvc.perform(post("/rooms/{roomId}/closures", roomId)
+                        .with(csrf())
+                        .with(user("admin1").roles("ADMIN"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper.writeValueAsString(new ClosureRequest(startTime, endTime))))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        AddClosureResponse response = objectMapper.readValue(responseString, AddClosureResponse.class);
+        /* verify */
+        verify(closureService).addClosure(roomId, startTime, endTime);
+        Assertions.assertThat(response.closure())
+                .usingRecursiveComparison()
+                .ignoringFields("userId", "roomId")
+                .isEqualTo(addClosureResult.closure());
+        Assertions.assertThat(response.canceledReservations())
+                .usingRecursiveComparison()
+                .ignoringFields("userId", "roomId")
+                .isEqualTo(addClosureResult.closedReservations());
+    }
+
+    @Test
+    void addClosureShouldRejectInvalidTimeRange() throws Exception {
+        Long roomId = 2L;
+        LocalDateTime startTime = LocalDateTime.of(2300, 1, 10, 10, 30, 0, 0);
+        LocalDateTime endTime = LocalDateTime.of(2300, 1, 1, 10, 30, 0, 0);
+
+        mockMvc.perform(post("/rooms/{roomId}/closures", roomId)
+                        .with(csrf())
+                        .with(user("admin1").roles("ADMIN"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper.writeValueAsString(new ClosureRequest(startTime, endTime))))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(closureService);
+    }
+
+    @Test
+    void addClosureShouldRejectNonPositiveRoomId() throws Exception {
+        LocalDateTime startTime = LocalDateTime.of(2300, 1, 1, 10, 30, 0, 0);
+        LocalDateTime endTime = LocalDateTime.of(2300, 1, 10, 10, 30, 0, 0);
+
+        mockMvc.perform(post("/rooms/{roomId}/closures", 0)
+                        .with(csrf())
+                        .with(user("admin1").roles("ADMIN"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper.writeValueAsString(new ClosureRequest(startTime, endTime))))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(closureService);
+    }
+
+    @Test
+    void addClosureShouldRejectSecondPrecisionTime() throws Exception {
+        Long roomId = 2L;
+        LocalDateTime startTime = LocalDateTime.of(2300, 1, 1, 10, 30, 1, 0);
+        LocalDateTime endTime = LocalDateTime.of(2300, 1, 10, 10, 30, 0, 0);
+
+        mockMvc.perform(post("/rooms/{roomId}/closures", roomId)
+                        .with(csrf())
+                        .with(user("admin1").roles("ADMIN"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper.writeValueAsString(new ClosureRequest(startTime, endTime))))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(closureService);
+    }
+}

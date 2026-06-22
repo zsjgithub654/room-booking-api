@@ -22,7 +22,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                /* disable csrf for current stateless json api, tighten later when auth flow is wired */
+                /* demo/local API setup: CSRF is disabled to keep HTTP Basic + Swagger simple.
+                   Revisit before any browser-facing or production deployment. */
                 .csrf(AbstractHttpConfigurer::disable)
                 /* allowed unauthenticated accesses  */
                 .authorizeHttpRequests(authorize -> authorize

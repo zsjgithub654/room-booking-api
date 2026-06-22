@@ -266,8 +266,8 @@ class ServiceConcurrencyTest {
             assertThat(failures).hasSize(1);
             Throwable failure = failures.peek();
             assertThat(failure)
-                    .isInstanceOf(ResourceNotFoundException.class)
-                    .hasMessage("User not found.");
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessage("Cannot book reservations for a closed user account.");
             assertThat(reservationRepository.findByRoomId(room.getId())).isEmpty();
         }
     }
@@ -296,9 +296,9 @@ class ServiceConcurrencyTest {
         assertThat(failures).hasSizeLessThanOrEqualTo(1);
         if (!failures.isEmpty()) {
             Throwable failure = failures.peek();
-            if (failure instanceof ResourceNotFoundException) {
-                /* release read after update commit, release simply cannot find the target, no conflict */
-                assertThat(failure).hasMessage("Reservation not found.");
+            if (failure instanceof IllegalStateException) {
+                /* release commits first, update can no longer modify a canceled reservation */
+                assertThat(failure).hasMessage("Cannot update a canceled reservation.");
             } else {
                 /* write conflict on @Version, one fail with ObjectOptimisticLockingFailureException */
                 assertOptimisticLockingFailure(failure);
@@ -338,9 +338,9 @@ class ServiceConcurrencyTest {
         assertThat(failures).hasSizeLessThanOrEqualTo(1);
         if (!failures.isEmpty()) {
             Throwable failure = failures.peek();
-            if (failure instanceof ResourceNotFoundException) {
-                /* delete read after update commit, delete simply cannot find the target, no conflict */
-                assertThat(failure).hasMessage("Room not found.");
+            if (failure instanceof IllegalStateException) {
+                /* delete commits first, update can no longer modify a deleted room */
+                assertThat(failure).hasMessage("Cannot update a deleted room.");
             } else {
                 /* write conflict on @Version, one fail with ObjectOptimisticLockingFailureException */
                 assertOptimisticLockingFailure(failure);
@@ -370,9 +370,9 @@ class ServiceConcurrencyTest {
         assertThat(failures).hasSizeLessThanOrEqualTo(1);
         if (!failures.isEmpty()) {
             Throwable failure = failures.peek();
-            if (failure instanceof ResourceNotFoundException) {
-                /* close read after update commit, close simply cannot find the target, no conflict */
-                assertThat(failure).hasMessage("User not found.");
+            if (failure instanceof IllegalStateException) {
+                /* close commits first, update can no longer modify a closed user */
+                assertThat(failure).hasMessage("Cannot update a closed user.");
             } else {
                 /* write conflict on @Version, one fails */
                 assertOptimisticLockingFailure(failure);

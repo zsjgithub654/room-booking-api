@@ -214,10 +214,10 @@ public class ClosureControllerTest {
                 .usingRecursiveComparison()
                 .ignoringFields("userId", "roomId")
                 .isEqualTo(addClosureResult.closure());
-        Assertions.assertThat(response.canceledReservations())
+        Assertions.assertThat(response.affectedReservations())
                 .usingRecursiveComparison()
                 .ignoringFields("userId", "roomId")
-                .isEqualTo(addClosureResult.closedReservations());
+                .isEqualTo(addClosureResult.affectedReservations());
     }
 
     @Test

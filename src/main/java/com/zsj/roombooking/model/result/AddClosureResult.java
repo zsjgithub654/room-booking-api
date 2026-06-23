@@ -6,5 +6,5 @@ import com.zsj.roombooking.model.entity.Reservation;
 import java.util.List;
 
 public record AddClosureResult(Closure closure,
-                               List<Reservation> closedReservations) {
+                               List<Reservation> affectedReservations) {
 }

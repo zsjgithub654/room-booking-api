@@ -56,6 +56,11 @@ public class ClosureServiceImpl implements ClosureService {
         List<Reservation> reservations = reservationRepository.findByRoomIdAndOverlappingAndScheduled(
                 roomId, startTime, endTime, DefaultSorts.occupationSort());
         for (Reservation reservation : reservations) {
+            /* for started reservation, allow it to last until closure */
+            if (reservation.getStartTime().isBefore(LocalDateTime.now())) {
+                reservation.setTime(reservation.getStartTime(), startTime);
+                continue;
+            }
             reservation.setStatus(ReservationStatus.RESERVATION_STATUS_CLOSED);
         }
         /* add closure and merge with existing closures that overlap */

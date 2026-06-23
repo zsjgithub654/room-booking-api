@@ -1,6 +1,7 @@
 package com.zsj.roombooking.service;
 
 import com.zsj.roombooking.exception.ResourceNotFoundException;
+import com.zsj.roombooking.model.ReservationStatus;
 import com.zsj.roombooking.model.entity.Closure;
 import com.zsj.roombooking.model.entity.Reservation;
 import com.zsj.roombooking.model.entity.Room;
@@ -158,8 +159,8 @@ public class ClosureServiceImplTest {
         AddClosureResult result = closureService.addClosure(roomId, startTime, endTime);
         assertThat(result.closure().getStartTime()).isEqualTo(startTime);
         assertThat(result.closure().getEndTime()).isEqualTo(LocalDateTime.of(2026, 3, 1, 17, 0, 0, 0));
-        assertThat(result.closedReservations()).hasSize(reservations.size());
-        assertThat(result.closedReservations())
+        assertThat(result.affectedReservations()).hasSize(reservations.size());
+        assertThat(result.affectedReservations())
                 .usingRecursiveComparison()
                 .isEqualTo(reservations);
     }
@@ -187,9 +188,43 @@ public class ClosureServiceImplTest {
 
         AddClosureResult result = closureService.addClosure(roomId, startTime, endTime);
 
-        assertThat(result.closedReservations())
+        assertThat(result.affectedReservations())
                 .usingRecursiveComparison()
                 .isEqualTo(List.of(earlierReservation, laterReservation));
+    }
+
+    @Test
+    void addClosureShouldTrimOngoingReservationToClosureStartTest() {
+        Room room = new Room("101", 12, "Building A", null, null);
+        LocalDateTime reservationStartTime = LocalDateTime.of(2020, 3, 1, 10, 0, 0, 0);
+        LocalDateTime reservationEndTime = LocalDateTime.of(2300, 3, 1, 13, 0, 0, 0);
+        LocalDateTime closureStartTime = LocalDateTime.of(2200, 3, 1, 12, 0, 0, 0);
+        LocalDateTime closureEndTime = LocalDateTime.of(2200, 3, 1, 16, 0, 0, 0);
+        Reservation ongoingReservation = new Reservation(
+                new User(),
+                room,
+                reservationStartTime,
+                reservationEndTime);
+        Long roomId = 2L;
+
+        when(roomRepository.findByIdWithLock(roomId)).thenReturn(Optional.of(room));
+        when(reservationRepository.findByRoomIdAndOverlappingAndScheduled(
+                roomId,
+                closureStartTime,
+                closureEndTime,
+                getOccupationSort())).thenReturn(List.of(ongoingReservation));
+        when(closureRepository.findByRoomIdAndOverlappingOrAdjacent(roomId, closureStartTime, closureEndTime))
+                .thenReturn(List.of());
+        doAnswer(returnsFirstArg()).when(closureRepository).save(any(Closure.class));
+        doNothing().when(closureRepository).deleteAll(eq(List.of()));
+
+        AddClosureResult result = closureService.addClosure(roomId, closureStartTime, closureEndTime);
+
+        assertThat(result.affectedReservations()).singleElement().satisfies(reservation -> {
+            assertThat(reservation.getStartTime()).isEqualTo(reservationStartTime);
+            assertThat(reservation.getEndTime()).isEqualTo(closureStartTime);
+            assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.RESERVATION_STATUS_SCHEDULED);
+        });
     }
 
     @Test

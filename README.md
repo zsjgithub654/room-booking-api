@@ -1,6 +1,17 @@
 # Room booking API
 
-Room booking REST API built with Spring Boot with role-based access control, room availability search, reservation management, and closure management. It separates request validation from business-rule validation and includes repository, service, controller, and integration tests.
+Room booking REST API for managing users, rooms, reservations, and room closures. It supports availability search, access control, and booking workflows that prevent conflicts.
+
+## Main Features
+
+- User registration and account management
+- Admin management for users and rooms
+- Room search and availability search
+- Reservation lifecycle management
+- Room closure management
+- Role-based and ownership-based access control
+- Conflict handling for overlapping reservations and closures
+- Concurrency protection for competing updates
 
 ## Tech Stack
 
@@ -14,33 +25,18 @@ Room booking REST API built with Spring Boot with role-based access control, roo
 - Testcontainers for integration tests
 - Springdoc OpenAPI / Swagger UI
 
-## Main Features
+## Documentation
 
-- User registration and self-service account updates
-- Admin user management
-- Room create, update, delete, and search
-- Reservation create, update, release, and search
-- Room closure create, delete, and lookup
-- Availability search by name, area, capacity, date range, and unavailable-room inclusion
-
-## Business Rules
-
-- Reservations must stay within room open hours
-- Closures block overlapping reservations
-- Overlapping reservations are prevented
-- Updating a reservation after it starts is rejected
-- The last active admin cannot be removed or closed
-- Deleted rooms are hidden from normal users
-- Passed closures cannot be deleted
-- Duplicate usernames are translated into readable application errors
+- Project structure: [docs/project-structure.md](docs/project-structure.md)
+- Demo data: [database/demo.md](database/demo.md)
 
 ## Running Locally
 
 ### Prerequisites
 
-- JDK 17+
-- Maven wrapper
+- Java 17
 - PostgreSQL
+- Docker, only if you want to run integration tests
 
 ### Database
 
@@ -50,8 +46,15 @@ as configured in [application.properties](src/main/resources/application.propert
 
 - `spring.datasource.url=jdbc:postgresql://localhost:5432/room_booking`
 
-The database needs to be created before the application starts. If a different name is used,
-you need to override the default url, see [Properties Setting](#properties-setting).
+Make sure the PostgreSQL server is running and the database is created before the application starts.
+If a different host, port, or database name is used, you need to override the datasource properties,
+see [Properties Setting](#properties-setting).
+
+Example database creation command:
+
+```powershell
+psql -U postgres -c "CREATE DATABASE room_booking;"
+```
 
 #### Database Credentials
 For the application to access the database, database credentials are required. See [Properties Setting](#properties-setting) for ways to provide these:
@@ -87,6 +90,9 @@ If an active admin already exists, the bootstrap step will be skipped.
 ```powershell
 .\mvnw.cmd spring-boot:run
 ```
+
+On the first run, the Maven wrapper may download Maven and project dependencies.
+
 ### Properties Setting
 The properties can be set in multiple ways:
 1. Before starting the application, set environment variables in PowerShell:
@@ -140,9 +146,27 @@ The properties can be set in multiple ways:
 - a ready-to-import demo dump is available at [database/demo.sql](database/demo.sql). For instructions and data summary
 check out [database/demo.md](database/demo.md).
 
+## API And Access Overview
+
+### Endpoint Groups
+
+- `/users`
+- `/rooms`
+- `/reservations`
+- `/closures`
+
+### Access Model
+
+- public registration for normal users
+- authenticated self-service endpoints under `/me`
+- admin-only management endpoints
+- HTTP Basic authentication in Swagger/local testing
+
 ## Testing
 
-Tests in [integration](src/test/java/com/zsj/roombooking/integration) are running with testcontainers, which require a docker environment.
+- Unit and slice tests for repository, service, controller, and security logic
+- Integration tests for cross-layer workflows
+- Concurrency tests for concurrent access and locking behavior
 
 Run the full test suite:
 
@@ -150,33 +174,4 @@ Run the full test suite:
 .\mvnw.cmd test
 ```
 
-The project includes:
-
-- repository tests
-- service tests
-- controller tests
-- integration tests
-- concurrency tests
-
-## API Overview
-
-Main endpoint groups:
-
-- `/users`
-- `/rooms`
-- `/reservations`
-- `/closures`
-
-Security model:
-
-- public registration for normal users
-- authenticated self-service endpoints under `/me`
-- admin-only management endpoints
-- HTTP Basic authentication in Swagger/local testing
-
-## Project Notes
-
-- Request-shape validation is kept on DTOs and controller parameters
-- Business-rule validation is kept in the service layer
-- Search endpoints support paging and sorting
-- Error responses are normalized through a global exception handler
+Docker is needed for tests in `integration` that run with Testcontainers.

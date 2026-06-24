@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Transactional
@@ -68,15 +69,33 @@ public class ClosureServiceImpl implements ClosureService {
         return new AddClosureResult(closure, reservations);
     }
 
-    private @NonNull Closure addClosureAndMerge(Long roomId, LocalDateTime startTime, LocalDateTime endTime, Room room) {
+    private Closure addClosureAndMerge(Long roomId, LocalDateTime startTime, LocalDateTime endTime, Room room) {
+        /* no overlapping closures */
         List<Closure> overlapping = closureRepository.findByRoomIdAndOverlappingOrAdjacent(roomId, startTime, endTime);
-        LocalDateTime minStartTime = overlapping.stream().map(Closure::getStartTime).min(LocalDateTime::compareTo).orElse(startTime);
-        LocalDateTime maxEndTime = overlapping.stream().map(Closure::getEndTime).max(LocalDateTime::compareTo).orElse(endTime);
-        /* persist */
-        closureRepository.deleteAll(overlapping);
-        return closureRepository.save(new Closure(room,
-                minStartTime.isBefore(startTime) ? minStartTime : startTime,
-                maxEndTime.isAfter(endTime) ? maxEndTime : endTime));
+        if (overlapping.isEmpty()) {
+            return closureRepository.save(new Closure(room, startTime, endTime));
+        }
+        /* merge to existing closure */
+        LocalDateTime mergedStartTime = startTime;
+        LocalDateTime mergedEndTime = endTime;
+        for (Closure closure : overlapping) {
+            if (closure.getStartTime().isBefore(mergedStartTime)) {
+                mergedStartTime = closure.getStartTime();
+            }
+            if (closure.getEndTime().isAfter(mergedEndTime)) {
+                mergedEndTime = closure.getEndTime();
+            }
+        }
+        Closure keptClosure = overlapping.get(0);
+        if (!keptClosure.getStartTime().equals(mergedStartTime)
+                || !keptClosure.getEndTime().equals(mergedEndTime)) {
+            keptClosure.setTime(mergedStartTime, mergedEndTime);
+            closureRepository.save(keptClosure);
+        }
+        if (overlapping.size() > 1) {
+            closureRepository.deleteAll(new ArrayList<>(overlapping.subList(1, overlapping.size())));
+        }
+        return keptClosure;
     }
 
     @Override

@@ -391,13 +391,13 @@ class ServiceConcurrencyTest {
 
     @Test
     /* both with @Version */
-    void addClosureConcurrentWithDeleteClosureTest() throws Exception {
+    void addClosureConcurrentWithDeleteTheClosureToKeepTest() throws Exception {
         /* initial closure */
         Closure initialClosure = closureRepository.save(new Closure(room,
                 LocalDateTime.of(2026, 7, 1, 10, 0),
                 LocalDateTime.of(2026, 7, 1, 12, 0)));
 
-        /* new closure to add, which overlap with the initial one and will cause a delete and merge. */
+        /* new closure to add, it overlaps with the initial one and will cause an update on it. */
         LocalDateTime newStartTime = LocalDateTime.of(2026, 7, 1, 11, 0);
         LocalDateTime newEndTime = LocalDateTime.of(2026, 7, 1, 13, 0);
 
@@ -407,28 +407,65 @@ class ServiceConcurrencyTest {
                 () -> closureService.deleteClosure(initialClosure.getId())
         );
 
-        /* unless add and delete run in serial, one operation will fail */
+        /* both succeed, or one operation fails */
+        assertThat(failures).hasSizeLessThanOrEqualTo(1);
+        if (!failures.isEmpty()) {
+            /* either delete or update fail on optimistic lock */
+            assertOptimisticLockingFailure(failures.peek());
+        }
+
+        List<Closure> closures = closureRepository.findByRoomId(room.getId(), Sort.unsorted());
+        assertThat(closures).hasSizeLessThanOrEqualTo(1);
+        if (!closures.isEmpty()) {
+            Closure closure = closures.get(0);
+            assertThat(closure.getEndTime()).isEqualTo(newEndTime);
+            /* either delete finished first and a new closure was added, or the existing closure was merged in place */
+            assertThat(closure.getStartTime()).isIn(initialClosure.getStartTime(), newStartTime);
+        }
+    }
+
+    @Test
+    /* both with @Version */
+    void addClosureConcurrentWithDeleteTheClosureToDeleteTest() throws Exception {
+        Closure closure1 = closureRepository.save(new Closure(room,
+                LocalDateTime.of(2026, 7, 1, 10, 0),
+                LocalDateTime.of(2026, 7, 1, 11, 0)));
+        Closure closure2 = closureRepository.save(new Closure(room,
+                LocalDateTime.of(2026, 7, 1, 13, 0),
+                LocalDateTime.of(2026, 7, 1, 14, 0)));
+        /* new closure time, overlap with both, will cause update on closure1 and deletion on closure2 */
+        LocalDateTime startTime = LocalDateTime.of(2026, 7, 1, 11, 0);
+        LocalDateTime endTime = LocalDateTime.of(2026, 7, 1, 13, 0);
+
+        ConcurrentLinkedQueue<Throwable> failures = new ConcurrentLinkedQueue<>();
+        runConcurrentActions(failures,
+                () -> closureService.addClosure(room.getId(), startTime, endTime),
+                () -> closureService.deleteClosure(closure2.getId())
+        );
+
         assertThat(failures).hasSizeLessThanOrEqualTo(1);
         if (!failures.isEmpty()) {
             Throwable failure = failures.peek();
             if (failure instanceof ResourceNotFoundException) {
-                /* deleteClosure read after addClosure commit, delete simply cannot find the target, no conflict */
+                /* addClosure commit before deleteClosure read, deleteClosure cannot find the closure to delete. */
                 assertThat(failure).hasMessage("Closure not found.");
             } else {
-                /* conflict on @Version, the later one committing deletion fails  */
                 assertOptimisticLockingFailure(failure);
             }
         }
 
         List<Closure> closures = closureRepository.findByRoomId(room.getId(), Sort.unsorted());
-        /* if conflict on @Version and delete succeeded, add closure fails, no closure left */
         assertThat(closures).hasSizeLessThanOrEqualTo(1);
-        /* if no conflict or add closure succeeds, 1 closure left */
         if (!closures.isEmpty()) {
             Closure closure = closures.get(0);
-            assertThat(closure.getEndTime()).isEqualTo(newEndTime);
-            /* either delete finished first and new closure added with given time, or new closure merged with existing one */
-            assertThat(closure.getStartTime()).isIn(initialClosure.getStartTime(), newStartTime);
+            assertThat(closure.getStartTime()).isEqualTo(closure1.getStartTime());
+            assertThat(closure.getEndTime()).isIn(
+                    /* race, delete commit first, add fail */
+                    closure1.getEndTime(),
+                    /* no race, delete before add, new closure merge with closure1 */
+                    endTime,
+                    /* add commit first, merge with both, delete cannot find closure2, or fail on optimistic lock */
+                    closure2.getEndTime());
         }
     }
 

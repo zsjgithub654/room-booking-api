@@ -132,65 +132,111 @@ public class ClosureServiceImplTest {
         Room room = new Room("101", 12, "Building A", null, null);
         LocalDateTime startTime = LocalDateTime.of(2026, 3, 1, 12, 0, 0, 0);
         LocalDateTime endTime = LocalDateTime.of(2026, 3, 1, 16, 0, 0, 0);
-        List<Reservation> reservations = List.of(
-                new Reservation(new User(), room,
-                        LocalDateTime.of(2300, 3, 1, 10, 0, 0, 0),
-                        LocalDateTime.of(2300, 3, 1, 13, 0, 0, 0)),
-                new Reservation(new User(), room,
-                        LocalDateTime.of(2300, 3, 1, 14, 0, 0, 0),
-                        LocalDateTime.of(2300, 3, 1, 15, 0, 0, 0)));
-        List<Closure> overlappingClosures = List.of(
-                new Closure(new Room(),
-                        LocalDateTime.of(2026, 3, 1, 13, 0, 0, 0),
-                        LocalDateTime.of(2026, 3, 1, 14, 0, 0, 0)),
-                new Closure(new Room(),
-                        LocalDateTime.of(2026, 3, 1, 16, 0, 0, 0),
-                        LocalDateTime.of(2026, 3, 1, 17, 0, 0, 0)));
+        Reservation earlierReservation = new Reservation(new User(), room,
+                LocalDateTime.of(2300, 3, 1, 10, 0, 0, 0),
+                LocalDateTime.of(2300, 3, 1, 13, 0, 0, 0));
+        Reservation laterReservation = new Reservation(new User(), room,
+                LocalDateTime.of(2300, 3, 1, 14, 0, 0, 0),
+                LocalDateTime.of(2300, 3, 1, 15, 0, 0, 0));
+        List<Reservation> reservations = List.of(earlierReservation, laterReservation);
         Long roomId = 2L;
         /* mock */
         when(roomRepository.findByIdWithLock(roomId)).thenReturn(Optional.of(room));
         when(reservationRepository.findByRoomIdAndOverlappingAndScheduled(roomId, startTime, endTime, getOccupationSort()))
                 .thenReturn(reservations);
         when(closureRepository.findByRoomIdAndOverlappingOrAdjacent(roomId, startTime, endTime))
-                .thenReturn(overlappingClosures);
+                .thenReturn(List.of());
         doAnswer(returnsFirstArg()).when(closureRepository).save(any(Closure.class));
-        doNothing().when(closureRepository).deleteAll(eq(overlappingClosures));
         /* verify */
         AddClosureResult result = closureService.addClosure(roomId, startTime, endTime);
-        assertThat(result.closure().getStartTime()).isEqualTo(startTime);
-        assertThat(result.closure().getEndTime()).isEqualTo(LocalDateTime.of(2026, 3, 1, 17, 0, 0, 0));
         assertThat(result.affectedReservations()).hasSize(reservations.size());
         assertThat(result.affectedReservations())
                 .usingRecursiveComparison()
-                .isEqualTo(reservations);
+                .isEqualTo(List.of(earlierReservation, laterReservation));
+        assertThat(result.closure().getStartTime()).isEqualTo(startTime);
+        assertThat(result.closure().getEndTime()).isEqualTo(endTime);
     }
 
     @Test
-    void addClosureShouldSortClosedReservationsByTimeTest() {
+    void addClosureShouldNotAddWhenContainedInExistingClosureTest() {
         Room room = new Room("101", 12, "Building A", null, null);
         LocalDateTime startTime = LocalDateTime.of(2026, 3, 1, 12, 0, 0, 0);
-        LocalDateTime endTime = LocalDateTime.of(2026, 3, 1, 16, 0, 0, 0);
-        Reservation laterReservation = new Reservation(new User(), room,
-                LocalDateTime.of(2300, 3, 1, 14, 0, 0, 0),
-                LocalDateTime.of(2300, 3, 1, 15, 0, 0, 0));
-        Reservation earlierReservation = new Reservation(new User(), room,
-                LocalDateTime.of(2300, 3, 1, 10, 0, 0, 0),
-                LocalDateTime.of(2300, 3, 1, 13, 0, 0, 0));
+        LocalDateTime endTime = LocalDateTime.of(2026, 3, 1, 13, 0, 0, 0);
+        Closure existingClosure = new Closure(
+                room,
+                LocalDateTime.of(2026, 3, 1, 10, 0, 0, 0),
+                LocalDateTime.of(2026, 3, 1, 14, 0, 0, 0));
         Long roomId = 2L;
-        /* mock */
+
         when(roomRepository.findByIdWithLock(roomId)).thenReturn(Optional.of(room));
         when(reservationRepository.findByRoomIdAndOverlappingAndScheduled(roomId, startTime, endTime, getOccupationSort()))
-                .thenReturn(List.of(earlierReservation, laterReservation));
-        when(closureRepository.findByRoomIdAndOverlappingOrAdjacent(roomId, startTime, endTime))
                 .thenReturn(List.of());
-        doAnswer(returnsFirstArg()).when(closureRepository).save(any(Closure.class));
-        doNothing().when(closureRepository).deleteAll(eq(List.of()));
+        when(closureRepository.findByRoomIdAndOverlappingOrAdjacent(roomId, startTime, endTime))
+                .thenReturn(List.of(existingClosure));
 
         AddClosureResult result = closureService.addClosure(roomId, startTime, endTime);
 
-        assertThat(result.affectedReservations())
-                .usingRecursiveComparison()
-                .isEqualTo(List.of(earlierReservation, laterReservation));
+        assertThat(result.closure()).isSameAs(existingClosure);
+        assertThat(result.closure().getStartTime()).isEqualTo(LocalDateTime.of(2026, 3, 1, 10, 0, 0, 0));
+        assertThat(result.closure().getEndTime()).isEqualTo(LocalDateTime.of(2026, 3, 1, 14, 0, 0, 0));
+        assertThat(result.affectedReservations()).isEqualTo(List.of());
+        verify(closureRepository, never()).save(any(Closure.class));
+        verify(closureRepository, never()).deleteAll(any());
+    }
+
+    @Test
+    void addClosureShouldExpandExistingClosureWhenPartiallyOverlapTest() {
+        Room room = new Room("101", 12, "Building A", null, null);
+        LocalDateTime startTime = LocalDateTime.of(2026, 3, 1, 12, 0, 0, 0);
+        LocalDateTime endTime = LocalDateTime.of(2026, 3, 1, 16, 0, 0, 0);
+        Closure existingClosure = new Closure(
+                room,
+                LocalDateTime.of(2026, 3, 1, 13, 0, 0, 0),
+                LocalDateTime.of(2026, 3, 1, 14, 0, 0, 0));
+        Long roomId = 2L;
+
+        when(roomRepository.findByIdWithLock(roomId)).thenReturn(Optional.of(room));
+        when(reservationRepository.findByRoomIdAndOverlappingAndScheduled(roomId, startTime, endTime, getOccupationSort()))
+                .thenReturn(List.of());
+        when(closureRepository.findByRoomIdAndOverlappingOrAdjacent(roomId, startTime, endTime))
+                .thenReturn(List.of(existingClosure));
+        doAnswer(returnsFirstArg()).when(closureRepository).save(any(Closure.class));
+
+        AddClosureResult result = closureService.addClosure(roomId, startTime, endTime);
+
+        assertThat(result.closure()).isSameAs(existingClosure);
+        assertThat(result.closure().getStartTime()).isEqualTo(startTime);
+        assertThat(result.closure().getEndTime()).isEqualTo(endTime);
+        verify(closureRepository, never()).deleteAll(any());
+    }
+
+    @Test
+    void addClosureShouldMergeWhenMultipleOverlapTest() {
+        Room room = new Room("101", 12, "Building A", null, null);
+        LocalDateTime startTime = LocalDateTime.of(2026, 3, 1, 12, 0, 0, 0);
+        LocalDateTime endTime = LocalDateTime.of(2026, 3, 1, 16, 0, 0, 0);
+        Closure keptClosure = new Closure(new Room(),
+                LocalDateTime.of(2026, 3, 1, 13, 0, 0, 0),
+                LocalDateTime.of(2026, 3, 1, 14, 0, 0, 0));
+        Closure deletedClosure = new Closure(new Room(),
+                LocalDateTime.of(2026, 3, 1, 16, 0, 0, 0),
+                LocalDateTime.of(2026, 3, 1, 17, 0, 0, 0));
+        Long roomId = 2L;
+
+        when(roomRepository.findByIdWithLock(roomId)).thenReturn(Optional.of(room));
+        when(reservationRepository.findByRoomIdAndOverlappingAndScheduled(roomId, startTime, endTime, getOccupationSort()))
+                .thenReturn(List.of());
+        when(closureRepository.findByRoomIdAndOverlappingOrAdjacent(roomId, startTime, endTime))
+                .thenReturn(List.of(keptClosure, deletedClosure));
+        doAnswer(returnsFirstArg()).when(closureRepository).save(any(Closure.class));
+        doNothing().when(closureRepository).deleteAll(eq(List.of(deletedClosure)));
+
+        AddClosureResult result = closureService.addClosure(roomId, startTime, endTime);
+
+        assertThat(result.closure()).isSameAs(keptClosure);
+        assertThat(result.closure().getStartTime()).isEqualTo(startTime);
+        assertThat(result.closure().getEndTime()).isEqualTo(LocalDateTime.of(2026, 3, 1, 17, 0, 0, 0));
+        assertThat(result.affectedReservations()).isEqualTo(List.of());
     }
 
     @Test
@@ -200,11 +246,6 @@ public class ClosureServiceImplTest {
         LocalDateTime reservationEndTime = LocalDateTime.of(2300, 3, 1, 13, 0, 0, 0);
         LocalDateTime closureStartTime = LocalDateTime.of(2200, 3, 1, 12, 0, 0, 0);
         LocalDateTime closureEndTime = LocalDateTime.of(2200, 3, 1, 16, 0, 0, 0);
-        Reservation ongoingReservation = new Reservation(
-                new User(),
-                room,
-                reservationStartTime,
-                reservationEndTime);
         Long roomId = 2L;
 
         when(roomRepository.findByIdWithLock(roomId)).thenReturn(Optional.of(room));
@@ -212,11 +253,11 @@ public class ClosureServiceImplTest {
                 roomId,
                 closureStartTime,
                 closureEndTime,
-                getOccupationSort())).thenReturn(List.of(ongoingReservation));
+                getOccupationSort())).thenReturn(
+                        List.of(new Reservation(new User(), room, reservationStartTime, reservationEndTime)));
         when(closureRepository.findByRoomIdAndOverlappingOrAdjacent(roomId, closureStartTime, closureEndTime))
                 .thenReturn(List.of());
         doAnswer(returnsFirstArg()).when(closureRepository).save(any(Closure.class));
-        doNothing().when(closureRepository).deleteAll(eq(List.of()));
 
         AddClosureResult result = closureService.addClosure(roomId, closureStartTime, closureEndTime);
 

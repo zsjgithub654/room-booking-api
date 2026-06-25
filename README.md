@@ -28,6 +28,7 @@ Room booking REST API for managing users, rooms, reservations, and room closures
 ## Documentation
 
 - Project structure: [docs/project-structure.md](docs/project-structure.md)
+- Domain rules: [docs/domain-rules.md](docs/domain-rules.md)
 - Demo data: [database/demo.md](database/demo.md)
 
 ## Running Locally
